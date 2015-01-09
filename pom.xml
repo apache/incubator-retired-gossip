@@ -31,14 +31,17 @@
 		<developerConnection>scm:git:git@github.com:edwardcapriolo/gossip.git</developerConnection>
 	</scm>
 	<dependencies>
-
+		<dependency>
+			<groupId>com.fasterxml.jackson</groupId>
+			<artifactId>jackson-datatype-json-org</artifactId>
+			<version>1.8.0</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.8.2</version>
 			<scope>test</scope>
 		</dependency>
-
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
