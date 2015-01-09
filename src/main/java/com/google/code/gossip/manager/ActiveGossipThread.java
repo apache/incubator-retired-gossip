@@ -22,7 +22,6 @@ abstract public class ActiveGossipThread implements Runnable {
 
 	public ActiveGossipThread(GossipManager gossipManager) {
 		_gossipManager = gossipManager;
-		
 		_keepRunning = new AtomicBoolean(true);
 	}
 
@@ -33,9 +32,7 @@ abstract public class ActiveGossipThread implements Runnable {
 				TimeUnit.MILLISECONDS.sleep(_gossipManager.getSettings().getGossipInterval());
 				sendMembershipList(_gossipManager.getMyself(), _gossipManager.getMemberList());
 			} catch (InterruptedException e) {
-				// This membership thread was interrupted externally, shutdown
-				GossipService.debug("The ActiveGossipThread was interrupted externally, shutdown.");
-				e.printStackTrace();
+				GossipService.LOGGER.error(e);
 				_keepRunning.set(false);
 			}
 		}

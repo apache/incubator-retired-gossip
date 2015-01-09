@@ -1,11 +1,10 @@
 package com.google.code.gossip;
 
-import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Date;
+import org.apache.log4j.Logger;
 
 import com.google.code.gossip.manager.GossipManager;
 import com.google.code.gossip.manager.random.RandomGossipManager;
@@ -16,10 +15,8 @@ import com.google.code.gossip.manager.random.RandomGossipManager;
  * @author joshclemm, harmenw
  */
 public class GossipService {
-	
-	/** A instance variable holding the log level. */
-	private int _logLevel = LogLevel.INFO;
-	
+		
+  public static final Logger LOGGER = Logger.getLogger(GossipService.class);
 	private GossipManager _gossipManager;
 	
 	/**
@@ -38,9 +35,6 @@ public class GossipService {
 	 * @throws UnknownHostException
 	 */
 	public GossipService(String ipAddress, int port, int logLevel, ArrayList<GossipMember> gossipMembers, GossipSettings settings) throws InterruptedException, UnknownHostException {
-		// Set the logging level.
-		_logLevel = logLevel;
-		
 		_gossipManager = new RandomGossipManager(ipAddress, port, settings, gossipMembers);
 	}
 	
@@ -52,29 +46,6 @@ public class GossipService {
 		_gossipManager.shutdown();
 	}
 	
-	public static void error(Object message) {
-		//if (_logLevel >= LogLevel.ERROR) printMessage(message, System.err);
-		printMessage(message, System.err);
-	}
-	
-	public static void info(Object message) {
-		//if (_logLevel >= LogLevel.INFO) printMessage(message, System.out);
-		printMessage(message, System.out);
-	}
-	
-	public static void debug(Object message) {
-		//if (_logLevel >= LogLevel.DEBUG) printMessage(message, System.out);
-		printMessage(message, System.out);
-	}
-	
-	private static void printMessage(Object message, PrintStream out) {
-		/**String addressString = "unknown";
-		if (_me != null)
-			addressString = _me.getAddress();
-		out.println("[" + addressString + "][" + new Date().toString() + "] " + message);*/
-		out.println("[" + new Date().toString() + "] " + message);
-	}
-
   public GossipManager get_gossipManager() {
     return _gossipManager;
   }

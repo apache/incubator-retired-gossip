@@ -33,7 +33,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
 					// Skip myself. We don't want ourselves in the local member list.
 					if (!remoteMember.equals(gossipManager.getMyself())) {
 						if (gossipManager.getMemberList().contains(remoteMember)) {
-							GossipService.debug("The local list already contains the remote member (" + remoteMember + ").");
+						  GossipService.LOGGER.debug("The local list already contains the remote member (" + remoteMember + ").");
 							// The local memberlist contains the remote member.
 							LocalGossipMember localMember = gossipManager.getMemberList().get(gossipManager.getMemberList().indexOf(remoteMember));
 
@@ -47,13 +47,13 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
 							// TODO: Otherwise, should we inform the other when the heartbeat is already higher?
 						} else {
 							// The local list does not contain the remote member.
-							GossipService.debug("The local list does not contain the remote member (" + remoteMember + ").");
+						  GossipService.LOGGER.debug("The local list does not contain the remote member (" + remoteMember + ").");
 
 							// The remote member is either brand new, or a previously declared dead member.
 							// If its dead, check the heartbeat because it may have come back from the dead.
 							if (gossipManager.getDeadList().contains(remoteMember)) {
 								// The remote member is known here as a dead member.
-								GossipService.debug("The remote member is known here as a dead member.");
+							  GossipService.LOGGER.debug("The remote member is known here as a dead member.");
 								LocalGossipMember localDeadMember = gossipManager.getDeadList().get(gossipManager.getDeadList().indexOf(remoteMember));
 								// If a member is restarted the heartbeat will restart from 1, so we should check that here.
 								// So a member can become from the dead when it is either larger than a previous heartbeat (due to network failure)
@@ -66,7 +66,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
 								if (remoteMember.getHeartbeat() == 1 
 										|| ((localDeadMember.getHeartbeat() - remoteMember.getHeartbeat()) * -1) >  (gossipManager.getSettings().getCleanupInterval() / 1000)
 										|| remoteMember.getHeartbeat() > localDeadMember.getHeartbeat()) {
-									GossipService.debug("The remote member is back from the dead. We will remove it from the dead list and add it as a new member.");
+								  GossipService.LOGGER.debug("The remote member is back from the dead. We will remove it from the dead list and add it as a new member.");
 									// The remote member is back from the dead.
 									// Remove it from the dead list.
 									gossipManager.getDeadList().remove(localDeadMember);
@@ -74,14 +74,14 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
 									LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(), remoteMember.getPort(), remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings().getCleanupInterval());
 									gossipManager.getMemberList().add(newLocalMember);
 									newLocalMember.startTimeoutTimer();
-									GossipService.info("Removed remote member " + remoteMember.getAddress() + " from dead list and added to local member list.");
+									GossipService.LOGGER.info("Removed remote member " + remoteMember.getAddress() + " from dead list and added to local member list.");
 								}
 							} else {
 								// Brand spanking new member - welcome.
 								LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(), remoteMember.getPort(), remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings().getCleanupInterval());
 								gossipManager.getMemberList().add(newLocalMember);
 								newLocalMember.startTimeoutTimer();
-								GossipService.info("Added new remote member " + remoteMember.getAddress() + " to local member list.");
+								GossipService.LOGGER.info("Added new remote member " + remoteMember.getAddress() + " to local member list.");
 							}
 						}
 					}

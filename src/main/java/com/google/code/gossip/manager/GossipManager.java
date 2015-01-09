@@ -42,45 +42,28 @@ public abstract class GossipManager extends Thread implements NotificationListen
 	private Class<? extends ActiveGossipThread> _activeGossipThreadClass;
 	
 	public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass, Class<? extends ActiveGossipThread> activeGossipThreadClass, String address, int port, GossipSettings settings, ArrayList<GossipMember> gossipMembers) {
-		// Set the active and passive gossip thread classes to use.
 		_passiveGossipThreadClass = passiveGossipThreadClass;
 		_activeGossipThreadClass = activeGossipThreadClass;
-		
-		// Assign the GossipSettings to the instance variable.
 		_settings = settings;
-		
-		// Create the local gossip member which I am representing.
 		_me = new LocalGossipMember(address, port, 0, this, settings.getCleanupInterval());
-		
-		// Initialize the gossip members list.
 		_memberList = new ArrayList<LocalGossipMember>();
-		
-		// Initialize the dead gossip members list.
-		_deadList = new ArrayList<LocalGossipMember>();
-		
-		// Print the startup member list when the service is in debug mode.
-		GossipService.debug("Startup member list:");
-		GossipService.debug("---------------------");
-		// First print out myself.
-		GossipService.debug(_me);
-		// Copy the list with members given to the local member list and print the member when in debug mode.
+		_deadList = new ArrayList<LocalGossipMember>();		
+		GossipService.LOGGER.debug("Startup member list:");
+		GossipService.LOGGER.debug("---------------------");
+		GossipService.LOGGER.debug(_me);
+
 		for (GossipMember startupMember : gossipMembers) {
 			if (!startupMember.equals(_me)) {
 				LocalGossipMember member = new LocalGossipMember(startupMember.getHost(), startupMember.getPort(), 0, this, settings.getCleanupInterval());
 				_memberList.add(member);
-				GossipService.debug(member);
-			} else {
-				GossipService.info("Found myself in the members section of the configuration, you should not add the host itself to the members section.");
-			}
+				GossipService.LOGGER.debug(member);
+			} 
 		}
 		
-		// Set the boolean for running the gossip service to true.
 		_gossipServiceRunning = new AtomicBoolean(true);
-		
-		// Add a shutdown hook so we can see when the service has been shutdown.
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 			public void run() {
-				GossipService.info("Service has been shutdown...");
+			  GossipService.LOGGER.info("Service has been shutdown...");
 			}
 		}));
 	}
@@ -92,18 +75,11 @@ public abstract class GossipManager extends Thread implements NotificationListen
 	 */
 	@Override
 	public void handleNotification(Notification notification, Object handback) {
-
-		// Get the local gossip member associated with the notification.
 		LocalGossipMember deadMember = (LocalGossipMember) notification.getUserData();
-
-		GossipService.info("Dead member detected: " + deadMember);
-
-		// Remove the member from the active member list.
+		GossipService.LOGGER.info("Dead member detected: " + deadMember);
 		synchronized (this._memberList) {
 			this._memberList.remove(deadMember);
 		}
-
-		// Add the member to the dead member list.
 		synchronized (this._deadList) {
 			this._deadList.add(deadMember);
 		}
@@ -135,46 +111,27 @@ public abstract class GossipManager extends Thread implements NotificationListen
 	 * @throws InterruptedException
 	 */
 	public void run() {
-		// Start all timers except for me
 		for (LocalGossipMember member : _memberList) {
 			if (member != _me) {
 				member.startTimeoutTimer();
 			}
 		}
-
-		try {
-			_gossipThreadExecutor = Executors.newCachedThreadPool();
-			//  The receiver thread is a passive player that handles
-			//  merging incoming membership lists from other neighbors.
-			_gossipThreadExecutor.execute(_passiveGossipThreadClass.getConstructor(GossipManager.class).newInstance(this));
-			//  The gossiper thread is an active player that 
-			//  selects a neighbor to share its membership list
-			_gossipThreadExecutor.execute(_activeGossipThreadClass.getConstructor(GossipManager.class).newInstance(this));
-		} catch (IllegalArgumentException e1) {
-			e1.printStackTrace();
-		} catch (SecurityException e1) {
-			e1.printStackTrace();
-		} catch (InstantiationException e1) {
-			e1.printStackTrace();
-		} catch (IllegalAccessException e1) {
-			e1.printStackTrace();
-		} catch (InvocationTargetException e1) {
-			e1.printStackTrace();
-		} catch (NoSuchMethodException e1) {
-			e1.printStackTrace();
-		}
-
-		// Potentially, you could kick off more threads here
-		//  that could perform additional data synching
-		
-		GossipService.info("The GossipService is started.");
-
-		// keep the main thread around
+    _gossipThreadExecutor = Executors.newCachedThreadPool();
+    try {
+      _gossipThreadExecutor.execute(_passiveGossipThreadClass.getConstructor(GossipManager.class)
+              .newInstance(this));
+      _gossipThreadExecutor.execute(_activeGossipThreadClass.getConstructor(GossipManager.class)
+              .newInstance(this));
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+            | InvocationTargetException | NoSuchMethodException | SecurityException e1) {
+      throw new RuntimeException(e1);
+    }
+		GossipService.LOGGER.info("The GossipService is started.");
 		while(_gossipServiceRunning.get()) {
 			try {
 				TimeUnit.SECONDS.sleep(10);
 			} catch (InterruptedException e) {
-				GossipService.info("The GossipClient was interrupted.");
+			  GossipService.LOGGER.info("The GossipClient was interrupted.");
 			}
 		}
 	}

@@ -15,8 +15,6 @@ public class RandomActiveGossipThread extends SendMembersActiveGossipThread {
 
 	public RandomActiveGossipThread(GossipManager gossipManager) {
 		super(gossipManager);
-		
-		// Initialize the random used for deciding on which gossip member to gossip with.
 		_random = new Random();
 	}
 	
@@ -28,16 +26,12 @@ public class RandomActiveGossipThread extends SendMembersActiveGossipThread {
 	 */
 	protected LocalGossipMember selectPartner(ArrayList<LocalGossipMember> memberList) {
 		LocalGossipMember member = null;
-
-		// We can only send a message if there are actually other members.
 		if (memberList.size() > 0) {
-			// Get the index of the random member.
 			int randomNeighborIndex = _random.nextInt(memberList.size());
 			member = memberList.get(randomNeighborIndex);
 		} else {
-			GossipService.debug("I am alone in this world.");
+		  GossipService.LOGGER.debug("I am alone in this world.");
 		}
-
 		return member;
 	}
 

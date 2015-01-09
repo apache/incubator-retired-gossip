@@ -19,13 +19,11 @@ public class TenNodeThreeSeedTest {
   @Test
   public void test() throws UnknownHostException, InterruptedException{
     GossipSettings settings = new GossipSettings();
-    
     int seedNodes = 3;
     ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
     for (int i = 1; i < seedNodes+1; ++i) {
       startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000));
     }
-    
     ArrayList<GossipService> clients = new ArrayList<GossipService>();
     int clusterMembers = 10;
     for (int i = 1; i < clusterMembers+1; ++i) {
@@ -36,6 +34,7 @@ public class TenNodeThreeSeedTest {
     }
     Thread.sleep(10000);
     for (int i = 0; i < clusterMembers; ++i) {
+      System.out.println(clients.get(i).get_gossipManager().getMemberList());
       Assert.assertEquals(9, clients.get(i).get_gossipManager().getMemberList().size());
     }
     for (int i = 0; i < clusterMembers; ++i) {

@@ -25,7 +25,7 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 	 * incremented our own heartbeat.
 	 */
 	protected void sendMembershipList(LocalGossipMember me, ArrayList<LocalGossipMember> memberList) {
-		GossipService.debug("Send sendMembershipList() is called.");
+	  GossipService.LOGGER.debug("Send sendMembershipList() is called.");
 
 		// Increase the heartbeat of myself by 1.
 		me.setHeartbeat(me.getHeartbeat() + 1);
@@ -39,21 +39,21 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 					
 					// Create a StringBuffer for the JSON message.
 					JSONArray jsonArray = new JSONArray();
-					GossipService.debug("Sending memberlist to " + dest + ":" + member.getPort());
-					GossipService.debug("---------------------");
+					GossipService.LOGGER.debug("Sending memberlist to " + dest + ":" + member.getPort());
+					GossipService.LOGGER.debug("---------------------");
 					
 					// First write myself, append the JSON representation of the member to the buffer.
 					jsonArray.put(me.toJSONObject());
-					GossipService.debug(me);
+					GossipService.LOGGER.debug(me);
 					
 					// Then write the others.
 					for (int i=0; i<memberList.size(); i++) {
 						LocalGossipMember other = memberList.get(i);
 						// Append the JSON representation of the member to the buffer.
 						jsonArray.put(other.toJSONObject());
-						GossipService.debug(other);
+						GossipService.LOGGER.debug(other);
 					}
-					GossipService.debug("---------------------");
+					GossipService.LOGGER.debug("---------------------");
 					
 					// Write the objects to a byte array.
 					byte[] json_bytes = jsonArray.toString().getBytes();
@@ -70,7 +70,7 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 						length_bytes[3] =(byte)( (packet_length << 24) >> 24 );
 						
 						
-						GossipService.debug("Sending message ("+packet_length+" bytes): " + jsonArray.toString());
+						GossipService.LOGGER.debug("Sending message ("+packet_length+" bytes): " + jsonArray.toString());
 						
             ByteBuffer byteBuffer = ByteBuffer.allocate(4 + json_bytes.length);
 						byteBuffer.put(length_bytes);
@@ -82,7 +82,7 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 						socket.send(datagramPacket);
 						socket.close();
 					} else {
-						GossipService.error("The length of the to be send message is too large (" + packet_length + " > " + GossipManager.MAX_PACKET_SIZE + ").");
+					  GossipService.LOGGER.error("The length of the to be send message is too large (" + packet_length + " > " + GossipManager.MAX_PACKET_SIZE + ").");
 					}
 				}
 
