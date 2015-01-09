@@ -74,4 +74,14 @@ public class GossipService {
 		out.println("[" + addressString + "][" + new Date().toString() + "] " + message);*/
 		out.println("[" + new Date().toString() + "] " + message);
 	}
+
+  public GossipManager get_gossipManager() {
+    return _gossipManager;
+  }
+
+  public void set_gossipManager(GossipManager _gossipManager) {
+    this._gossipManager = _gossipManager;
+  }
+	
+	
 }
