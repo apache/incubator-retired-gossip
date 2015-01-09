@@ -3,6 +3,8 @@ package com.google.code.gossip.manager;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,17 +39,22 @@ abstract public class PassiveGossipThread implements Runnable {
 		
 		// Start the service on the given port number.
 		try {
-			_server = new DatagramSocket(_gossipManager.getMyself().getPort());
+			//_server = new DatagramSocket( _gossipManager.getMyself().getPort());
+		  
+		  SocketAddress socketAddress = new InetSocketAddress(_gossipManager.getMyself().getHost(), _gossipManager.getMyself().getPort());
+		  _server = new DatagramSocket(socketAddress);
 			
 			// The server successfully started on the current port.
 			GossipService.info("Gossip service successfully initialized on port " + _gossipManager.getMyself().getPort());
 			GossipService.debug("I am " + _gossipManager.getMyself());
 		} catch (SocketException ex) {
-			// The port is probably already in use.
+			System.err.println(ex);
 			_server = null;
 			// Let's communicate this to the user.
+			/*
 			GossipService.error("Error while starting the gossip service on port " + _gossipManager.getMyself().getPort() + ": " + ex.getMessage());
-			System.exit(-1);
+			System.exit(-1);*/
+			throw new RuntimeException(ex);
 		}
 		
 		_keepRunning = new AtomicBoolean(true);
