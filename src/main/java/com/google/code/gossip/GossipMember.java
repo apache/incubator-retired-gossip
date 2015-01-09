@@ -131,8 +131,7 @@ public abstract class GossipMember {
 			jsonObject.put(JSON_HEARTBEAT, _heartbeat);
 			return jsonObject;
 		} catch (JSONException e) {
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
-		return null;
 	}
 }
