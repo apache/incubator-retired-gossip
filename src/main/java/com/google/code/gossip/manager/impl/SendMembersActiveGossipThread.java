@@ -13,7 +13,6 @@ import com.google.code.gossip.GossipService;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.manager.ActiveGossipThread;
 import com.google.code.gossip.manager.GossipManager;
-import com.sun.xml.internal.ws.util.ByteArrayBuffer;
 
 abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 
@@ -73,21 +72,10 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 						
 						GossipService.debug("Sending message ("+packet_length+" bytes): " + jsonArray.toString());
 						
-						
-						ByteArrayBuffer byteBuffer = new ByteArrayBuffer();
-						// Write the first 4 bytes with the length of the rest of the packet.
-						byteBuffer.write(length_bytes);
-						// Write the json data.
-						byteBuffer.write(json_bytes);
-						
-						byte[] buf = byteBuffer.getRawData();
-						
-						/*
             ByteBuffer byteBuffer = ByteBuffer.allocate(4 + json_bytes.length);
 						byteBuffer.put(length_bytes);
 						byteBuffer.put(json_bytes);
 						byte[] buf = byteBuffer.array();
-						*/
 						
 						DatagramSocket socket = new DatagramSocket();
 						DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, member.getPort());
