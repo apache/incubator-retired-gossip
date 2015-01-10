@@ -25,17 +25,17 @@ public class TenNodeThreeSeedTest {
       startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000));
     }
     ArrayList<GossipService> clients = new ArrayList<GossipService>();
-    int clusterMembers = 10;
+    int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
       GossipService gossipService = new GossipService("127.0.0."+i, 2000, LogLevel.DEBUG, startupMembers, settings);
       clients.add(gossipService);
       gossipService.start();
-      Thread.sleep(settings.getCleanupInterval() + 1000);
+      Thread.sleep(1000);
     }
     Thread.sleep(10000);
     for (int i = 0; i < clusterMembers; ++i) {
       System.out.println(clients.get(i).get_gossipManager().getMemberList());
-      Assert.assertEquals(9, clients.get(i).get_gossipManager().getMemberList().size());
+      Assert.assertEquals(4, clients.get(i).get_gossipManager().getMemberList().size());
     }
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();
