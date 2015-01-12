@@ -90,7 +90,7 @@ abstract public class PassiveGossipThread implements Runnable {
                 RemoteGossipMember member = new RemoteGossipMember(
                         memberJSONObject.getString(GossipMember.JSON_HOST),
                         memberJSONObject.getInt(GossipMember.JSON_PORT),
-                        memberJSONObject.getString(GossipMember.JSON_PORT),
+                        memberJSONObject.getString(GossipMember.JSON_ID),
                         memberJSONObject.getInt(GossipMember.JSON_HEARTBEAT));
                 GossipService.LOGGER.debug(member.toString());
                 // This is the first member found, so this should be the member who is communicating

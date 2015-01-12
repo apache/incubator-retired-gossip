@@ -40,8 +40,8 @@ public abstract class GossipMember {
 	public GossipMember(String host, int port, String id, int heartbeat) {
 		_host = host;
 		_port = port;
-		_heartbeat = heartbeat;
 		_id = id;
+		_heartbeat = heartbeat;
 	}
 	
 	/**
