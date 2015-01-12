@@ -25,7 +25,7 @@ public class GossipService {
 	 * @throws UnknownHostException
 	 */
 	public GossipService(StartupSettings startupSettings) throws InterruptedException, UnknownHostException {
-		this(InetAddress.getLocalHost().getHostAddress(), startupSettings.getPort(), startupSettings.getLogLevel(), startupSettings.getGossipMembers(), startupSettings.getGossipSettings());
+		this(InetAddress.getLocalHost().getHostAddress(), startupSettings.getPort(), "", startupSettings.getLogLevel(), startupSettings.getGossipMembers(), startupSettings.getGossipSettings());
 	}
 
 	/**
@@ -34,8 +34,8 @@ public class GossipService {
 	 * @throws InterruptedException
 	 * @throws UnknownHostException
 	 */
-	public GossipService(String ipAddress, int port, int logLevel, ArrayList<GossipMember> gossipMembers, GossipSettings settings) throws InterruptedException, UnknownHostException {
-		_gossipManager = new RandomGossipManager(ipAddress, port, settings, gossipMembers);
+	public GossipService(String ipAddress, int port, String id, int logLevel, ArrayList<GossipMember> gossipMembers, GossipSettings settings) throws InterruptedException, UnknownHostException {
+		_gossipManager = new RandomGossipManager(ipAddress, port, id, settings, gossipMembers);
 	}
 	
 	public void start() {

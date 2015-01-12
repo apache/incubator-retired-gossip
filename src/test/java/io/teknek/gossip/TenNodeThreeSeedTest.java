@@ -22,12 +22,12 @@ public class TenNodeThreeSeedTest {
     int seedNodes = 3;
     ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
     for (int i = 1; i < seedNodes+1; ++i) {
-      startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000));
+      startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i+""));
     }
     ArrayList<GossipService> clients = new ArrayList<GossipService>();
     int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
-      GossipService gossipService = new GossipService("127.0.0."+i, 2000, LogLevel.DEBUG, startupMembers, settings);
+      GossipService gossipService = new GossipService("127.0.0."+i, 2000, i+"", LogLevel.DEBUG, startupMembers, settings);
       clients.add(gossipService);
       gossipService.start();
       Thread.sleep(1000);

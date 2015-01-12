@@ -17,6 +17,8 @@ public abstract class GossipMember {
 	public static final String JSON_PORT = "port";
 	/** The JSON key for the heartbeat property. */
 	public static final String JSON_HEARTBEAT = "heartbeat";
+	
+	public static final String JSON_ID = "id";
 
 	/** The hostname or IP address of this gossip member. */
 	protected String _host;
@@ -27,16 +29,19 @@ public abstract class GossipMember {
 	/** The current heartbeat of this gossip member. */
 	protected int _heartbeat;
 	
+	protected String _id;
+	
 	/**
 	 * Constructor.
 	 * @param host The hostname or IP address.
 	 * @param port The port number.
 	 * @param heartbeat The current heartbeat.
 	 */
-	public GossipMember(String host, int port, int heartbeat) {
+	public GossipMember(String host, int port, String id, int heartbeat) {
 		_host = host;
 		_port = port;
 		_heartbeat = heartbeat;
+		_id = id;
 	}
 	
 	/**
@@ -78,14 +83,20 @@ public abstract class GossipMember {
 	public void setHeartbeat(int heartbeat) {
 		this._heartbeat = heartbeat;
 	}
+	
+	
+	public String getId() {
+    return _id;
+  }
 
-	/**
-	 * @see java.lang.Object#toString()
-	 */
+  public void setId(String _id) {
+    this._id = _id;
+  }
+
 	public String toString() {
-		return "Member [address=" + getAddress() + ", heartbeat=" + _heartbeat + "]";
+		return "Member [address=" + getAddress() + ", id=" + _id + ", heartbeat=" + _heartbeat + "]";
 	}
-
+	  
 	/**
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -128,6 +139,7 @@ public abstract class GossipMember {
 			JSONObject jsonObject = new JSONObject();
 			jsonObject.put(JSON_HOST, _host);
 			jsonObject.put(JSON_PORT, _port);
+			jsonObject.put(JSON_ID, _id);
 			jsonObject.put(JSON_HEARTBEAT, _heartbeat);
 			return jsonObject;
 		} catch (JSONException e) {

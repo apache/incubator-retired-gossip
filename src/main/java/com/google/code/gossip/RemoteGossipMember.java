@@ -13,8 +13,8 @@ public class RemoteGossipMember extends GossipMember {
 	 * @param port The port number.
 	 * @param heartbeat The current heartbeat.
 	 */
-	public RemoteGossipMember(String hostname, int port, int heartbeat) {
-		super(hostname, port, heartbeat);
+	public RemoteGossipMember(String hostname, int port, String id, int heartbeat) {
+		super(hostname, port, id, heartbeat);
 	}
 	
 	/**
@@ -22,7 +22,7 @@ public class RemoteGossipMember extends GossipMember {
 	 * @param host The hostname or IP address.
 	 * @param port The port number.
 	 */
-	public RemoteGossipMember(String hostname, int port) {
-		super(hostname, port, 0);
+	public RemoteGossipMember(String hostname, int port, String id) {
+		super(hostname, port, id, 0);
 	}
 }

@@ -51,13 +51,13 @@ public class GossipExample extends Thread {
 			// Create the gossip members and put them in a list and give them a port number starting with 2000.
 			ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
 			for (int i=0; i<NUMBER_OF_CLIENTS; ++i) {
-				startupMembers.add(new RemoteGossipMember(myIpAddress, 2000+i));
+				startupMembers.add(new RemoteGossipMember(myIpAddress, 2000+i, ""));
 			}
 			
 			// Lets start the gossip clients.
 			// Start the clients, waiting cleaning-interval + 1 second between them which will show the dead list handling.
 			for (GossipMember member : startupMembers) {
-				GossipService gossipService = new GossipService(myIpAddress, member.getPort(), LogLevel.DEBUG, startupMembers, settings);
+				GossipService gossipService = new GossipService(myIpAddress, member.getPort(), "", LogLevel.DEBUG, startupMembers, settings);
 				clients.add(gossipService);
 				gossipService.start();
 				sleep(settings.getCleanupInterval() + 1000);
