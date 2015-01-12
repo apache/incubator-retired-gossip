@@ -71,14 +71,14 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
 									// Remove it from the dead list.
 									gossipManager.getDeadList().remove(localDeadMember);
 									// Add it as a new member and add it to the member list.
-									LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(), remoteMember.getPort(), remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings().getCleanupInterval());
+									LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(), remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings().getCleanupInterval());
 									gossipManager.getMemberList().add(newLocalMember);
 									newLocalMember.startTimeoutTimer();
 									GossipService.LOGGER.info("Removed remote member " + remoteMember.getAddress() + " from dead list and added to local member list.");
 								}
 							} else {
 								// Brand spanking new member - welcome.
-								LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(), remoteMember.getPort(), remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings().getCleanupInterval());
+								LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(), remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings().getCleanupInterval());
 								gossipManager.getMemberList().add(newLocalMember);
 								newLocalMember.startTimeoutTimer();
 								GossipService.LOGGER.info("Added new remote member " + remoteMember.getAddress() + " to local member list.");

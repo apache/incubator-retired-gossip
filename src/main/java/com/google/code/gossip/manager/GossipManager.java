@@ -41,20 +41,20 @@ public abstract class GossipManager extends Thread implements NotificationListen
 	
 	private Class<? extends ActiveGossipThread> _activeGossipThreadClass;
 	
-	public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass, Class<? extends ActiveGossipThread> activeGossipThreadClass, String address, int port, GossipSettings settings, ArrayList<GossipMember> gossipMembers) {
+  public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
+          Class<? extends ActiveGossipThread> activeGossipThreadClass, String address, int port,
+          String id, GossipSettings settings, ArrayList<GossipMember> gossipMembers) {
 		_passiveGossipThreadClass = passiveGossipThreadClass;
 		_activeGossipThreadClass = activeGossipThreadClass;
 		_settings = settings;
-		_me = new LocalGossipMember(address, port, 0, this, settings.getCleanupInterval());
+		_me = new LocalGossipMember(address, port, id, 0, this, settings.getCleanupInterval());
 		_memberList = new ArrayList<LocalGossipMember>();
 		_deadList = new ArrayList<LocalGossipMember>();		
-		GossipService.LOGGER.debug("Startup member list:");
-		GossipService.LOGGER.debug("---------------------");
-		GossipService.LOGGER.debug(_me);
-
 		for (GossipMember startupMember : gossipMembers) {
 			if (!startupMember.equals(_me)) {
-				LocalGossipMember member = new LocalGossipMember(startupMember.getHost(), startupMember.getPort(), 0, this, settings.getCleanupInterval());
+        LocalGossipMember member = new LocalGossipMember(startupMember.getHost(),
+                startupMember.getPort(), startupMember.getId(), 0, this,
+                settings.getCleanupInterval());
 				_memberList.add(member);
 				GossipService.LOGGER.debug(member);
 			} 

@@ -147,7 +147,7 @@ public class StartupSettings {
 		JSONArray membersJSON = jsonObject.getJSONArray("members");
 		for (int i=0; i<membersJSON.length(); i++) {
 			JSONObject memberJSON = membersJSON.getJSONObject(i);
-			RemoteGossipMember member = new RemoteGossipMember(memberJSON.getString("host"), memberJSON.getInt("port"));
+			RemoteGossipMember member = new RemoteGossipMember(memberJSON.getString("host"), memberJSON.getInt("port"), "");
 			settings.addGossipMember(member);
 			System.out.print(member.getAddress());
 			if (i < (membersJSON.length() - 1))

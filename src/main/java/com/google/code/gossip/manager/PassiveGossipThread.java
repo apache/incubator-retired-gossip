@@ -86,10 +86,11 @@ abstract public class PassiveGossipThread implements Runnable {
             JSONArray jsonArray = new JSONArray(receivedMessage);
             for (int i = 0; i < jsonArray.length(); i++) {
               JSONObject memberJSONObject = jsonArray.getJSONObject(i);
-              if (memberJSONObject.length() == 3) {
+              if (memberJSONObject.length() == 4) {
                 RemoteGossipMember member = new RemoteGossipMember(
                         memberJSONObject.getString(GossipMember.JSON_HOST),
                         memberJSONObject.getInt(GossipMember.JSON_PORT),
+                        memberJSONObject.getString(GossipMember.JSON_ID),
                         memberJSONObject.getInt(GossipMember.JSON_HEARTBEAT));
                 GossipService.LOGGER.debug(member.toString());
                 // This is the first member found, so this should be the member who is communicating
@@ -100,7 +101,7 @@ abstract public class PassiveGossipThread implements Runnable {
                 remoteGossipMembers.add(member);
               } else {
                 GossipService.LOGGER
-                        .error("The received member object does not contain 3 objects:\n"
+                        .error("The received member object does not contain 4 objects:\n"
                                 + memberJSONObject.toString());
               }
 
