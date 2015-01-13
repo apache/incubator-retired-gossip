@@ -129,7 +129,8 @@ public abstract class GossipManager extends Thread implements NotificationListen
 		GossipService.LOGGER.info("The GossipService is started.");
 		while(_gossipServiceRunning.get()) {
 			try {
-				TimeUnit.SECONDS.sleep(10);
+			  //TODO 
+				TimeUnit.MILLISECONDS.sleep(1);
 			} catch (InterruptedException e) {
 			  GossipService.LOGGER.info("The GossipClient was interrupted.");
 			}
