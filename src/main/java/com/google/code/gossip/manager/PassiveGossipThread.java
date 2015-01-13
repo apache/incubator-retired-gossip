@@ -125,8 +125,13 @@ abstract public class PassiveGossipThread implements Runnable {
         _keepRunning.set(false);
       }
     }
+    shutdown();
   }
 	
+  public void shutdown(){
+    _server.close();
+  }
+  
 	/**
 	 * Abstract method for merging the local and remote list.
 	 * @param gossipManager The GossipManager for retrieving the local members and dead members list.

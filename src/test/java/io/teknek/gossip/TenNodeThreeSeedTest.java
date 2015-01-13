@@ -18,6 +18,15 @@ public class TenNodeThreeSeedTest {
   
   @Test
   public void test() throws UnknownHostException, InterruptedException{
+    abc();
+  }
+  
+  @Test
+  public void testAgain() throws UnknownHostException, InterruptedException{
+    abc();
+  }
+  
+  public void abc() throws InterruptedException, UnknownHostException{
     GossipSettings settings = new GossipSettings();
     int seedNodes = 3;
     ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
@@ -39,6 +48,6 @@ public class TenNodeThreeSeedTest {
     }
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();
-    }
+    } 
   }
 }

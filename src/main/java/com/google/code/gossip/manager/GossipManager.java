@@ -38,8 +38,10 @@ public abstract class GossipManager extends Thread implements NotificationListen
 	private ExecutorService _gossipThreadExecutor;
 	
 	private Class<? extends PassiveGossipThread> _passiveGossipThreadClass;
+	private PassiveGossipThread passiveGossipThread; 
 	
 	private Class<? extends ActiveGossipThread> _activeGossipThreadClass;
+	private ActiveGossipThread activeGossipThread;
 	
   public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
           Class<? extends ActiveGossipThread> activeGossipThreadClass, String address, int port,
@@ -118,10 +120,10 @@ public abstract class GossipManager extends Thread implements NotificationListen
 		}
     _gossipThreadExecutor = Executors.newCachedThreadPool();
     try {
-      _gossipThreadExecutor.execute(_passiveGossipThreadClass.getConstructor(GossipManager.class)
-              .newInstance(this));
-      _gossipThreadExecutor.execute(_activeGossipThreadClass.getConstructor(GossipManager.class)
-              .newInstance(this));
+      passiveGossipThread = _passiveGossipThreadClass.getConstructor(GossipManager.class).newInstance(this);
+      _gossipThreadExecutor.execute(passiveGossipThread);
+      activeGossipThread = _activeGossipThreadClass.getConstructor(GossipManager.class).newInstance(this);
+      _gossipThreadExecutor.execute(activeGossipThread);
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
             | InvocationTargetException | NoSuchMethodException | SecurityException e1) {
       throw new RuntimeException(e1);
@@ -142,6 +144,14 @@ public abstract class GossipManager extends Thread implements NotificationListen
 	 */
 	public void shutdown() {
 		_gossipThreadExecutor.shutdown();
+		passiveGossipThread.shutdown();
+		activeGossipThread.shutdown();
+		try {
+      boolean result = _gossipThreadExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+      System.err.println("Terminate retuned " + result);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
 		_gossipServiceRunning.set(false);
 	}
 }

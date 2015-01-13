@@ -18,7 +18,7 @@ abstract public class ActiveGossipThread implements Runnable {
 	
 	private GossipManager _gossipManager;
 	
-	private AtomicBoolean _keepRunning;
+	private final AtomicBoolean _keepRunning;
 
 	public ActiveGossipThread(GossipManager gossipManager) {
 		_gossipManager = gossipManager;
@@ -36,10 +36,12 @@ abstract public class ActiveGossipThread implements Runnable {
 				_keepRunning.set(false);
 			}
 		}
-
-		_keepRunning = null;
+		shutdown();
 	}
 	
+	public void shutdown(){
+	  _keepRunning.set(false);
+	}
 	/**
 	 * Performs the sending of the membership list, after we have
 	 * incremented our own heartbeat.
