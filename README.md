@@ -41,5 +41,5 @@ You can get this software from maven central.
     <dependency>  
          <groupId>io.teknek</groupId>
         <artifactId>gossip</artifactId>
-        <version>0.0.0</version>
+        <version>${pick_the_latest_version}</version>
     </dependency>
