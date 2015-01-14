@@ -20,7 +20,8 @@ Here we start five gossip processes and check that they discover each other. (No
     ArrayList<GossipService> clients = new ArrayList<GossipService>();
     int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
-      GossipService gossipService = new GossipService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG, startupMembers, settings);
+      GossipService gossipService = new GossipService("127.0.0." + i, 2000, i + "", 
+        LogLevel.DEBUG, startupMembers, settings);
       clients.add(gossipService);
       gossipService.start();
     }
@@ -31,3 +32,14 @@ Later we can check that the nodes discover each other
     for (int i = 0; i < clusterMembers; ++i) {
       Assert.assertEquals(4, clients.get(i).get_gossipManager().getMemberList().size());
     }
+
+Maven
+------
+
+You can get this software from maven central.
+
+    <dependency>  
+         <groupId>io.teknek</groupId>
+        <artifactId>gossip</artifactId>
+        <version>0.0.0</version>
+    </dependency>
