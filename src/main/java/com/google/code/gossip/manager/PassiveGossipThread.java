@@ -18,36 +18,36 @@ import com.google.code.gossip.GossipService;
 import com.google.code.gossip.RemoteGossipMember;
 
 /**
- * [The passive thread: reply to incoming gossip request.]
- * This class handles the passive cycle, where this client
- * has received an incoming message.  For now, this message
- * is always the membership list, but if you choose to gossip
- * additional information, you will need some logic to determine
- * the incoming message.
+ * [The passive thread: reply to incoming gossip request.] This class handles the passive cycle,
+ * where this client has received an incoming message. For now, this message is always the
+ * membership list, but if you choose to gossip additional information, you will need some logic to
+ * determine the incoming message.
  */
 abstract public class PassiveGossipThread implements Runnable {
-	
-	/** The socket used for the passive thread of the gossip service. */
-	private DatagramSocket _server;
-	
-	private GossipManager _gossipManager;
 
-	private AtomicBoolean _keepRunning;
+  /** The socket used for the passive thread of the gossip service. */
+  private DatagramSocket _server;
 
-	public PassiveGossipThread(GossipManager gossipManager) {
-		_gossipManager = gossipManager;
-		try {
-		  SocketAddress socketAddress = new InetSocketAddress(_gossipManager.getMyself().getHost(), _gossipManager.getMyself().getPort());
-		  _server = new DatagramSocket(socketAddress);
-		  GossipService.LOGGER.info("Gossip service successfully initialized on port " + _gossipManager.getMyself().getPort());
-		  GossipService.LOGGER.debug("I am " + _gossipManager.getMyself());
-		} catch (SocketException ex) {
-		  GossipService.LOGGER.error(ex);
-			_server = null;
-			throw new RuntimeException(ex);
-		}
-		_keepRunning = new AtomicBoolean(true);
-	}
+  private GossipManager _gossipManager;
+
+  private AtomicBoolean _keepRunning;
+
+  public PassiveGossipThread(GossipManager gossipManager) {
+    _gossipManager = gossipManager;
+    try {
+      SocketAddress socketAddress = new InetSocketAddress(_gossipManager.getMyself().getHost(),
+              _gossipManager.getMyself().getPort());
+      _server = new DatagramSocket(socketAddress);
+      GossipService.LOGGER.info("Gossip service successfully initialized on port "
+              + _gossipManager.getMyself().getPort());
+      GossipService.LOGGER.debug("I am " + _gossipManager.getMyself());
+    } catch (SocketException ex) {
+      GossipService.LOGGER.error(ex);
+      _server = null;
+      throw new RuntimeException(ex);
+    }
+    _keepRunning = new AtomicBoolean(true);
+  }
 
   @Override
   public void run() {
@@ -127,16 +127,22 @@ abstract public class PassiveGossipThread implements Runnable {
     }
     shutdown();
   }
-	
-  public void shutdown(){
+
+  public void shutdown() {
     _server.close();
   }
-  
-	/**
-	 * Abstract method for merging the local and remote list.
-	 * @param gossipManager The GossipManager for retrieving the local members and dead members list.
-	 * @param senderMember The member who is sending this list, this could be used to send a response if the remote list contains out-dated information.
-	 * @param remoteList The list of members known at the remote side.
-	 */
-	abstract protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember, ArrayList<GossipMember> remoteList);
+
+  /**
+   * Abstract method for merging the local and remote list.
+   * 
+   * @param gossipManager
+   *          The GossipManager for retrieving the local members and dead members list.
+   * @param senderMember
+   *          The member who is sending this list, this could be used to send a response if the
+   *          remote list contains out-dated information.
+   * @param remoteList
+   *          The list of members known at the remote side.
+   */
+  abstract protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
+          ArrayList<GossipMember> remoteList);
 }
