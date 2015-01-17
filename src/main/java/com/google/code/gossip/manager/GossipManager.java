@@ -10,12 +10,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.management.Notification;
 import javax.management.NotificationListener;
 
+import org.apache.log4j.Logger;
+
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
 
 public abstract class GossipManager extends Thread implements NotificationListener {
+  
+  public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
+  
   /** The maximal number of bytes the packet with the GOSSIP may be. (Default is 100 kb) */
   public static final int MAX_PACKET_SIZE = 102400;
 
@@ -153,9 +158,11 @@ public abstract class GossipManager extends Thread implements NotificationListen
     activeGossipThread.shutdown();
     try {
       boolean result = _gossipThreadExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
-      System.err.println("Terminate retuned " + result);
+      if (result == false){
+        LOGGER.error("executor shutdown timed out");
+      }
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      LOGGER.error(e);
     }
     _gossipServiceRunning.set(false);
   }
