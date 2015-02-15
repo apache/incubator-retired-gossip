@@ -2,6 +2,10 @@ package com.google.code.gossip.manager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -20,34 +24,16 @@ import com.google.code.gossip.LocalGossipMember;
 public abstract class GossipManager extends Thread implements NotificationListener {
   
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
-  
-  /** The maximal number of bytes the packet with the GOSSIP may be. (Default is 100 kb) */
   public static final int MAX_PACKET_SIZE = 102400;
 
-  /** The list of members which are in the gossip group (not including myself). */
-  private ArrayList<LocalGossipMember> _memberList;
-
-  /** The list of members which are known to be dead. */
-  private ArrayList<LocalGossipMember> _deadList;
-
-  /** The member I am representing. */
+  private ConcurrentSkipListMap<LocalGossipMember,String> members;
   private LocalGossipMember _me;
-
-  /** The settings for gossiping. */
   private GossipSettings _settings;
-
-  /** A boolean whether the gossip service should keep running. */
   private AtomicBoolean _gossipServiceRunning;
-
-  /** A ExecutorService used for executing the active and passive gossip threads. */
   private ExecutorService _gossipThreadExecutor;
-
   private Class<? extends PassiveGossipThread> _passiveGossipThreadClass;
-
   private PassiveGossipThread passiveGossipThread;
-
   private Class<? extends ActiveGossipThread> _activeGossipThreadClass;
-
   private ActiveGossipThread activeGossipThread;
 
   public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
@@ -57,14 +43,13 @@ public abstract class GossipManager extends Thread implements NotificationListen
     _activeGossipThreadClass = activeGossipThreadClass;
     _settings = settings;
     _me = new LocalGossipMember(address, port, id, 0, this, settings.getCleanupInterval());
-    _memberList = new ArrayList<LocalGossipMember>();
-    _deadList = new ArrayList<LocalGossipMember>();
+    members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(_me)) {
         LocalGossipMember member = new LocalGossipMember(startupMember.getHost(),
                 startupMember.getPort(), startupMember.getId(), 0, this,
                 settings.getCleanupInterval());
-        _memberList.add(member);
+        members.put(member, "UP");
         GossipService.LOGGER.debug(member);
       }
     }
@@ -85,33 +70,39 @@ public abstract class GossipManager extends Thread implements NotificationListen
   public void handleNotification(Notification notification, Object handback) {
     LocalGossipMember deadMember = (LocalGossipMember) notification.getUserData();
     GossipService.LOGGER.info("Dead member detected: " + deadMember);
-    synchronized (this._memberList) {
-      this._memberList.remove(deadMember);
-    }
-    synchronized (this._deadList) {
-      this._deadList.add(deadMember);
-    }
+    members.put(deadMember, "DOWN");
   }
 
   public GossipSettings getSettings() {
     return _settings;
   }
 
-  /**
-   * Get a clone of the memberlist.
-   * 
-   * @return
-   */
-  public ArrayList<LocalGossipMember> getMemberList() {
-    return _memberList;
+  public List<LocalGossipMember> getMemberList() {
+    List<LocalGossipMember> up = new ArrayList<>();
+    for (Entry<LocalGossipMember, String> entry : members.entrySet()){
+      if ("UP".equals(entry.getValue())){
+        up.add(entry.getKey());
+      }
+    }
+    return Collections.unmodifiableList(up);
   }
 
   public LocalGossipMember getMyself() {
     return _me;
   }
+  
+  public void createOrRevivieMember(LocalGossipMember m){
+    members.put(m, "UP");
+  }
 
-  public ArrayList<LocalGossipMember> getDeadList() {
-    return _deadList;
+  public List<LocalGossipMember> getDeadList() {
+    List<LocalGossipMember> up = new ArrayList<>();
+    for (Entry<LocalGossipMember, String> entry : members.entrySet()){
+      if ("DOWN".equals(entry.getValue())){
+        up.add(entry.getKey());
+      }
+    }
+    return Collections.unmodifiableList(up);
   }
 
   /**
@@ -121,7 +112,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
    * @throws InterruptedException
    */
   public void run() {
-    for (LocalGossipMember member : _memberList) {
+    for (LocalGossipMember member : members.keySet()) {
       if (member != _me) {
         member.startTimeoutTimer();
       }

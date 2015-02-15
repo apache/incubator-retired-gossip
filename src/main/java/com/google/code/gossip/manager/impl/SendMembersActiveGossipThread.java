@@ -5,7 +5,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.List;
 
 import org.json.JSONArray;
 
@@ -23,7 +23,7 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
   /**
    * Performs the sending of the membership list, after we have incremented our own heartbeat.
    */
-  protected void sendMembershipList(LocalGossipMember me, ArrayList<LocalGossipMember> memberList) {
+  protected void sendMembershipList(LocalGossipMember me, List<LocalGossipMember> memberList) {
     GossipService.LOGGER.debug("Send sendMembershipList() is called.");
     me.setHeartbeat(me.getHeartbeat() + 1);
     synchronized (memberList) {

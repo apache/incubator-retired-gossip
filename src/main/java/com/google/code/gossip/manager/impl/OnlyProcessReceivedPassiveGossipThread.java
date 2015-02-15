@@ -1,6 +1,6 @@
 package com.google.code.gossip.manager.impl;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
@@ -23,35 +23,21 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
    * @param remoteList
    */
   protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
-          ArrayList<GossipMember> remoteList) {
-
-    synchronized (gossipManager.getDeadList()) {
-
-      synchronized (gossipManager.getMemberList()) {
+          List<GossipMember> remoteList) {
 
         for (GossipMember remoteMember : remoteList) {
           // Skip myself. We don't want ourselves in the local member list.
-          if (!remoteMember.equals(gossipManager.getMyself())) {
+          if (remoteMember.equals(gossipManager.getMyself())) {
+            continue;
+          }
             if (gossipManager.getMemberList().contains(remoteMember)) {
-              GossipService.LOGGER.debug("The local list already contains the remote member ("
-                      + remoteMember + ").");
-              // The local memberlist contains the remote member.
               LocalGossipMember localMember = gossipManager.getMemberList().get(
                       gossipManager.getMemberList().indexOf(remoteMember));
-
-              // Let's synchronize it's heartbeat.
               if (remoteMember.getHeartbeat() > localMember.getHeartbeat()) {
-                // update local list with latest heartbeat
                 localMember.setHeartbeat(remoteMember.getHeartbeat());
-                // and reset the timeout of that member
                 localMember.resetTimeoutTimer();
               }
-              // TODO: Otherwise, should we inform the other when the heartbeat is already higher?
             } else {
-              // The local list does not contain the remote member.
-              GossipService.LOGGER.debug("The local list does not contain the remote member ("
-                      + remoteMember + ").");
-
               // The remote member is either brand new, or a previously declared dead member.
               // If its dead, check the heartbeat because it may have come back from the dead.
               if (gossipManager.getDeadList().contains(remoteMember)) {
@@ -80,13 +66,14 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
                           .debug("The remote member is back from the dead. We will remove it from the dead list and add it as a new member.");
                   // The remote member is back from the dead.
                   // Remove it from the dead list.
-                  gossipManager.getDeadList().remove(localDeadMember);
+                  //gossipManager.getDeadList().remove(localDeadMember);
                   // Add it as a new member and add it to the member list.
                   LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(),
                           remoteMember.getPort(), remoteMember.getId(),
                           remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings()
                                   .getCleanupInterval());
-                  gossipManager.getMemberList().add(newLocalMember);
+                  //gossipManager.getMemberList().add(newLocalMember);
+                  gossipManager.createOrRevivieMember(newLocalMember);
                   newLocalMember.startTimeoutTimer();
                   GossipService.LOGGER.info("Removed remote member " + remoteMember.getAddress()
                           + " from dead list and added to local member list.");
@@ -96,7 +83,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
                 LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(),
                         remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(),
                         gossipManager, gossipManager.getSettings().getCleanupInterval());
-                gossipManager.getMemberList().add(newLocalMember);
+                gossipManager.createOrRevivieMember(newLocalMember);
                 newLocalMember.startTimeoutTimer();
                 GossipService.LOGGER.info("Added new remote member " + remoteMember.getAddress()
                         + " to local member list.");
@@ -104,8 +91,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
             }
           }
         }
-      }
-    }
-  }
+
+  
 
 }

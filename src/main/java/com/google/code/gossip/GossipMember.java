@@ -10,25 +10,15 @@ import org.json.JSONObject;
  * 
  * @author joshclemm, harmenw
  */
-public abstract class GossipMember {
-	/** The JSON key for the host property. */
+public abstract class GossipMember implements Comparable<GossipMember>{
+	
 	public static final String JSON_HOST = "host";
-	/** The JSON key for the port property. */
 	public static final String JSON_PORT = "port";
-	/** The JSON key for the heartbeat property. */
 	public static final String JSON_HEARTBEAT = "heartbeat";
-	
 	public static final String JSON_ID = "id";
-
-	/** The hostname or IP address of this gossip member. */
 	protected String _host;
-	
-	/** The port number of this gossip member. */
 	protected int _port;
-
-	/** The current heartbeat of this gossip member. */
 	protected int _heartbeat;
-	
 	protected String _id;
 	
 	/**
@@ -145,5 +135,9 @@ public abstract class GossipMember {
 		} catch (JSONException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public int compareTo(GossipMember other){
+	  return this.getAddress().compareTo(other.getAddress());
 	}
 }

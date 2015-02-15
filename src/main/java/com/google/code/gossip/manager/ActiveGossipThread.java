@@ -1,6 +1,7 @@
 package com.google.code.gossip.manager;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -45,7 +46,7 @@ abstract public class ActiveGossipThread implements Runnable {
    * Performs the sending of the membership list, after we have incremented our own heartbeat.
    */
   abstract protected void sendMembershipList(LocalGossipMember me,
-          ArrayList<LocalGossipMember> memberList);
+          List<LocalGossipMember> memberList);
 
   /**
    * Abstract method which should be implemented by a subclass. This method should return a member
@@ -55,5 +56,5 @@ abstract public class ActiveGossipThread implements Runnable {
    *          The list of members which are stored in the local list of members.
    * @return The chosen LocalGossipMember to gossip with.
    */
-  abstract protected LocalGossipMember selectPartner(ArrayList<LocalGossipMember> memberList);
+  abstract protected LocalGossipMember selectPartner(List<LocalGossipMember> memberList);
 }

@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.JSONArray;
@@ -144,5 +145,5 @@ abstract public class PassiveGossipThread implements Runnable {
    *          The list of members known at the remote side.
    */
   abstract protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
-          ArrayList<GossipMember> remoteList);
+          List<GossipMember> remoteList);
 }
