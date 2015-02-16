@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import org.apache.log4j.Logger;
 
+import com.google.code.gossip.event.GossipListener;
 import com.google.code.gossip.manager.GossipManager;
 import com.google.code.gossip.manager.random.RandomGossipManager;
 
@@ -30,7 +31,7 @@ public class GossipService {
           UnknownHostException {
     this(InetAddress.getLocalHost().getHostAddress(), startupSettings.getPort(), "",
             startupSettings.getLogLevel(), startupSettings.getGossipMembers(), startupSettings
-                    .getGossipSettings());
+                    .getGossipSettings(), null);
   }
 
   /**
@@ -41,9 +42,9 @@ public class GossipService {
    * @throws UnknownHostException
    */
   public GossipService(String ipAddress, int port, String id, int logLevel,
-          ArrayList<GossipMember> gossipMembers, GossipSettings settings)
+          ArrayList<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener)
           throws InterruptedException, UnknownHostException {
-    _gossipManager = new RandomGossipManager(ipAddress, port, id, settings, gossipMembers);
+    _gossipManager = new RandomGossipManager(ipAddress, port, id, settings, gossipMembers, listener);
   }
 
   public void start() {

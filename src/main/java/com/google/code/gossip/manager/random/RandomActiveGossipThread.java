@@ -1,6 +1,6 @@
 package com.google.code.gossip.manager.random;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import com.google.code.gossip.GossipService;
@@ -24,7 +24,7 @@ public class RandomActiveGossipThread extends SendMembersActiveGossipThread {
    * 
    * @return Member random member if list is greater than 1, null otherwise
    */
-  protected LocalGossipMember selectPartner(ArrayList<LocalGossipMember> memberList) {
+  protected LocalGossipMember selectPartner(List<LocalGossipMember> memberList) {
     LocalGossipMember member = null;
     if (memberList.size() > 0) {
       int randomNeighborIndex = _random.nextInt(memberList.size());

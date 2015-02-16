@@ -14,10 +14,7 @@ import javax.management.timer.Timer;
  */
 public class GossipTimeoutTimer extends Timer {
 
-  /** The amount of time this timer waits before generating a wake-up event. */
   private long _sleepTime;
-
-  /** The gossip member this timer is for. */
   private LocalGossipMember _source;
 
   /**

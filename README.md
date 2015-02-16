@@ -21,7 +21,7 @@ Here we start five gossip processes and check that they discover each other. (No
     int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
       GossipService gossipService = new GossipService("127.0.0." + i, 2000, i + "", 
-        LogLevel.DEBUG, startupMembers, settings);
+        LogLevel.DEBUG, startupMembers, settings, null);
       clients.add(gossipService);
       gossipService.start();
     }
@@ -33,8 +33,29 @@ Later we can check that the nodes discover each other
       Assert.assertEquals(4, clients.get(i).get_gossipManager().getMemberList().size());
     }
 
+Event Listener
+------
+
+The status can be polled using the getters that return immutable lists.
+
+     List<LocalGossipMember> getMemberList()
+     public List<LocalGossipMember> getDeadList()
+
+Users can also attach an event listener:
+
+      GossipService gossipService = new GossipService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG,
+              startupMembers, settings,
+              new GossipListener(){
+        @Override
+        public void gossipEvent(GossipMember member, GossipState state) {
+          System.out.println(member+" "+ state);
+        }
+      });
+
+
 Maven
 ------
+
 
 You can get this software from maven central.
 

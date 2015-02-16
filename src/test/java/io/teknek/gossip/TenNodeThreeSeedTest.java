@@ -12,6 +12,8 @@ import com.google.code.gossip.GossipService;
 import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LogLevel;
 import com.google.code.gossip.RemoteGossipMember;
+import com.google.code.gossip.event.GossipListener;
+import com.google.code.gossip.event.GossipState;
 
 public class TenNodeThreeSeedTest {
 
@@ -31,19 +33,25 @@ public class TenNodeThreeSeedTest {
     int seedNodes = 3;
     ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
     for (int i = 1; i < seedNodes+1; ++i) {
-      startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i+""));
+      startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));
     }
     ArrayList<GossipService> clients = new ArrayList<GossipService>();
     int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
-      GossipService gossipService = new GossipService("127.0.0."+i, 2000, i+"", LogLevel.DEBUG, startupMembers, settings);
+      GossipService gossipService = new GossipService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG,
+              startupMembers, settings,
+              new GossipListener(){
+        @Override
+        public void gossipEvent(GossipMember member, GossipState state) {
+          System.out.println(member+" "+ state);
+        }
+      });
       clients.add(gossipService);
       gossipService.start();
       Thread.sleep(1000);
     }
     Thread.sleep(10000);
     for (int i = 0; i < clusterMembers; ++i) {
-      System.out.println(clients.get(i).get_gossipManager().getMemberList());
       Assert.assertEquals(4, clients.get(i).get_gossipManager().getMemberList().size());
     }
     for (int i = 0; i < clusterMembers; ++i) {
