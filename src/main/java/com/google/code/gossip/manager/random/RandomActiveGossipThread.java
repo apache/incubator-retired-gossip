@@ -1,6 +1,5 @@
 package com.google.code.gossip.manager.random;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 

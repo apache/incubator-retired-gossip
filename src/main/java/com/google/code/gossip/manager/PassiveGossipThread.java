@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,6 +26,8 @@ import com.google.code.gossip.RemoteGossipMember;
  * determine the incoming message.
  */
 abstract public class PassiveGossipThread implements Runnable {
+  
+  public static final Logger LOGGER = Logger.getLogger(PassiveGossipThread.class);
 
   /** The socket used for the passive thread of the gossip service. */
   private DatagramSocket _server;
@@ -107,8 +110,6 @@ abstract public class PassiveGossipThread implements Runnable {
               }
 
             }
-
-            // Merge our list with the one we just received
             mergeLists(_gossipManager, senderMember, remoteGossipMembers);
           } catch (JSONException e) {
             GossipService.LOGGER
@@ -122,7 +123,7 @@ abstract public class PassiveGossipThread implements Runnable {
         }
 
       } catch (IOException e) {
-        e.printStackTrace();
+        GossipService.LOGGER.error(e);
         _keepRunning.set(false);
       }
     }

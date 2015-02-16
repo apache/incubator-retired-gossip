@@ -58,7 +58,7 @@ public class GossipExample extends Thread {
       // dead list handling.
       for (GossipMember member : startupMembers) {
         GossipService gossipService = new GossipService(myIpAddress, member.getPort(), "",
-                LogLevel.DEBUG, startupMembers, settings);
+                LogLevel.DEBUG, startupMembers, settings, null);
         clients.add(gossipService);
         gossipService.start();
         sleep(settings.getCleanupInterval() + 1000);

@@ -20,13 +20,15 @@ import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.GossipSettings;
 import com.google.code.gossip.LocalGossipMember;
+import com.google.code.gossip.event.GossipListener;
+import com.google.code.gossip.event.GossipState;
 
 public abstract class GossipManager extends Thread implements NotificationListener {
   
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
   public static final int MAX_PACKET_SIZE = 102400;
 
-  private ConcurrentSkipListMap<LocalGossipMember,String> members;
+  private ConcurrentSkipListMap<LocalGossipMember,GossipState> members;
   private LocalGossipMember _me;
   private GossipSettings _settings;
   private AtomicBoolean _gossipServiceRunning;
@@ -35,10 +37,12 @@ public abstract class GossipManager extends Thread implements NotificationListen
   private PassiveGossipThread passiveGossipThread;
   private Class<? extends ActiveGossipThread> _activeGossipThreadClass;
   private ActiveGossipThread activeGossipThread;
+  private GossipListener listener;
 
   public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
           Class<? extends ActiveGossipThread> activeGossipThreadClass, String address, int port,
-          String id, GossipSettings settings, ArrayList<GossipMember> gossipMembers) {
+          String id, GossipSettings settings, ArrayList<GossipMember> gossipMembers, 
+          GossipListener listener) {
     _passiveGossipThreadClass = passiveGossipThreadClass;
     _activeGossipThreadClass = activeGossipThreadClass;
     _settings = settings;
@@ -49,12 +53,13 @@ public abstract class GossipManager extends Thread implements NotificationListen
         LocalGossipMember member = new LocalGossipMember(startupMember.getHost(),
                 startupMember.getPort(), startupMember.getId(), 0, this,
                 settings.getCleanupInterval());
-        members.put(member, "UP");
+        members.put(member, GossipState.UP);
         GossipService.LOGGER.debug(member);
       }
     }
 
     _gossipServiceRunning = new AtomicBoolean(true);
+    this.listener = listener;
     Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
       public void run() {
         GossipService.LOGGER.info("Service has been shutdown...");
@@ -70,17 +75,27 @@ public abstract class GossipManager extends Thread implements NotificationListen
   public void handleNotification(Notification notification, Object handback) {
     LocalGossipMember deadMember = (LocalGossipMember) notification.getUserData();
     GossipService.LOGGER.info("Dead member detected: " + deadMember);
-    members.put(deadMember, "DOWN");
+    members.put(deadMember, GossipState.DOWN);
+    if (listener != null) {
+      listener.gossipEvent(deadMember, GossipState.DOWN);
+    }
   }
 
+  public void createOrRevivieMember(LocalGossipMember m){
+    members.put(m, GossipState.UP);
+    if (listener != null) {
+      listener.gossipEvent(m, GossipState.UP);
+    }
+  }
+  
   public GossipSettings getSettings() {
     return _settings;
   }
 
   public List<LocalGossipMember> getMemberList() {
     List<LocalGossipMember> up = new ArrayList<>();
-    for (Entry<LocalGossipMember, String> entry : members.entrySet()){
-      if ("UP".equals(entry.getValue())){
+    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()){
+      if (GossipState.UP.equals(entry.getValue())){
         up.add(entry.getKey());
       }
     }
@@ -91,14 +106,10 @@ public abstract class GossipManager extends Thread implements NotificationListen
     return _me;
   }
   
-  public void createOrRevivieMember(LocalGossipMember m){
-    members.put(m, "UP");
-  }
-
   public List<LocalGossipMember> getDeadList() {
     List<LocalGossipMember> up = new ArrayList<>();
-    for (Entry<LocalGossipMember, String> entry : members.entrySet()){
-      if ("DOWN".equals(entry.getValue())){
+    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()){
+      if (GossipState.DOWN.equals(entry.getValue())){
         up.add(entry.getKey());
       }
     }
