@@ -1,9 +1,9 @@
 package com.google.code.gossip;
 
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.log4j.Logger;
 
 import com.google.code.gossip.event.GossipListener;
@@ -12,7 +12,7 @@ import com.google.code.gossip.manager.random.RandomGossipManager;
 
 /**
  * This object represents the service which is responsible for gossiping with other gossip members.
- * 
+ *
  * @author joshclemm, harmenw
  */
 public class GossipService {
@@ -23,7 +23,7 @@ public class GossipService {
 
   /**
    * Constructor with the default settings.
-   * 
+   *
    * @throws InterruptedException
    * @throws UnknownHostException
    */
@@ -36,13 +36,12 @@ public class GossipService {
 
   /**
    * Setup the client's lists, gossiping parameters, and parse the startup config file.
-   * 
-   * @throws SocketException
+   *
    * @throws InterruptedException
    * @throws UnknownHostException
    */
   public GossipService(String ipAddress, int port, String id, int logLevel,
-          ArrayList<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener)
+          List<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener)
           throws InterruptedException, UnknownHostException {
     _gossipManager = new RandomGossipManager(ipAddress, port, id, settings, gossipMembers, listener);
   }

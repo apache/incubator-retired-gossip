@@ -5,24 +5,24 @@ import javax.management.NotificationListener;
 /**
  * This object represent a gossip member with the properties known locally. These objects are stored
  * in the local list of gossip member.s
- * 
+ *
  * @author harmenw
  */
 public class LocalGossipMember extends GossipMember {
   /** The timeout timer for this gossip member. */
-  private transient GossipTimeoutTimer timeoutTimer;
+  private final transient GossipTimeoutTimer timeoutTimer;
 
   /**
    * Constructor.
-   * 
-   * @param host
+   *
+   * @param hostname
    *          The hostname or IP address.
    * @param port
    *          The port number.
+   * @param id
    * @param heartbeat
    *          The current heartbeat.
-   * @param gossipService
-   *          The GossipService object.
+   * @param notificationListener
    * @param cleanupTimeout
    *          The cleanup timeout for this gossip member.
    */

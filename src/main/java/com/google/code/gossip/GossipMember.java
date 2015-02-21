@@ -7,20 +7,20 @@ import org.json.JSONObject;
 
 /**
  * A abstract class representing a gossip member.
- * 
+ *
  * @author joshclemm, harmenw
  */
 public abstract class GossipMember implements Comparable<GossipMember>{
-	
+
 	public static final String JSON_HOST = "host";
 	public static final String JSON_PORT = "port";
 	public static final String JSON_HEARTBEAT = "heartbeat";
 	public static final String JSON_ID = "id";
-	protected String _host;
-	protected int _port;
+	protected final String _host;
+	protected final int _port;
 	protected int _heartbeat;
 	protected String _id;
-	
+
 	/**
 	 * Constructor.
 	 * @param host The hostname or IP address.
@@ -33,7 +33,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 		_id = id;
 		_heartbeat = heartbeat;
 	}
-	
+
 	/**
 	 * Get the hostname or IP address of the remote gossip member.
 	 * @return The hostname or IP address.
@@ -41,7 +41,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	public String getHost() {
 		return _host;
 	}
-	
+
 	/**
 	 * Get the port number of the remote gossip member.
 	 * @return The port number.
@@ -65,7 +65,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	public int getHeartbeat() {
 		return _heartbeat;
 	}
-	
+
 	/**
 	 * Set the heartbeat of this gossip member.
 	 * @param heartbeat The new heartbeat.
@@ -73,8 +73,8 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	public void setHeartbeat(int heartbeat) {
 		this._heartbeat = heartbeat;
 	}
-	
-	
+
+
 	public String getId() {
     return _id;
   }
@@ -86,7 +86,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	public String toString() {
 		return "Member [address=" + getAddress() + ", id=" + _id + ", heartbeat=" + _heartbeat + "]";
 	}
-	  
+
 	/**
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -136,7 +136,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public int compareTo(GossipMember other){
 	  return this.getAddress().compareTo(other.getAddress());
 	}

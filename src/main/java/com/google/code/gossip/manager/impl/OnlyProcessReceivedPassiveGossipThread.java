@@ -19,7 +19,9 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
    * Merge remote list (received from peer), and our local member list. Simply, we must update the
    * heartbeats that the remote list has with our list. Also, some additional logic is needed to
    * make sure we have not timed out a member and then immediately received a list with that member.
-   * 
+   *
+   * @param gossipManager
+   * @param senderMember
    * @param remoteList
    */
   protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
@@ -92,6 +94,6 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
           }
         }
 
-  
+
 
 }

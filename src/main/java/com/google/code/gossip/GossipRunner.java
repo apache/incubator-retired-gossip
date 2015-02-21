@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.json.JSONException;
 
 public class GossipRunner {
-  private StartupSettings _settings;
 
   public static void main(String[] args) {
     File configFile;
@@ -26,9 +25,9 @@ public class GossipRunner {
     if (configFile != null && configFile.exists()) {
       try {
         System.out.println("Parsing the configuration file...");
-        _settings = StartupSettings.fromJSONFile(configFile);
+        StartupSettings _settings = StartupSettings.fromJSONFile(configFile);
         GossipService gossipService = new GossipService(_settings);
-        System.out.println("Gossip service successfully inialized, let's start it...");
+        System.out.println("Gossip service successfully initialized, let's start it...");
         gossipService.start();
       } catch (FileNotFoundException e) {
         System.err.println("The given file is not found!");

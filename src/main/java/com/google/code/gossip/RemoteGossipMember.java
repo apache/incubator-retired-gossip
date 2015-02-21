@@ -3,15 +3,15 @@ package com.google.code.gossip;
 /**
  * The object represents a gossip member with the properties as received from a remote gossip
  * member.
- * 
+ *
  * @author harmenw
  */
 public class RemoteGossipMember extends GossipMember {
 
   /**
    * Constructor.
-   * 
-   * @param host
+   *
+   * @param hostname
    *          The hostname or IP address.
    * @param port
    *          The port number.
@@ -24,8 +24,8 @@ public class RemoteGossipMember extends GossipMember {
 
   /**
    * Construct a RemoteGossipMember with a heartbeat of 0.
-   * 
-   * @param host
+   *
+   * @param hostname
    *          The hostname or IP address.
    * @param port
    *          The port number.
