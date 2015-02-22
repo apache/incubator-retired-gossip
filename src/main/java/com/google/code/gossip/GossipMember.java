@@ -19,6 +19,11 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	protected final String _host;
 	protected final int _port;
 	protected int _heartbeat;
+	/**
+	 * The purpose of the id field is to be able for nodes to identify themselves beyond there host/port. For example
+	 * an application might generate a persistent id so if they rejoin the cluster at a different host and port we 
+	 * are aware it is the same node.
+	 */
 	protected String _id;
 
 	/**
@@ -26,6 +31,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	 * @param host The hostname or IP address.
 	 * @param port The port number.
 	 * @param heartbeat The current heartbeat.
+	 * @param id an id that may be replaced after contact
 	 */
 	public GossipMember(String host, int port, String id, int heartbeat) {
 		_host = host;
