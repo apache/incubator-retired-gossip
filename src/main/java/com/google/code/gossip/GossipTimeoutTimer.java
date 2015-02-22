@@ -9,20 +9,20 @@ import javax.management.timer.Timer;
  * This object represents a timer for a gossip member. When the timer has elapsed without being
  * reset in the meantime, it will inform the GossipService about this who in turn will put the
  * gossip member on the dead list, because it is apparantly not alive anymore.
- * 
+ *
  * @author joshclemm, harmenw
  */
 public class GossipTimeoutTimer extends Timer {
 
-  private long _sleepTime;
-  private LocalGossipMember _source;
+  private final long _sleepTime;
+  private final LocalGossipMember _source;
 
   /**
    * Constructor. Creates a reset-able timer that wakes up after millisecondsSleepTime.
-   * 
+   *
    * @param millisecondsSleepTime
    *          The time for this timer to wait before an event.
-   * @param service
+   * @param notificationListener
    * @param member
    */
   public GossipTimeoutTimer(long millisecondsSleepTime, NotificationListener notificationListener,
@@ -51,7 +51,7 @@ public class GossipTimeoutTimer extends Timer {
 
   /**
    * Adds a new wake-up time for this timer.
-   * 
+   *
    * @param milliseconds
    */
   private void setWakeupTime(long milliseconds) {

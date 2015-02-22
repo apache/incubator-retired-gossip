@@ -24,24 +24,24 @@ import com.google.code.gossip.event.GossipListener;
 import com.google.code.gossip.event.GossipState;
 
 public abstract class GossipManager extends Thread implements NotificationListener {
-  
+
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
   public static final int MAX_PACKET_SIZE = 102400;
 
-  private ConcurrentSkipListMap<LocalGossipMember,GossipState> members;
-  private LocalGossipMember _me;
-  private GossipSettings _settings;
-  private AtomicBoolean _gossipServiceRunning;
-  private ExecutorService _gossipThreadExecutor;
-  private Class<? extends PassiveGossipThread> _passiveGossipThreadClass;
-  private PassiveGossipThread passiveGossipThread;
-  private Class<? extends ActiveGossipThread> _activeGossipThreadClass;
+  private final ConcurrentSkipListMap<LocalGossipMember,GossipState> members;
+  private final LocalGossipMember _me;
+  private final GossipSettings _settings;
+  private final AtomicBoolean _gossipServiceRunning;
+  private final Class<? extends PassiveGossipThread> _passiveGossipThreadClass;
+  private final Class<? extends ActiveGossipThread> _activeGossipThreadClass;
+  private final GossipListener listener;
   private ActiveGossipThread activeGossipThread;
-  private GossipListener listener;
+  private PassiveGossipThread passiveGossipThread;
+  private ExecutorService _gossipThreadExecutor;
 
   public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
           Class<? extends ActiveGossipThread> activeGossipThreadClass, String address, int port,
-          String id, GossipSettings settings, ArrayList<GossipMember> gossipMembers, 
+          String id, GossipSettings settings, List<GossipMember> gossipMembers,
           GossipListener listener) {
     _passiveGossipThreadClass = passiveGossipThreadClass;
     _activeGossipThreadClass = activeGossipThreadClass;
@@ -87,7 +87,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
       listener.gossipEvent(m, GossipState.UP);
     }
   }
-  
+
   public GossipSettings getSettings() {
     return _settings;
   }
@@ -105,7 +105,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
   public LocalGossipMember getMyself() {
     return _me;
   }
-  
+
   public List<LocalGossipMember> getDeadList() {
     List<LocalGossipMember> up = new ArrayList<>();
     for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()){
@@ -119,8 +119,6 @@ public abstract class GossipManager extends Thread implements NotificationListen
   /**
    * Starts the client. Specifically, start the various cycles for this protocol. Start the gossip
    * thread and start the receiver thread.
-   * 
-   * @throws InterruptedException
    */
   public void run() {
     for (LocalGossipMember member : members.keySet()) {
@@ -160,7 +158,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
     activeGossipThread.shutdown();
     try {
       boolean result = _gossipThreadExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
-      if (result == false){
+      if (!result){
         LOGGER.error("executor shutdown timed out");
       }
     } catch (InterruptedException e) {

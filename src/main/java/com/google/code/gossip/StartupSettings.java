@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,7 +14,7 @@ import org.json.JSONObject;
 
 /**
  * This object represents the settings used when starting the gossip service.
- * 
+ *
  * @author harmenw
  */
 public class StartupSettings {
@@ -25,14 +26,14 @@ public class StartupSettings {
   private int _logLevel;
 
   /** The gossip settings used at startup. */
-  private GossipSettings _gossipSettings;
+  private final GossipSettings _gossipSettings;
 
   /** The list with gossip members to start with. */
-  private ArrayList<GossipMember> _gossipMembers;
+  private final List<GossipMember> _gossipMembers;
 
   /**
    * Constructor.
-   * 
+   *
    * @param port
    *          The port to start the service on.
    */
@@ -42,7 +43,7 @@ public class StartupSettings {
 
   /**
    * Constructor.
-   * 
+   *
    * @param port
    *          The port to start the service on.
    */
@@ -50,12 +51,12 @@ public class StartupSettings {
     _port = port;
     _logLevel = logLevel;
     _gossipSettings = gossipSettings;
-    _gossipMembers = new ArrayList<GossipMember>();
+    _gossipMembers = new ArrayList<>();
   }
 
   /**
    * Set the port of the gossip service.
-   * 
+   *
    * @param port
    *          The port for the gossip service.
    */
@@ -65,7 +66,7 @@ public class StartupSettings {
 
   /**
    * Get the port for the gossip service.
-   * 
+   *
    * @return The port of the gossip service.
    */
   public int getPort() {
@@ -74,7 +75,7 @@ public class StartupSettings {
 
   /**
    * Set the log level of the gossip service.
-   * 
+   *
    * @param logLevel
    *          The log level({LogLevel}).
    */
@@ -84,7 +85,7 @@ public class StartupSettings {
 
   /**
    * Get the log level of the gossip service.
-   * 
+   *
    * @return The log level.
    */
   public int getLogLevel() {
@@ -93,7 +94,7 @@ public class StartupSettings {
 
   /**
    * Get the GossipSettings.
-   * 
+   *
    * @return The GossipSettings object.
    */
   public GossipSettings getGossipSettings() {
@@ -102,7 +103,7 @@ public class StartupSettings {
 
   /**
    * Add a gossip member to the list of members to start with.
-   * 
+   *
    * @param member
    *          The member to add.
    */
@@ -112,16 +113,16 @@ public class StartupSettings {
 
   /**
    * Get the list with gossip members.
-   * 
+   *
    * @return The gossip members.
    */
-  public ArrayList<GossipMember> getGossipMembers() {
+  public List<GossipMember> getGossipMembers() {
     return _gossipMembers;
   }
 
   /**
    * Parse the settings for the gossip service from a JSON file.
-   * 
+   *
    * @param jsonFile
    *          The file object which refers to the JSON config file.
    * @return The StartupSettings object with the settings from the config file.

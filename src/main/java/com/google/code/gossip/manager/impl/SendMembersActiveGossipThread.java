@@ -35,8 +35,7 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
           GossipService.LOGGER.debug("Sending memberlist to " + dest + ":" + member.getPort());
           jsonArray.put(me.toJSONObject());
           GossipService.LOGGER.debug(me);
-          for (int i = 0; i < memberList.size(); i++) {
-            LocalGossipMember other = memberList.get(i);
+          for (LocalGossipMember other : memberList) {
             jsonArray.put(other.toJSONObject());
             GossipService.LOGGER.debug(other);
           }

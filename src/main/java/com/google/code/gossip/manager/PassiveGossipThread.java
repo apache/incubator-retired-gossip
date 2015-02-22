@@ -26,13 +26,13 @@ import com.google.code.gossip.RemoteGossipMember;
  * determine the incoming message.
  */
 abstract public class PassiveGossipThread implements Runnable {
-  
+
   public static final Logger LOGGER = Logger.getLogger(PassiveGossipThread.class);
 
   /** The socket used for the passive thread of the gossip service. */
   private DatagramSocket _server;
 
-  private GossipManager _gossipManager;
+  private final GossipManager _gossipManager;
 
   private AtomicBoolean _keepRunning;
 
@@ -73,7 +73,7 @@ abstract public class PassiveGossipThread implements Runnable {
         // A package larger than this would not be possible to be send from a GossipService,
         // since this is check before sending the message.
         // This could normally only occur when the list of members is very big,
-        // or when the packet is misformed, and the first 4 bytes is not the right in anymore.
+        // or when the packet is malformed, and the first 4 bytes is not the right in anymore.
         // For this reason we regards the message.
         if (packet_length <= GossipManager.MAX_PACKET_SIZE) {
           byte[] json_bytes = new byte[packet_length];
@@ -84,7 +84,7 @@ abstract public class PassiveGossipThread implements Runnable {
           GossipService.LOGGER.debug("Received message (" + packet_length + " bytes): "
                   + receivedMessage);
           try {
-            ArrayList<GossipMember> remoteGossipMembers = new ArrayList<GossipMember>();
+            List<GossipMember> remoteGossipMembers = new ArrayList<>();
             RemoteGossipMember senderMember = null;
             GossipService.LOGGER.debug("Received member list:");
             JSONArray jsonArray = new JSONArray(receivedMessage);
@@ -136,7 +136,7 @@ abstract public class PassiveGossipThread implements Runnable {
 
   /**
    * Abstract method for merging the local and remote list.
-   * 
+   *
    * @param gossipManager
    *          The GossipManager for retrieving the local members and dead members list.
    * @param senderMember

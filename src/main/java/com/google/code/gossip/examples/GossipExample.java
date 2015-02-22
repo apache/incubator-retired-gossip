@@ -3,6 +3,7 @@ package com.google.code.gossip.examples;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
@@ -13,7 +14,7 @@ import com.google.code.gossip.RemoteGossipMember;
 /**
  * This class is an example of how one could use the gossip service. Here we start multiple gossip
  * clients on this host as specified in the config file.
- * 
+ *
  * @author harmenw
  */
 public class GossipExample extends Thread {
@@ -41,14 +42,14 @@ public class GossipExample extends Thread {
     try {
       GossipSettings settings = new GossipSettings();
 
-      ArrayList<GossipService> clients = new ArrayList<GossipService>();
+      List<GossipService> clients = new ArrayList<>();
 
       // Get my ip address.
       String myIpAddress = InetAddress.getLocalHost().getHostAddress();
 
       // Create the gossip members and put them in a list and give them a port number starting with
       // 2000.
-      ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
+      List<GossipMember> startupMembers = new ArrayList<>();
       for (int i = 0; i < NUMBER_OF_CLIENTS; ++i) {
         startupMembers.add(new RemoteGossipMember(myIpAddress, 2000 + i, ""));
       }

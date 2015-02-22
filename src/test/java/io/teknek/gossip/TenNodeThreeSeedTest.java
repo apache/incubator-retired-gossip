@@ -2,6 +2,7 @@ package io.teknek.gossip;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 
 import junit.framework.Assert;
 
@@ -17,25 +18,25 @@ import com.google.code.gossip.event.GossipState;
 
 public class TenNodeThreeSeedTest {
 
-  
+
   @Test
   public void test() throws UnknownHostException, InterruptedException{
     abc();
   }
-  
+
   @Test
   public void testAgain() throws UnknownHostException, InterruptedException{
     abc();
   }
-  
+
   public void abc() throws InterruptedException, UnknownHostException{
     GossipSettings settings = new GossipSettings();
     int seedNodes = 3;
-    ArrayList<GossipMember> startupMembers = new ArrayList<GossipMember>();
+    List<GossipMember> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes+1; ++i) {
       startupMembers.add(new RemoteGossipMember("127.0.0." + i, 2000, i + ""));
     }
-    ArrayList<GossipService> clients = new ArrayList<GossipService>();
+    List<GossipService> clients = new ArrayList<>();
     int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
       GossipService gossipService = new GossipService("127.0.0." + i, 2000, i + "", LogLevel.DEBUG,
@@ -56,6 +57,6 @@ public class TenNodeThreeSeedTest {
     }
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();
-    } 
+    }
   }
 }

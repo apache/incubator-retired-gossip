@@ -14,7 +14,7 @@ import com.google.code.gossip.LocalGossipMember;
  */
 abstract public class ActiveGossipThread implements Runnable {
 
-  private GossipManager _gossipManager;
+  private final GossipManager _gossipManager;
 
   private final AtomicBoolean _keepRunning;
 
@@ -50,7 +50,7 @@ abstract public class ActiveGossipThread implements Runnable {
   /**
    * Abstract method which should be implemented by a subclass. This method should return a member
    * of the list to gossip with.
-   * 
+   *
    * @param memberList
    *          The list of members which are stored in the local list of members.
    * @return The chosen LocalGossipMember to gossip with.
