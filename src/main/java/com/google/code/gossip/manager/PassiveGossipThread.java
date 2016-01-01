@@ -42,11 +42,11 @@ abstract public class PassiveGossipThread implements Runnable {
       SocketAddress socketAddress = new InetSocketAddress(_gossipManager.getMyself().getHost(),
               _gossipManager.getMyself().getPort());
       _server = new DatagramSocket(socketAddress);
-      GossipService.LOGGER.info("Gossip service successfully initialized on port "
+      GossipService.LOGGER.debug("Gossip service successfully initialized on port "
               + _gossipManager.getMyself().getPort());
       GossipService.LOGGER.debug("I am " + _gossipManager.getMyself());
     } catch (SocketException ex) {
-      GossipService.LOGGER.error(ex);
+      GossipService.LOGGER.warn(ex);
       _server = null;
       throw new RuntimeException(ex);
     }

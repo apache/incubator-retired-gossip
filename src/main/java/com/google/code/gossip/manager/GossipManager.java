@@ -62,7 +62,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
     this.listener = listener;
     Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
       public void run() {
-        GossipService.LOGGER.info("Service has been shutdown...");
+        GossipService.LOGGER.debug("Service has been shutdown...");
       }
     }));
   }
@@ -74,7 +74,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
   @Override
   public void handleNotification(Notification notification, Object handback) {
     LocalGossipMember deadMember = (LocalGossipMember) notification.getUserData();
-    GossipService.LOGGER.info("Dead member detected: " + deadMember);
+    GossipService.LOGGER.debug("Dead member detected: " + deadMember);
     members.put(deadMember, GossipState.DOWN);
     if (listener != null) {
       listener.gossipEvent(deadMember, GossipState.DOWN);
@@ -138,13 +138,13 @@ public abstract class GossipManager extends Thread implements NotificationListen
             | InvocationTargetException | NoSuchMethodException | SecurityException e1) {
       throw new RuntimeException(e1);
     }
-    GossipService.LOGGER.info("The GossipService is started.");
+    GossipService.LOGGER.debug("The GossipService is started.");
     while (_gossipServiceRunning.get()) {
       try {
         // TODO
         TimeUnit.MILLISECONDS.sleep(1);
       } catch (InterruptedException e) {
-        GossipService.LOGGER.info("The GossipClient was interrupted.");
+        GossipService.LOGGER.warn("The GossipClient was interrupted.");
       }
     }
   }

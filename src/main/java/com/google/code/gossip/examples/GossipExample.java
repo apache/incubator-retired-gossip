@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.GossipSettings;
-import com.google.code.gossip.LogLevel;
 import com.google.code.gossip.RemoteGossipMember;
 
 /**
@@ -59,7 +58,7 @@ public class GossipExample extends Thread {
       // dead list handling.
       for (GossipMember member : startupMembers) {
         GossipService gossipService = new GossipService(myIpAddress, member.getPort(), "",
-                LogLevel.DEBUG, startupMembers, settings, null);
+                startupMembers, settings, null);
         clients.add(gossipService);
         gossipService.start();
         sleep(settings.getCleanupInterval() + 1000);
