@@ -39,9 +39,15 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.8.2</version>
+			<version>4.11</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+                        <groupId>io.teknek</groupId>
+                        <artifactId>tunit</artifactId>
+                        <version>0.0.0</version>
+                        <scope>test</scope>
+                </dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>

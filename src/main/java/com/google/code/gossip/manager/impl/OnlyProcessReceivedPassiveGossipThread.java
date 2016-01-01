@@ -76,7 +76,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
             // gossipManager.getMemberList().add(newLocalMember);
             gossipManager.createOrRevivieMember(newLocalMember);
             newLocalMember.startTimeoutTimer();
-            GossipService.LOGGER.info("Removed remote member " + remoteMember.getAddress()
+            GossipService.LOGGER.debug("Removed remote member " + remoteMember.getAddress()
                     + " from dead list and added to local member list.");
           }
         } else {
@@ -86,7 +86,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
                   gossipManager, gossipManager.getSettings().getCleanupInterval());
           gossipManager.createOrRevivieMember(newLocalMember);
           newLocalMember.startTimeoutTimer();
-          GossipService.LOGGER.info("Added new remote member " + remoteMember.getAddress()
+          GossipService.LOGGER.debug("Added new remote member " + remoteMember.getAddress()
                   + " to local member list.");
         }
       }

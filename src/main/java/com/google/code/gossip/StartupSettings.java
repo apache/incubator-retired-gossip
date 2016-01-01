@@ -22,9 +22,6 @@ public class StartupSettings {
   /** The port to start the gossip service on. */
   private int _port;
 
-  /** The logging level of the gossip service. */
-  private int _logLevel;
-
   /** The gossip settings used at startup. */
   private final GossipSettings _gossipSettings;
 
@@ -38,7 +35,7 @@ public class StartupSettings {
    *          The port to start the service on.
    */
   public StartupSettings(int port, int logLevel) {
-    this(port, logLevel, new GossipSettings());
+    this(port, new GossipSettings());
   }
 
   /**
@@ -47,9 +44,8 @@ public class StartupSettings {
    * @param port
    *          The port to start the service on.
    */
-  public StartupSettings(int port, int logLevel, GossipSettings gossipSettings) {
+  public StartupSettings(int port, GossipSettings gossipSettings) {
     _port = port;
-    _logLevel = logLevel;
     _gossipSettings = gossipSettings;
     _gossipMembers = new ArrayList<>();
   }
@@ -71,25 +67,6 @@ public class StartupSettings {
    */
   public int getPort() {
     return _port;
-  }
-
-  /**
-   * Set the log level of the gossip service.
-   *
-   * @param logLevel
-   *          The log level({LogLevel}).
-   */
-  public void setLogLevel(int logLevel) {
-    _logLevel = logLevel;
-  }
-
-  /**
-   * Get the log level of the gossip service.
-   *
-   * @return The log level.
-   */
-  public int getLogLevel() {
-    return _logLevel;
   }
 
   /**
@@ -149,20 +126,14 @@ public class StartupSettings {
     // Now get the port number.
     int port = jsonObject.getInt("port");
 
-    // Get the log level from the config file.
-    int logLevel = LogLevel.fromString(jsonObject.getString("log_level"));
-
     // Get the gossip_interval from the config file.
     int gossipInterval = jsonObject.getInt("gossip_interval");
 
     // Get the cleanup_interval from the config file.
     int cleanupInterval = jsonObject.getInt("cleanup_interval");
 
-    System.out.println("Config [port: " + port + ", log_level: " + logLevel + ", gossip_interval: "
-            + gossipInterval + ", cleanup_interval: " + cleanupInterval + "]");
-
     // Initiate the settings with the port number.
-    StartupSettings settings = new StartupSettings(port, logLevel, new GossipSettings(
+    StartupSettings settings = new StartupSettings(port, new GossipSettings(
             gossipInterval, cleanupInterval));
 
     // Now iterate over the members from the config file and add them to the settings.
