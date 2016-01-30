@@ -47,6 +47,9 @@ public class GossipService {
   }
 
   public void start() {
+    String address = get_gossipManager().getMyself().getHost() + ":" + get_gossipManager().getMyself().getPort();
+    LOGGER.debug( "Starting: " + _gossipManager.getName() + " - " + address );
+
     _gossipManager.start();
   }
 
