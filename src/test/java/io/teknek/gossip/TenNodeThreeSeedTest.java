@@ -52,11 +52,12 @@ public class TenNodeThreeSeedTest {
               new GossipListener(){
         @Override
         public void gossipEvent(GossipMember member, GossipState state) {
-          System.out.println(member+" "+ state);
+          log.info(member+" "+ state);
         }
       });
       clients.add(gossipService);
       gossipService.start();
+      gossipService.get_gossipManager().getMemberList();
     }
     TUnit.assertThat(new Callable<Integer> (){
       public Integer call() throws Exception {

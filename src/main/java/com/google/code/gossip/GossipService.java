@@ -29,7 +29,7 @@ public class GossipService {
    */
   public GossipService(StartupSettings startupSettings) throws InterruptedException,
           UnknownHostException {
-    this(InetAddress.getLocalHost().getHostAddress(), startupSettings.getPort(), "",
+    this(InetAddress.getLocalHost().getHostAddress(), startupSettings.getPort(), startupSettings.getId(),
              startupSettings.getGossipMembers(), startupSettings
                     .getGossipSettings(), null);
   }
