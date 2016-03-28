@@ -40,6 +40,46 @@ Later we can check that the nodes discover each other
   }
 ```
 
+Usage with Settings File
+-----
+
+For a very simple client setup with a settings file you first need a JSON file such as:
+
+```json
+[{
+  "id":"419af818-0114-4c7b-8fdb-952915335ce4",
+  "port":50001,
+  "gossip_interval":1000,
+  "cleanup_interval":10000,
+  "members":[
+    {"host":"127.0.0.1", "port":50000}
+  ]
+}]
+```
+
+where:
+
+* `id` - is a unique id for this node (you can use any string, but above we use a UUID)
+* `port` - the port to use on the default adapter on the node's machine
+* `gossip_interval` - how often (in milliseconds) to gossip list of members to other node(s)
+* `cleanup_interval` - when to remove 'dead' nodes (in milliseconds)
+* `members` - initial seed nodes
+
+Then starting a local node is as simple as:
+
+```java
+GossipService gossipService = new GossipService(
+  StartupSettings.fromJSONFile( "node_settings.json" )
+);
+gossipService.start();
+```
+
+And then when all is done, shutdown with:
+
+```java
+gossipService.shutdown();
+```
+
 Event Listener
 ------
 
@@ -49,6 +89,9 @@ The status can be polled using the getters that return immutable lists.
    List<LocalGossipMember> getMemberList()
    public List<LocalGossipMember> getDeadList()
 ```
+
+These can be accessed from the `GossipManager` on your `GossipService`, e.g:
+`gossipService.get_gossipManager().getMemberList();`
 
 Users can also attach an event listener:
 
