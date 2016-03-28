@@ -26,51 +26,46 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
   protected void sendMembershipList(LocalGossipMember me, List<LocalGossipMember> memberList) {
     GossipService.LOGGER.debug("Send sendMembershipList() is called.");
     me.setHeartbeat(me.getHeartbeat() + 1);
-    synchronized (memberList) {
-      try {
-        LocalGossipMember member = selectPartner(memberList);
-        if (member != null) {
-          InetAddress dest = InetAddress.getByName(member.getHost());
-          JSONArray jsonArray = new JSONArray();
-          GossipService.LOGGER.debug("Sending memberlist to " + dest + ":" + member.getPort());
-          jsonArray.put(me.toJSONObject());
-          GossipService.LOGGER.debug(me);
-          for (LocalGossipMember other : memberList) {
-            jsonArray.put(other.toJSONObject());
-            GossipService.LOGGER.debug(other);
-          }
-          byte[] json_bytes = jsonArray.toString().getBytes();
-          int packet_length = json_bytes.length;
-          if (packet_length < GossipManager.MAX_PACKET_SIZE) {
-            // Convert the packet length to the byte representation of the int.
-            byte[] length_bytes = new byte[4];
-            length_bytes[0] = (byte) (packet_length >> 24);
-            length_bytes[1] = (byte) ((packet_length << 8) >> 24);
-            length_bytes[2] = (byte) ((packet_length << 16) >> 24);
-            length_bytes[3] = (byte) ((packet_length << 24) >> 24);
-
-            GossipService.LOGGER.debug("Sending message (" + packet_length + " bytes): "
-                    + jsonArray.toString());
-
-            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + json_bytes.length);
-            byteBuffer.put(length_bytes);
-            byteBuffer.put(json_bytes);
-            byte[] buf = byteBuffer.array();
-
-            DatagramSocket socket = new DatagramSocket();
-            DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest,
-                    member.getPort());
-            socket.send(datagramPacket);
-            socket.close();
-          } else {
-            GossipService.LOGGER.error("The length of the to be send message is too large ("
-                    + packet_length + " > " + GossipManager.MAX_PACKET_SIZE + ").");
-          }
-        }
-
-      } catch (IOException e1) {
-        e1.printStackTrace();
+    LocalGossipMember member = selectPartner(memberList);
+    if (member == null) {
+      return;
+    }
+    try (DatagramSocket socket = new DatagramSocket()){
+      socket.setSoTimeout(_gossipManager.getSettings().getGossipInterval());
+      InetAddress dest = InetAddress.getByName(member.getHost());
+      JSONArray jsonArray = new JSONArray();
+      jsonArray.put(me.toJSONObject());
+      for (LocalGossipMember other : memberList) {
+        jsonArray.put(other.toJSONObject());
+        GossipService.LOGGER.debug(other);
       }
+      byte[] json_bytes = jsonArray.toString().getBytes();
+      int packet_length = json_bytes.length;
+      if (packet_length < GossipManager.MAX_PACKET_SIZE) {
+        byte[] buf = createBuffer(packet_length, json_bytes);
+        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest,
+                member.getPort());
+        socket.send(datagramPacket);
+      } else {
+        GossipService.LOGGER.error("The length of the to be send message is too large ("
+                + packet_length + " > " + GossipManager.MAX_PACKET_SIZE + ").");
+      }
+    } catch (IOException e1) {
+      GossipService.LOGGER.warn(e1);
     }
   }
+  
+  private byte[] createBuffer(int packetLength, byte [] jsonBytes){
+    byte[] lengthBytes = new byte[4];
+    lengthBytes[0] = (byte) (packetLength >> 24);
+    lengthBytes[1] = (byte) ((packetLength << 8) >> 24);
+    lengthBytes[2] = (byte) ((packetLength << 16) >> 24);
+    lengthBytes[3] = (byte) ((packetLength << 24) >> 24);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(4 + jsonBytes.length);
+    byteBuffer.put(lengthBytes);
+    byteBuffer.put(jsonBytes);
+    byte[] buf = byteBuffer.array();
+    return buf;
+  }
+  
 }

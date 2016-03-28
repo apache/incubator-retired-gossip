@@ -14,7 +14,7 @@ import com.google.code.gossip.LocalGossipMember;
  */
 abstract public class ActiveGossipThread implements Runnable {
 
-  private final GossipManager _gossipManager;
+  protected final GossipManager _gossipManager;
 
   private final AtomicBoolean _keepRunning;
 

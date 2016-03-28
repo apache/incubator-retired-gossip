@@ -92,6 +92,10 @@ public abstract class GossipManager extends Thread implements NotificationListen
     return _settings;
   }
 
+  /**
+   * 
+   * @return a read only list of members found in the UP state
+   */
   public List<LocalGossipMember> getMemberList() {
     List<LocalGossipMember> up = new ArrayList<>();
     for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()){
