@@ -60,21 +60,11 @@ abstract public class PassiveGossipThread implements Runnable {
         byte[] buf = new byte[_server.getReceiveBufferSize()];
         DatagramPacket p = new DatagramPacket(buf, buf.length);
         _server.receive(p);
-        GossipService.LOGGER.debug("A message has been received from " + p.getAddress() + ":"
-                + p.getPort() + ".");
-
         int packet_length = 0;
         for (int i = 0; i < 4; i++) {
           int shift = (4 - 1 - i) * 8;
           packet_length += (buf[i] & 0x000000FF) << shift;
         }
-
-        // Check whether the package is smaller than the maximal packet length.
-        // A package larger than this would not be possible to be send from a GossipService,
-        // since this is check before sending the message.
-        // This could normally only occur when the list of members is very big,
-        // or when the packet is malformed, and the first 4 bytes is not the right in anymore.
-        // For this reason we regards the message.
         if (packet_length <= GossipManager.MAX_PACKET_SIZE) {
           byte[] json_bytes = new byte[packet_length];
           for (int i = 0; i < packet_length; i++) {
@@ -86,7 +76,6 @@ abstract public class PassiveGossipThread implements Runnable {
           try {
             List<GossipMember> remoteGossipMembers = new ArrayList<>();
             RemoteGossipMember senderMember = null;
-            GossipService.LOGGER.debug("Received member list:");
             JSONArray jsonArray = new JSONArray(receivedMessage);
             for (int i = 0; i < jsonArray.length(); i++) {
               JSONObject memberJSONObject = jsonArray.getJSONObject(i);
@@ -95,7 +84,7 @@ abstract public class PassiveGossipThread implements Runnable {
                         memberJSONObject.getString(GossipMember.JSON_HOST),
                         memberJSONObject.getInt(GossipMember.JSON_PORT),
                         memberJSONObject.getString(GossipMember.JSON_ID),
-                        memberJSONObject.getInt(GossipMember.JSON_HEARTBEAT));
+                        memberJSONObject.getLong(GossipMember.JSON_HEARTBEAT));
                 GossipService.LOGGER.debug(member.toString());
                 // This is the first member found, so this should be the member who is communicating
                 // with me.
@@ -115,6 +104,7 @@ abstract public class PassiveGossipThread implements Runnable {
             GossipService.LOGGER
                     .error("The received message is not well-formed JSON. The following message has been dropped:\n"
                             + receivedMessage);
+            System.out.println(e);
           }
 
         } else {
@@ -124,6 +114,7 @@ abstract public class PassiveGossipThread implements Runnable {
 
       } catch (IOException e) {
         GossipService.LOGGER.error(e);
+        System.out.println(e);
         _keepRunning.set(false);
       }
     }
@@ -148,3 +139,13 @@ abstract public class PassiveGossipThread implements Runnable {
   abstract protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
           List<GossipMember> remoteList);
 }
+
+/*
+ * random comments
+ *         // Check whether the package is smaller than the maximal packet length.
+        // A package larger than this would not be possible to be send from a GossipService,
+        // since this is check before sending the message.
+        // This could normally only occur when the list of members is very big,
+        // or when the packet is malformed, and the first 4 bytes is not the right in anymore.
+        // For this reason we regards the message.
+         * */

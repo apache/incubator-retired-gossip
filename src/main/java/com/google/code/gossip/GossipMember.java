@@ -18,7 +18,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	public static final String JSON_ID = "id";
 	protected final String _host;
 	protected final int _port;
-	protected int _heartbeat;
+	protected volatile long _heartbeat;
 	/**
 	 * The purpose of the id field is to be able for nodes to identify themselves beyond there host/port. For example
 	 * an application might generate a persistent id so if they rejoin the cluster at a different host and port we 
@@ -33,7 +33,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	 * @param heartbeat The current heartbeat.
 	 * @param id an id that may be replaced after contact
 	 */
-	public GossipMember(String host, int port, String id, int heartbeat) {
+	public GossipMember(String host, int port, String id, long heartbeat) {
 		_host = host;
 		_port = port;
 		_id = id;
@@ -68,7 +68,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	 * Get the heartbeat of this gossip member.
 	 * @return The current heartbeat.
 	 */
-	public int getHeartbeat() {
+	public long getHeartbeat() {
 		return _heartbeat;
 	}
 
@@ -76,7 +76,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	 * Set the heartbeat of this gossip member.
 	 * @param heartbeat The new heartbeat.
 	 */
-	public void setHeartbeat(int heartbeat) {
+	public void setHeartbeat(long heartbeat) {
 		this._heartbeat = heartbeat;
 	}
 

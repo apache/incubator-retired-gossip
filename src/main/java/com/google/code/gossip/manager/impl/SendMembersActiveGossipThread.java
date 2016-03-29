@@ -25,7 +25,7 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
    */
   protected void sendMembershipList(LocalGossipMember me, List<LocalGossipMember> memberList) {
     GossipService.LOGGER.debug("Send sendMembershipList() is called.");
-    me.setHeartbeat(me.getHeartbeat() + 1);
+    me.setHeartbeat(System.currentTimeMillis());
     LocalGossipMember member = selectPartner(memberList);
     if (member == null) {
       return;

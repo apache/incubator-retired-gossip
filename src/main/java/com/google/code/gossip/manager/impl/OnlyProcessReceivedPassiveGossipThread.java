@@ -27,11 +27,21 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
   protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
           List<GossipMember> remoteList) {
 
-    for (GossipMember remoteMember : remoteList) {
-      // Skip myself. We don't want ourselves in the local member list.
-      if (remoteMember.equals(gossipManager.getMyself())) {
-        continue;
+    //if the person sending to us is in the dead list consider them up
+    for (LocalGossipMember i : gossipManager.getDeadList()){
+      if (i.getId().equals(senderMember.getId())){
+        System.out.println(gossipManager.getMyself() +" caught a live one!");
+        LocalGossipMember newLocalMember = new LocalGossipMember(senderMember.getHost(),
+                senderMember.getPort(), senderMember.getId(), senderMember.getHeartbeat(),
+                gossipManager, gossipManager.getSettings().getCleanupInterval());
+        gossipManager.revivieMember(newLocalMember);
+        newLocalMember.startTimeoutTimer();
       }
+    }
+    for (GossipMember remoteMember : remoteList) {
+      if (remoteMember.getId().equals(gossipManager.getMyself().getId())) {
+        continue;
+      }  
       if (gossipManager.getMemberList().contains(remoteMember)) {
         LocalGossipMember localMember = gossipManager.getMemberList().get(
                 gossipManager.getMemberList().indexOf(remoteMember));
@@ -39,58 +49,66 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
           localMember.setHeartbeat(remoteMember.getHeartbeat());
           localMember.resetTimeoutTimer();
         }
+      } else if (!gossipManager.getMemberList().contains(remoteMember) 
+              && !gossipManager.getDeadList().contains(remoteMember) ){
+        LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(),
+                remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(),
+                gossipManager, gossipManager.getSettings().getCleanupInterval());
+        gossipManager.createOrRevivieMember(newLocalMember);
+        newLocalMember.startTimeoutTimer();
       } else {
-        // The remote member is either brand new, or a previously declared dead member.
-        // If its dead, check the heartbeat because it may have come back from the dead.
         if (gossipManager.getDeadList().contains(remoteMember)) {
-          // The remote member is known here as a dead member.
-          GossipService.LOGGER.debug("The remote member is known here as a dead member.");
           LocalGossipMember localDeadMember = gossipManager.getDeadList().get(
                   gossipManager.getDeadList().indexOf(remoteMember));
-          // If a member is restarted the heartbeat will restart from 1, so we should check
-          // that here.
-          // So a member can become from the dead when it is either larger than a previous
-          // heartbeat (due to network failure)
-          // or when the heartbeat is 1 (after a restart of the service).
-          // TODO: What if the first message of a gossip service is sent to a dead node? The
-          // second member will receive a heartbeat of two.
-          // TODO: The above does happen. Maybe a special message for a revived member?
-          // TODO: Or maybe when a member is declared dead for more than
-          // _settings.getCleanupInterval() ms, reset the heartbeat to 0.
-          // It will then accept a revived member.
-          // The above is now handle by checking whether the heartbeat differs
-          // _settings.getCleanupInterval(), it must be restarted.
-          if (remoteMember.getHeartbeat() == 1
-                  || ((localDeadMember.getHeartbeat() - remoteMember.getHeartbeat()) * -1) > (gossipManager
-                          .getSettings().getCleanupInterval() / 1000)
-                  || remoteMember.getHeartbeat() > localDeadMember.getHeartbeat()) {
-            GossipService.LOGGER
-                    .debug("The remote member is back from the dead. We will remove it from the dead list and add it as a new member.");
-            // The remote member is back from the dead.
-            // Remove it from the dead list.
-            // gossipManager.getDeadList().remove(localDeadMember);
-            // Add it as a new member and add it to the member list.
+          if (remoteMember.getHeartbeat() > localDeadMember.getHeartbeat()) {
             LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(),
                     remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(),
                     gossipManager, gossipManager.getSettings().getCleanupInterval());
-            // gossipManager.getMemberList().add(newLocalMember);
-            gossipManager.createOrRevivieMember(newLocalMember);
+            gossipManager.revivieMember(newLocalMember);
             newLocalMember.startTimeoutTimer();
             GossipService.LOGGER.debug("Removed remote member " + remoteMember.getAddress()
                     + " from dead list and added to local member list.");
+          } else {
+            GossipService.LOGGER.debug("me " + gossipManager.getMyself());
+            GossipService.LOGGER.debug("sender " + senderMember);
+            GossipService.LOGGER.debug("remote " + remoteList);
+            GossipService.LOGGER.debug("live " + gossipManager.getMemberList());
+            GossipService.LOGGER.debug("dead " + gossipManager.getDeadList());
           }
         } else {
-          // Brand spanking new member - welcome.
-          LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(),
-                  remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(),
-                  gossipManager, gossipManager.getSettings().getCleanupInterval());
-          gossipManager.createOrRevivieMember(newLocalMember);
-          newLocalMember.startTimeoutTimer();
-          GossipService.LOGGER.debug("Added new remote member " + remoteMember.getAddress()
-                  + " to local member list.");
+          GossipService.LOGGER.debug("me " + gossipManager.getMyself());
+          GossipService.LOGGER.debug("sender " + senderMember);
+          GossipService.LOGGER.debug("remote " + remoteList);
+          GossipService.LOGGER.debug("live " + gossipManager.getMemberList());
+          GossipService.LOGGER.debug("dead " + gossipManager.getDeadList());
+          //throw new IllegalArgumentException("wtf");
         }
       }
     }
   }
 
 }
+
+/**
+old comment section:
+// If a member is restarted the heartbeat will restart from 1, so we should check
+// that here.
+// So a member can become from the dead when it is either larger than a previous
+// heartbeat (due to network failure)
+// or when the heartbeat is 1 (after a restart of the service).
+// TODO: What if the first message of a gossip service is sent to a dead node? The
+// second member will receive a heartbeat of two.
+// TODO: The above does happen. Maybe a special message for a revived member?
+// TODO: Or maybe when a member is declared dead for more than
+// _settings.getCleanupInterval() ms, reset the heartbeat to 0.
+// It will then accept a revived member.
+// The above is now handle by checking whether the heartbeat differs
+// _settings.getCleanupInterval(), it must be restarted.
+*/
+
+/*
+// The remote member is back from the dead.
+// Remove it from the dead list.
+// gossipManager.getDeadList().remove(localDeadMember);
+// Add it as a new member and add it to the member list.
+*/
