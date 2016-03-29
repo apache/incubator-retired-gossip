@@ -43,7 +43,7 @@ public class StartupSettingsTest {
     TUnit.assertThat(new Callable<Integer> (){
       public Integer call() throws Exception {
           return firstService.get_gossipManager().getMemberList().size();
-      }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(0);
+      }}).afterWaitingAtMost(30, TimeUnit.SECONDS).isEqualTo(0);
     final GossipService serviceUnderTest = new GossipService(
             StartupSettings.fromJSONFile( settingsFile )
           );
