@@ -46,12 +46,12 @@ public abstract class GossipManager extends Thread implements NotificationListen
     _passiveGossipThreadClass = passiveGossipThreadClass;
     _activeGossipThreadClass = activeGossipThreadClass;
     _settings = settings;
-    _me = new LocalGossipMember(address, port, id, 0, this, settings.getCleanupInterval());
+    _me = new LocalGossipMember(address, port, id, System.currentTimeMillis(), this, settings.getCleanupInterval());
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(_me)) {
         LocalGossipMember member = new LocalGossipMember(startupMember.getHost(),
-                startupMember.getPort(), startupMember.getId(), 0, this,
+                startupMember.getPort(), startupMember.getId(), System.currentTimeMillis(), this,
                 settings.getCleanupInterval());
         members.put(member, GossipState.UP);
         GossipService.LOGGER.debug(member);
@@ -81,6 +81,19 @@ public abstract class GossipManager extends Thread implements NotificationListen
     }
   }
 
+  public void revivieMember(LocalGossipMember m){
+    for ( Entry<LocalGossipMember, GossipState> it : this.members.entrySet()){
+      if (it.getKey().getId().equals(m.getId())){
+        it.getKey().disableTimer();
+      }
+    }
+    members.remove(m);
+    members.put(m, GossipState.UP);
+    if (listener != null) {
+      listener.gossipEvent(m, GossipState.UP);
+    }
+  }
+  
   public void createOrRevivieMember(LocalGossipMember m){
     members.put(m, GossipState.UP);
     if (listener != null) {

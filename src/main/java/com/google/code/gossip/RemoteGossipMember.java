@@ -18,7 +18,7 @@ public class RemoteGossipMember extends GossipMember {
    * @param heartbeat
    *          The current heartbeat.
    */
-  public RemoteGossipMember(String hostname, int port, String id, int heartbeat) {
+  public RemoteGossipMember(String hostname, int port, String id, long heartbeat) {
     super(hostname, port, id, heartbeat);
   }
 
@@ -31,6 +31,6 @@ public class RemoteGossipMember extends GossipMember {
    *          The port number.
    */
   public RemoteGossipMember(String hostname, int port, String id) {
-    super(hostname, port, id, 0);
+    super(hostname, port, id, System.currentTimeMillis());
   }
 }

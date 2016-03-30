@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 
 import org.apache.log4j.Logger;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.code.gossip.GossipMember;
@@ -24,10 +23,10 @@ import com.google.code.gossip.event.GossipState;
 public class ShutdownDeadtimeTest {
 
   private static final Logger log = Logger.getLogger(ShutdownDeadtimeTest.class );
-  //@Test
-  @Ignore
+  @Test
+  //@Ignore
   public void DeadNodesDoNotComeAliveAgain() throws InterruptedException, UnknownHostException {
-      GossipSettings settings = new GossipSettings(10,10000);
+      GossipSettings settings = new GossipSettings(1000, 10000);
       
       log.info( "Adding seed nodes" );
       int seedNodes = 3;
@@ -59,7 +58,7 @@ public class ShutdownDeadtimeTest {
                   total += clients.get(i).get_gossipManager().getMemberList().size();
               }
               return total;
-          }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(20);
+          }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(20);
 
       // shutdown one client and verify that one client is lost.
       Random r = new Random();
@@ -75,8 +74,18 @@ public class ShutdownDeadtimeTest {
                   total += clients.get(i).get_gossipManager().getMemberList().size();
               }
               return total;
-          }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(16);
-
+          }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(16);
+      clients.remove(randomClientId);
+      
+      TUnit.assertThat(new Callable<Integer> (){
+        public Integer call() throws Exception {
+            int total = 0;
+            for (int i = 0; i < clusterMembers - 1; ++i) {
+                total += clients.get(i).get_gossipManager().getDeadList().size();
+            }
+            return total;
+        }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(4);
+      
       // start client again
       GossipService gossipService = new GossipService("127.0.0.1", shutdownPort, shutdownId + "",
               startupMembers, settings,
@@ -97,7 +106,10 @@ public class ShutdownDeadtimeTest {
                   total += clients.get(i).get_gossipManager().getMemberList().size();
               }
               return total;
-          }}).afterWaitingAtMost(70, TimeUnit.SECONDS).isEqualTo(20);
+          }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(20);
       
+      for (int i = 0; i < clusterMembers; ++i) {
+        clients.get(i).shutdown();
+      }
   }
 }
