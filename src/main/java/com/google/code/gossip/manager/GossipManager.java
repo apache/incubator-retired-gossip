@@ -57,7 +57,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
         GossipService.LOGGER.debug(member);
       }
     }
-
+    _gossipThreadExecutor = Executors.newCachedThreadPool();
     _gossipServiceRunning = new AtomicBoolean(true);
     this.listener = listener;
     Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -143,7 +143,6 @@ public abstract class GossipManager extends Thread implements NotificationListen
         member.startTimeoutTimer();
       }
     }
-    _gossipThreadExecutor = Executors.newCachedThreadPool();
     try {
       passiveGossipThread = _passiveGossipThreadClass.getConstructor(GossipManager.class)
               .newInstance(this);
@@ -170,6 +169,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
    * Shutdown the gossip service.
    */
   public void shutdown() {
+    _gossipServiceRunning.set(false);
     _gossipThreadExecutor.shutdown();
     passiveGossipThread.shutdown();
     activeGossipThread.shutdown();
@@ -181,6 +181,5 @@ public abstract class GossipManager extends Thread implements NotificationListen
     } catch (InterruptedException e) {
       LOGGER.error(e);
     }
-    _gossipServiceRunning.set(false);
   }
 }
