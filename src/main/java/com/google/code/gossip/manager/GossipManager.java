@@ -188,8 +188,12 @@ public abstract class GossipManager extends Thread implements NotificationListen
   public void shutdown() {
     _gossipServiceRunning.set(false);
     _gossipThreadExecutor.shutdown();
-    passiveGossipThread.shutdown();
-    activeGossipThread.shutdown();
+    if (passiveGossipThread != null){
+      passiveGossipThread.shutdown();
+    }
+    if (activeGossipThread != null){
+      activeGossipThread.shutdown();
+    }
     try {
       boolean result = _gossipThreadExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
       if (!result){
