@@ -64,7 +64,6 @@ abstract public class PassiveGossipThread implements Runnable {
       GossipService.LOGGER.debug("I am " + _gossipManager.getMyself());
     } catch (SocketException ex) {
       GossipService.LOGGER.warn(ex);
-      _server = null;
       throw new RuntimeException(ex);
     }
     _keepRunning = new AtomicBoolean(true);
@@ -139,7 +138,9 @@ abstract public class PassiveGossipThread implements Runnable {
   }
 
   public void shutdown() {
+    try {
     _server.close();
+    } catch (RuntimeException ex){ }
   }
 
   /**
