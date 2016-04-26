@@ -48,7 +48,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
     for (LocalGossipMember i : gossipManager.getDeadList()){
       if (i.getId().equals(senderMember.getId())){
         System.out.println(gossipManager.getMyself() +" caught a live one!");
-        LocalGossipMember newLocalMember = new LocalGossipMember(senderMember.getHost(),
+        LocalGossipMember newLocalMember = new LocalGossipMember(senderMember.getClusterName(), senderMember.getHost(),
                 senderMember.getPort(), senderMember.getId(), senderMember.getHeartbeat(),
                 gossipManager, gossipManager.getSettings().getCleanupInterval());
         gossipManager.revivieMember(newLocalMember);
@@ -68,7 +68,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
         }
       } else if (!gossipManager.getMemberList().contains(remoteMember) 
               && !gossipManager.getDeadList().contains(remoteMember) ){
-        LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(),
+        LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getClusterName(), remoteMember.getHost(),
                 remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(),
                 gossipManager, gossipManager.getSettings().getCleanupInterval());
         gossipManager.createOrRevivieMember(newLocalMember);
@@ -78,7 +78,7 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
           LocalGossipMember localDeadMember = gossipManager.getDeadList().get(
                   gossipManager.getDeadList().indexOf(remoteMember));
           if (remoteMember.getHeartbeat() > localDeadMember.getHeartbeat()) {
-            LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getHost(),
+            LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getClusterName(), remoteMember.getHost(),
                     remoteMember.getPort(), remoteMember.getId(), remoteMember.getHeartbeat(),
                     gossipManager, gossipManager.getSettings().getCleanupInterval());
             gossipManager.revivieMember(newLocalMember);

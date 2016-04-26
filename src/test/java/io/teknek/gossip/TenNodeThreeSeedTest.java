@@ -22,6 +22,7 @@ import io.teknek.tunit.TUnit;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -52,19 +53,20 @@ public class TenNodeThreeSeedTest {
 
   public void abc() throws InterruptedException, UnknownHostException{
     GossipSettings settings = new GossipSettings();
+    String cluster = UUID.randomUUID().toString();
 
     log.info( "Adding seed nodes" );
     int seedNodes = 3;
     List<GossipMember> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes+1; ++i) {
-      startupMembers.add(new RemoteGossipMember("127.0.0.1", 50000 + i, i + ""));
+      startupMembers.add(new RemoteGossipMember(cluster, "127.0.0.1", 50000 + i, i + ""));
     }
 
     log.info( "Adding clients" );
     final List<GossipService> clients = new ArrayList<>();
     final int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
-      GossipService gossipService = new GossipService("127.0.0.1", 50000 + i, i + "",
+      GossipService gossipService = new GossipService(cluster, "127.0.0.1", 50000 + i, i + "",
               startupMembers, settings,
               new GossipListener(){
         @Override

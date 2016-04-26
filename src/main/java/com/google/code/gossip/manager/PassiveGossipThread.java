@@ -53,6 +53,8 @@ abstract public class PassiveGossipThread implements Runnable {
 
   private AtomicBoolean _keepRunning;
 
+  private final String _cluster;
+
   public PassiveGossipThread(GossipManager gossipManager) {
     _gossipManager = gossipManager;
     try {
@@ -62,6 +64,7 @@ abstract public class PassiveGossipThread implements Runnable {
       GossipService.LOGGER.debug("Gossip service successfully initialized on port "
               + _gossipManager.getMyself().getPort());
       GossipService.LOGGER.debug("I am " + _gossipManager.getMyself());
+      _cluster = _gossipManager.getMyself().getClusterName();
     } catch (SocketException ex) {
       GossipService.LOGGER.warn(ex);
       _server = null;
@@ -96,8 +99,9 @@ abstract public class PassiveGossipThread implements Runnable {
             JSONArray jsonArray = new JSONArray(receivedMessage);
             for (int i = 0; i < jsonArray.length(); i++) {
               JSONObject memberJSONObject = jsonArray.getJSONObject(i);
-              if (memberJSONObject.length() == 4) {
+              if (memberJSONObject.length() == 5  && _cluster.equals(memberJSONObject.get(GossipMember.JSON_CLUSTER))) {
                 RemoteGossipMember member = new RemoteGossipMember(
+                        memberJSONObject.getString(GossipMember.JSON_CLUSTER),
                         memberJSONObject.getString(GossipMember.JSON_HOST),
                         memberJSONObject.getInt(GossipMember.JSON_PORT),
                         memberJSONObject.getString(GossipMember.JSON_ID),
@@ -109,9 +113,11 @@ abstract public class PassiveGossipThread implements Runnable {
                   senderMember = member;
                 }
                 remoteGossipMembers.add(member);
+              } else if(memberJSONObject.length() == 5) {
+                GossipService.LOGGER.warn("The member object does not belong to this cluster.");
               } else {
                 GossipService.LOGGER
-                        .error("The received member object does not contain 4 objects:\n"
+                        .error("The received member object does not contain 5 objects:\n"
                                 + memberJSONObject.toString());
               }
 

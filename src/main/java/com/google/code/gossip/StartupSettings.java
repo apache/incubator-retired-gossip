@@ -44,6 +44,8 @@ public class StartupSettings {
   /** The port to start the gossip service on. */
   private int _port;
 
+  private String cluster;
+
   /** The gossip settings used at startup. */
   private final GossipSettings _gossipSettings;
 
@@ -77,6 +79,14 @@ public class StartupSettings {
     _port = port;
     _gossipSettings = gossipSettings;
     _gossipMembers = new ArrayList<>();
+  }
+
+  public void setCluster(String cluster){
+    this.cluster = cluster;
+  }
+
+  public String getCluster(){
+    return this.cluster;
   }
 
   /**
@@ -192,7 +202,7 @@ public class StartupSettings {
     JSONArray membersJSON = jsonObject.getJSONArray("members");
     for (int i = 0; i < membersJSON.length(); i++) {
       JSONObject memberJSON = membersJSON.getJSONObject(i);
-      RemoteGossipMember member = new RemoteGossipMember(memberJSON.getString("host"),
+      RemoteGossipMember member = new RemoteGossipMember(memberJSON.getString("cluster"), memberJSON.getString("host"),
               memberJSON.getInt("port"), "");
       settings.addGossipMember(member);
       configMembersDetails += member.getAddress();

@@ -44,6 +44,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class StartupSettingsTest {
   private static final Logger log = Logger.getLogger( StartupSettingsTest.class );
+  private static final String CLUSTER = UUID.randomUUID().toString();
 
   @Test
   public void testUsingSettingsFile() throws IOException, InterruptedException, JSONException {
@@ -52,7 +53,7 @@ public class StartupSettingsTest {
     settingsFile.deleteOnExit();
     writeSettingsFile(settingsFile);
     final GossipService firstService = new GossipService(
-      "127.0.0.1", 50000, UUID.randomUUID().toString(),
+            CLUSTER, "127.0.0.1", 50000, UUID.randomUUID().toString(),
       new ArrayList<GossipMember>(), new GossipSettings(), null);
     
     firstService.start();
@@ -76,12 +77,13 @@ public class StartupSettingsTest {
   private void writeSettingsFile( File target ) throws IOException {
     String settings =
             "[{\n" + // It is odd that this is meant to be in an array, but oh well.
+            "  \"cluster\":\"" + CLUSTER + "\",\n" +
             "  \"id\":\"" + UUID.randomUUID() + "\",\n" +
             "  \"port\":50001,\n" +
             "  \"gossip_interval\":1000,\n" +
             "  \"cleanup_interval\":10000,\n" +
             "  \"members\":[\n" +
-            "    {\"host\":\"127.0.0.1\", \"port\":50000}\n" +
+            "    {\"cluster\": \"" + CLUSTER + "\",\"host\":\"127.0.0.1\", \"port\":50000}\n" +
             "  ]\n" +
             "}]";
 

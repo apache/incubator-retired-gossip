@@ -33,9 +33,11 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	public static final String JSON_PORT = "port";
 	public static final String JSON_HEARTBEAT = "heartbeat";
 	public static final String JSON_ID = "id";
+	public static final String JSON_CLUSTER = "cluster";
 	protected final String _host;
 	protected final int _port;
 	protected volatile long _heartbeat;
+	protected final String _clusterName;
 	/**
 	 * The purpose of the id field is to be able for nodes to identify themselves beyond there host/port. For example
 	 * an application might generate a persistent id so if they rejoin the cluster at a different host and port we 
@@ -50,11 +52,21 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	 * @param heartbeat The current heartbeat.
 	 * @param id an id that may be replaced after contact
 	 */
-	public GossipMember(String host, int port, String id, long heartbeat) {
+	public GossipMember(String clusterName, String host, int port, String id, long heartbeat) {
+		_clusterName = clusterName;
 		_host = host;
 		_port = port;
 		_id = id;
 		_heartbeat = heartbeat;
+	}
+
+	/**
+	 * Get the name of the cluster the member belongs to.
+	 *
+	 * @return The cluster name
+     */
+	public String getClusterName(){
+		return _clusterName;
 	}
 
 	/**
@@ -119,7 +131,8 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 		int result = 1;
 		String address = getAddress();
 		result = prime * result
-		+ ((address == null) ? 0 : address.hashCode());
+		+ ((address == null) ? 0 : address.hashCode())
+		+ _clusterName == null ? 0 : _clusterName.hashCode();
 		return result;
 	}
 
@@ -140,7 +153,8 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 			return false;
 		}
 		// The object is the same of they both have the same address (hostname and port).
-		return getAddress().equals(((LocalGossipMember) obj).getAddress());
+		return getAddress().equals(((LocalGossipMember) obj).getAddress()) &&
+				getClusterName().equals(((LocalGossipMember) obj).getClusterName());
 	}
 
 	/**
@@ -150,6 +164,7 @@ public abstract class GossipMember implements Comparable<GossipMember>{
 	public JSONObject toJSONObject() {
 		try {
 			JSONObject jsonObject = new JSONObject();
+			jsonObject.put(JSON_CLUSTER, _clusterName);
 			jsonObject.put(JSON_HOST, _host);
 			jsonObject.put(JSON_PORT, _port);
 			jsonObject.put(JSON_ID, _id);
