@@ -43,9 +43,9 @@ public class LocalGossipMember extends GossipMember {
    * @param cleanupTimeout
    *          The cleanup timeout for this gossip member.
    */
-  public LocalGossipMember(String hostname, int port, String id, long heartbeat,
+  public LocalGossipMember(String clusterName, String hostname, int port, String id, long heartbeat,
           NotificationListener notificationListener, int cleanupTimeout) {
-    super(hostname, port, id, heartbeat);
+    super(clusterName, hostname, port, id, heartbeat);
 
     this.timeoutTimer = new GossipTimeoutTimer(cleanupTimeout, notificationListener, this);
   }

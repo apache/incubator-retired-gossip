@@ -57,17 +57,17 @@ public abstract class GossipManager extends Thread implements NotificationListen
   private ExecutorService _gossipThreadExecutor;
 
   public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
-          Class<? extends ActiveGossipThread> activeGossipThreadClass, String address, int port,
+          Class<? extends ActiveGossipThread> activeGossipThreadClass, String cluster, String address, int port,
           String id, GossipSettings settings, List<GossipMember> gossipMembers,
           GossipListener listener) {
     _passiveGossipThreadClass = passiveGossipThreadClass;
     _activeGossipThreadClass = activeGossipThreadClass;
     _settings = settings;
-    _me = new LocalGossipMember(address, port, id, System.currentTimeMillis(), this, settings.getCleanupInterval());
+    _me = new LocalGossipMember(cluster, address, port, id, System.currentTimeMillis(), this, settings.getCleanupInterval());
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(_me)) {
-        LocalGossipMember member = new LocalGossipMember(startupMember.getHost(),
+        LocalGossipMember member = new LocalGossipMember(startupMember.getClusterName(), startupMember.getHost(),
                 startupMember.getPort(), startupMember.getId(), System.currentTimeMillis(), this,
                 settings.getCleanupInterval());
         members.put(member, GossipState.UP);
