@@ -25,10 +25,10 @@ package com.google.code.gossip;
 public class GossipSettings {
 
   /** Time between gossip'ing in ms. Default is 1 second. */
-  private int _gossipInterval = 1000;
+  private int gossipInterval = 1000;
 
   /** Time between cleanups in ms. Default is 10 seconds. */
-  private int _cleanupInterval = 10000;
+  private int cleanupInterval = 10000;
 
   /**
    * Construct GossipSettings with default settings.
@@ -45,8 +45,8 @@ public class GossipSettings {
    *          The cleanup interval in ms.
    */
   public GossipSettings(int gossipInterval, int cleanupInterval) {
-    _gossipInterval = gossipInterval;
-    _cleanupInterval = cleanupInterval;
+    this.gossipInterval = gossipInterval;
+    this.cleanupInterval = cleanupInterval;
   }
 
   /**
@@ -56,7 +56,7 @@ public class GossipSettings {
    *          The gossip interval in ms.
    */
   public void setGossipTimeout(int gossipInterval) {
-    _gossipInterval = gossipInterval;
+    this.gossipInterval = gossipInterval;
   }
 
   /**
@@ -67,7 +67,7 @@ public class GossipSettings {
    *          The cleanup interval in ms.
    */
   public void setCleanupInterval(int cleanupInterval) {
-    _cleanupInterval = cleanupInterval;
+    this.cleanupInterval = cleanupInterval;
   }
 
   /**
@@ -76,7 +76,7 @@ public class GossipSettings {
    * @return The gossip interval in ms.
    */
   public int getGossipInterval() {
-    return _gossipInterval;
+    return gossipInterval;
   }
 
   /**
@@ -85,6 +85,6 @@ public class GossipSettings {
    * @return The cleanup interval.
    */
   public int getCleanupInterval() {
-    return _cleanupInterval;
+    return cleanupInterval;
   }
 }

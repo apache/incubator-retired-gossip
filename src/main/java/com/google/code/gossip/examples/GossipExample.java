@@ -30,7 +30,7 @@ import com.google.code.gossip.RemoteGossipMember;
 /**
  * This class is an example of how one could use the gossip service. Here we start multiple gossip
  * clients on this host as specified in the config file.
- *
+ * 
  * @author harmenw
  */
 public class GossipExample extends Thread {

@@ -22,7 +22,7 @@ import javax.management.NotificationListener;
 /**
  * This object represent a gossip member with the properties known locally. These objects are stored
  * in the local list of gossip member.s
- *
+ * 
  * @author harmenw
  */
 public class LocalGossipMember extends GossipMember {
@@ -31,7 +31,7 @@ public class LocalGossipMember extends GossipMember {
 
   /**
    * Constructor.
-   *
+   * 
    * @param hostname
    *          The hostname or IP address.
    * @param port
@@ -43,28 +43,28 @@ public class LocalGossipMember extends GossipMember {
    * @param cleanupTimeout
    *          The cleanup timeout for this gossip member.
    */
-  public LocalGossipMember(String clusterName, String hostname, int port, String id, long heartbeat,
-          NotificationListener notificationListener, int cleanupTimeout) {
+  public LocalGossipMember(String clusterName, String hostname, int port, String id,
+          long heartbeat, NotificationListener notificationListener, int cleanupTimeout) {
     super(clusterName, hostname, port, id, heartbeat);
 
-    this.timeoutTimer = new GossipTimeoutTimer(cleanupTimeout, notificationListener, this);
+    timeoutTimer = new GossipTimeoutTimer(cleanupTimeout, notificationListener, this);
   }
 
   /**
    * Start the timeout timer.
    */
   public void startTimeoutTimer() {
-    this.timeoutTimer.start();
+    timeoutTimer.start();
   }
 
   /**
    * Reset the timeout timer.
    */
   public void resetTimeoutTimer() {
-    this.timeoutTimer.reset();
+    timeoutTimer.reset();
   }
-  
+
   public void disableTimer() {
-    this.timeoutTimer.removeAllNotifications();
+    timeoutTimer.removeAllNotifications();
   }
 }

@@ -43,39 +43,50 @@ import com.google.code.gossip.event.GossipState;
 public abstract class GossipManager extends Thread implements NotificationListener {
 
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
+
   public static final int MAX_PACKET_SIZE = 102400;
 
-  private final ConcurrentSkipListMap<LocalGossipMember,GossipState> members;
-  private final LocalGossipMember _me;
-  private final GossipSettings _settings;
-  private final AtomicBoolean _gossipServiceRunning;
-  private final Class<? extends PassiveGossipThread> _passiveGossipThreadClass;
-  private final Class<? extends ActiveGossipThread> _activeGossipThreadClass;
+  private final ConcurrentSkipListMap<LocalGossipMember, GossipState> members;
+
+  private final LocalGossipMember me;
+
+  private final GossipSettings settings;
+
+  private final AtomicBoolean gossipServiceRunning;
+
+  private final Class<? extends PassiveGossipThread> passiveGossipThreadClass;
+
+  private final Class<? extends ActiveGossipThread> activeGossipThreadClass;
+
   private final GossipListener listener;
+
   private ActiveGossipThread activeGossipThread;
+
   private PassiveGossipThread passiveGossipThread;
-  private ExecutorService _gossipThreadExecutor;
+
+  private ExecutorService gossipThreadExecutor;
 
   public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
-          Class<? extends ActiveGossipThread> activeGossipThreadClass, String cluster, String address, int port,
-          String id, GossipSettings settings, List<GossipMember> gossipMembers,
-          GossipListener listener) {
-    _passiveGossipThreadClass = passiveGossipThreadClass;
-    _activeGossipThreadClass = activeGossipThreadClass;
-    _settings = settings;
-    _me = new LocalGossipMember(cluster, address, port, id, System.currentTimeMillis(), this, settings.getCleanupInterval());
+          Class<? extends ActiveGossipThread> activeGossipThreadClass, String cluster,
+          String address, int port, String id, GossipSettings settings,
+          List<GossipMember> gossipMembers, GossipListener listener) {
+    this.passiveGossipThreadClass = passiveGossipThreadClass;
+    this.activeGossipThreadClass = activeGossipThreadClass;
+    this.settings = settings;
+    me = new LocalGossipMember(cluster, address, port, id, System.currentTimeMillis(), this,
+            settings.getCleanupInterval());
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
-      if (!startupMember.equals(_me)) {
-        LocalGossipMember member = new LocalGossipMember(startupMember.getClusterName(), startupMember.getHost(),
-                startupMember.getPort(), startupMember.getId(), System.currentTimeMillis(), this,
-                settings.getCleanupInterval());
+      if (!startupMember.equals(me)) {
+        LocalGossipMember member = new LocalGossipMember(startupMember.getClusterName(),
+                startupMember.getHost(), startupMember.getPort(), startupMember.getId(),
+                System.currentTimeMillis(), this, settings.getCleanupInterval());
         members.put(member, GossipState.UP);
         GossipService.LOGGER.debug(member);
       }
     }
-    _gossipThreadExecutor = Executors.newCachedThreadPool();
-    _gossipServiceRunning = new AtomicBoolean(true);
+    gossipThreadExecutor = Executors.newCachedThreadPool();
+    gossipServiceRunning = new AtomicBoolean(true);
     this.listener = listener;
     Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
       public void run() {
@@ -98,9 +109,9 @@ public abstract class GossipManager extends Thread implements NotificationListen
     }
   }
 
-  public void revivieMember(LocalGossipMember m){
-    for ( Entry<LocalGossipMember, GossipState> it : this.members.entrySet()){
-      if (it.getKey().getId().equals(m.getId())){
+  public void revivieMember(LocalGossipMember m) {
+    for (Entry<LocalGossipMember, GossipState> it : this.members.entrySet()) {
+      if (it.getKey().getId().equals(m.getId())) {
         it.getKey().disableTimer();
       }
     }
@@ -110,8 +121,8 @@ public abstract class GossipManager extends Thread implements NotificationListen
       listener.gossipEvent(m, GossipState.UP);
     }
   }
-  
-  public void createOrRevivieMember(LocalGossipMember m){
+
+  public void createOrRevivieMember(LocalGossipMember m) {
     members.put(m, GossipState.UP);
     if (listener != null) {
       listener.gossipEvent(m, GossipState.UP);
@@ -119,7 +130,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
   }
 
   public GossipSettings getSettings() {
-    return _settings;
+    return settings;
   }
 
   /**
@@ -128,8 +139,8 @@ public abstract class GossipManager extends Thread implements NotificationListen
    */
   public List<LocalGossipMember> getMemberList() {
     List<LocalGossipMember> up = new ArrayList<>();
-    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()){
-      if (GossipState.UP.equals(entry.getValue())){
+    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
+      if (GossipState.UP.equals(entry.getValue())) {
         up.add(entry.getKey());
       }
     }
@@ -137,13 +148,13 @@ public abstract class GossipManager extends Thread implements NotificationListen
   }
 
   public LocalGossipMember getMyself() {
-    return _me;
+    return me;
   }
 
   public List<LocalGossipMember> getDeadList() {
     List<LocalGossipMember> up = new ArrayList<>();
-    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()){
-      if (GossipState.DOWN.equals(entry.getValue())){
+    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
+      if (GossipState.DOWN.equals(entry.getValue())) {
         up.add(entry.getKey());
       }
     }
@@ -156,23 +167,23 @@ public abstract class GossipManager extends Thread implements NotificationListen
    */
   public void run() {
     for (LocalGossipMember member : members.keySet()) {
-      if (member != _me) {
+      if (member != me) {
         member.startTimeoutTimer();
       }
     }
     try {
-      passiveGossipThread = _passiveGossipThreadClass.getConstructor(GossipManager.class)
+      passiveGossipThread = passiveGossipThreadClass.getConstructor(GossipManager.class)
               .newInstance(this);
-      _gossipThreadExecutor.execute(passiveGossipThread);
-      activeGossipThread = _activeGossipThreadClass.getConstructor(GossipManager.class)
+      gossipThreadExecutor.execute(passiveGossipThread);
+      activeGossipThread = activeGossipThreadClass.getConstructor(GossipManager.class)
               .newInstance(this);
-      _gossipThreadExecutor.execute(activeGossipThread);
+      gossipThreadExecutor.execute(activeGossipThread);
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
             | InvocationTargetException | NoSuchMethodException | SecurityException e1) {
       throw new RuntimeException(e1);
     }
     GossipService.LOGGER.debug("The GossipService is started.");
-    while (_gossipServiceRunning.get()) {
+    while (gossipServiceRunning.get()) {
       try {
         // TODO
         TimeUnit.MILLISECONDS.sleep(1);
@@ -186,17 +197,17 @@ public abstract class GossipManager extends Thread implements NotificationListen
    * Shutdown the gossip service.
    */
   public void shutdown() {
-    _gossipServiceRunning.set(false);
-    _gossipThreadExecutor.shutdown();
-    if (passiveGossipThread != null){
+    gossipServiceRunning.set(false);
+    gossipThreadExecutor.shutdown();
+    if (passiveGossipThread != null) {
       passiveGossipThread.shutdown();
     }
-    if (activeGossipThread != null){
+    if (activeGossipThread != null) {
       activeGossipThread.shutdown();
     }
     try {
-      boolean result = _gossipThreadExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
-      if (!result){
+      boolean result = gossipThreadExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+      if (!result) {
         LOGGER.error("executor shutdown timed out");
       }
     } catch (InterruptedException e) {

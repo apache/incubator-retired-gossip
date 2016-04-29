@@ -27,18 +27,15 @@ public class GossipRunner {
 
   public static void main(String[] args) {
     File configFile;
-
     if (args.length == 1) {
       configFile = new File("./" + args[0]);
     } else {
       configFile = new File("gossip.conf");
     }
-
     new GossipRunner(configFile);
   }
 
   public GossipRunner(File configFile) {
-
     if (configFile != null && configFile.exists()) {
       try {
         System.out.println("Parsing the configuration file...");

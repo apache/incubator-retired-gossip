@@ -31,31 +31,31 @@ import com.google.code.gossip.LocalGossipMember;
  */
 abstract public class ActiveGossipThread implements Runnable {
 
-  protected final GossipManager _gossipManager;
+  protected final GossipManager gossipManager;
 
-  private final AtomicBoolean _keepRunning;
+  private final AtomicBoolean keepRunning;
 
   public ActiveGossipThread(GossipManager gossipManager) {
-    _gossipManager = gossipManager;
-    _keepRunning = new AtomicBoolean(true);
+    this.gossipManager = gossipManager;
+    this.keepRunning = new AtomicBoolean(true);
   }
 
   @Override
   public void run() {
-    while (_keepRunning.get()) {
+    while (keepRunning.get()) {
       try {
-        TimeUnit.MILLISECONDS.sleep(_gossipManager.getSettings().getGossipInterval());
-        sendMembershipList(_gossipManager.getMyself(), _gossipManager.getMemberList());
+        TimeUnit.MILLISECONDS.sleep(gossipManager.getSettings().getGossipInterval());
+        sendMembershipList(gossipManager.getMyself(), gossipManager.getMemberList());
       } catch (InterruptedException e) {
         GossipService.LOGGER.error(e);
-        _keepRunning.set(false);
+        keepRunning.set(false);
       }
     }
     shutdown();
   }
 
   public void shutdown() {
-    _keepRunning.set(false);
+    keepRunning.set(false);
   }
 
   /**
@@ -67,7 +67,7 @@ abstract public class ActiveGossipThread implements Runnable {
   /**
    * Abstract method which should be implemented by a subclass. This method should return a member
    * of the list to gossip with.
-   *
+   * 
    * @param memberList
    *          The list of members which are stored in the local list of members.
    * @return The chosen LocalGossipMember to gossip with.

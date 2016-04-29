@@ -47,38 +47,38 @@ abstract public class PassiveGossipThread implements Runnable {
   public static final Logger LOGGER = Logger.getLogger(PassiveGossipThread.class);
 
   /** The socket used for the passive thread of the gossip service. */
-  private DatagramSocket _server;
+  private DatagramSocket server;
 
-  private final GossipManager _gossipManager;
+  private final GossipManager gossipManager;
 
-  private AtomicBoolean _keepRunning;
+  private AtomicBoolean keepRunning;
 
-  private final String _cluster;
+  private final String cluster;
 
   public PassiveGossipThread(GossipManager gossipManager) {
-    _gossipManager = gossipManager;
+    this.gossipManager = gossipManager;
     try {
-      SocketAddress socketAddress = new InetSocketAddress(_gossipManager.getMyself().getHost(),
-              _gossipManager.getMyself().getPort());
-      _server = new DatagramSocket(socketAddress);
+      SocketAddress socketAddress = new InetSocketAddress(gossipManager.getMyself().getHost(),
+              gossipManager.getMyself().getPort());
+      server = new DatagramSocket(socketAddress);
       GossipService.LOGGER.debug("Gossip service successfully initialized on port "
-              + _gossipManager.getMyself().getPort());
-      GossipService.LOGGER.debug("I am " + _gossipManager.getMyself());
-      _cluster = _gossipManager.getMyself().getClusterName();
+              + gossipManager.getMyself().getPort());
+      GossipService.LOGGER.debug("I am " + gossipManager.getMyself());
+      cluster = gossipManager.getMyself().getClusterName();
     } catch (SocketException ex) {
       GossipService.LOGGER.warn(ex);
       throw new RuntimeException(ex);
     }
-    _keepRunning = new AtomicBoolean(true);
+    keepRunning = new AtomicBoolean(true);
   }
 
   @Override
   public void run() {
-    while (_keepRunning.get()) {
+    while (keepRunning.get()) {
       try {
-        byte[] buf = new byte[_server.getReceiveBufferSize()];
+        byte[] buf = new byte[server.getReceiveBufferSize()];
         DatagramPacket p = new DatagramPacket(buf, buf.length);
-        _server.receive(p);
+        server.receive(p);
         int packet_length = 0;
         for (int i = 0; i < 4; i++) {
           int shift = (4 - 1 - i) * 8;
@@ -98,7 +98,8 @@ abstract public class PassiveGossipThread implements Runnable {
             JSONArray jsonArray = new JSONArray(receivedMessage);
             for (int i = 0; i < jsonArray.length(); i++) {
               JSONObject memberJSONObject = jsonArray.getJSONObject(i);
-              if (memberJSONObject.length() == 5  && _cluster.equals(memberJSONObject.get(GossipMember.JSON_CLUSTER))) {
+              if (memberJSONObject.length() == 5
+                      && cluster.equals(memberJSONObject.get(GossipMember.JSON_CLUSTER))) {
                 RemoteGossipMember member = new RemoteGossipMember(
                         memberJSONObject.getString(GossipMember.JSON_CLUSTER),
                         memberJSONObject.getString(GossipMember.JSON_HOST),
@@ -112,7 +113,7 @@ abstract public class PassiveGossipThread implements Runnable {
                   senderMember = member;
                 }
                 remoteGossipMembers.add(member);
-              } else if(memberJSONObject.length() == 5) {
+              } else if (memberJSONObject.length() == 5) {
                 GossipService.LOGGER.warn("The member object does not belong to this cluster.");
               } else {
                 GossipService.LOGGER
@@ -121,7 +122,7 @@ abstract public class PassiveGossipThread implements Runnable {
               }
 
             }
-            mergeLists(_gossipManager, senderMember, remoteGossipMembers);
+            mergeLists(gossipManager, senderMember, remoteGossipMembers);
           } catch (JSONException e) {
             GossipService.LOGGER
                     .error("The received message is not well-formed JSON. The following message has been dropped:\n"
@@ -137,7 +138,7 @@ abstract public class PassiveGossipThread implements Runnable {
       } catch (IOException e) {
         GossipService.LOGGER.error(e);
         System.out.println(e);
-        _keepRunning.set(false);
+        keepRunning.set(false);
       }
     }
     shutdown();
@@ -145,13 +146,14 @@ abstract public class PassiveGossipThread implements Runnable {
 
   public void shutdown() {
     try {
-    _server.close();
-    } catch (RuntimeException ex){ }
+      server.close();
+    } catch (RuntimeException ex) {
+    }
   }
 
   /**
    * Abstract method for merging the local and remote list.
-   *
+   * 
    * @param gossipManager
    *          The GossipManager for retrieving the local members and dead members list.
    * @param senderMember
@@ -165,11 +167,9 @@ abstract public class PassiveGossipThread implements Runnable {
 }
 
 /*
- * random comments
- *         // Check whether the package is smaller than the maximal packet length.
-        // A package larger than this would not be possible to be send from a GossipService,
-        // since this is check before sending the message.
-        // This could normally only occur when the list of members is very big,
-        // or when the packet is malformed, and the first 4 bytes is not the right in anymore.
-        // For this reason we regards the message.
-         * */
+ * random comments // Check whether the package is smaller than the maximal packet length. // A
+ * package larger than this would not be possible to be send from a GossipService, // since this is
+ * check before sending the message. // This could normally only occur when the list of members is
+ * very big, // or when the packet is malformed, and the first 4 bytes is not the right in anymore.
+ * // For this reason we regards the message.
+ */
