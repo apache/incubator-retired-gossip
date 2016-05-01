@@ -26,9 +26,9 @@ import com.google.code.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThrea
 import java.util.List;
 
 public class RandomGossipManager extends GossipManager {
-  public RandomGossipManager(String cluster, String address, int port, String id, GossipSettings settings,
-          List<GossipMember> gossipMembers, GossipListener listener) {
-    super(OnlyProcessReceivedPassiveGossipThread.class, RandomActiveGossipThread.class, cluster, address,
-            port, id, settings, gossipMembers, listener);
+  public RandomGossipManager(String cluster, String address, int port, String id,
+          GossipSettings settings, List<GossipMember> gossipMembers, GossipListener listener) {
+    super(OnlyProcessReceivedPassiveGossipThread.class, RandomActiveGossipThread.class, cluster,
+            address, port, id, settings, gossipMembers, listener);
   }
 }

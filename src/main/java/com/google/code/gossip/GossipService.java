@@ -29,57 +29,59 @@ import com.google.code.gossip.manager.random.RandomGossipManager;
 
 /**
  * This object represents the service which is responsible for gossiping with other gossip members.
- *
+ * 
  * @author joshclemm, harmenw
  */
 public class GossipService {
 
   public static final Logger LOGGER = Logger.getLogger(GossipService.class);
 
-  private GossipManager _gossipManager;
+  private GossipManager gossipManager;
 
   /**
    * Constructor with the default settings.
-   *
+   * 
    * @throws InterruptedException
    * @throws UnknownHostException
    */
   public GossipService(StartupSettings startupSettings) throws InterruptedException,
           UnknownHostException {
-    this(startupSettings.getCluster(), InetAddress.getLocalHost().getHostAddress(), startupSettings.getPort(), startupSettings.getId(),
-             startupSettings.getGossipMembers(), startupSettings
-                    .getGossipSettings(), null);
+    this(startupSettings.getCluster(), InetAddress.getLocalHost().getHostAddress(), startupSettings
+            .getPort(), startupSettings.getId(), startupSettings.getGossipMembers(),
+            startupSettings.getGossipSettings(), null);
   }
 
   /**
    * Setup the client's lists, gossiping parameters, and parse the startup config file.
-   *
+   * 
    * @throws InterruptedException
    * @throws UnknownHostException
    */
   public GossipService(String cluster, String ipAddress, int port, String id,
           List<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener)
           throws InterruptedException, UnknownHostException {
-    _gossipManager = new RandomGossipManager(cluster, ipAddress, port, id, settings, gossipMembers, listener);
+    gossipManager = new RandomGossipManager(cluster, ipAddress, port, id, settings, gossipMembers,
+            listener);
   }
 
   public void start() {
-    String address = get_gossipManager().getMyself().getHost() + ":" + get_gossipManager().getMyself().getPort();
-    LOGGER.debug( "Starting: " + _gossipManager.getName() + " - " + address );
+    String address = get_gossipManager().getMyself().getHost() + ":"
+            + get_gossipManager().getMyself().getPort();
+    LOGGER.debug("Starting: " + gossipManager.getName() + " - " + address);
 
-    _gossipManager.start();
+    gossipManager.start();
   }
 
   public void shutdown() {
-    _gossipManager.shutdown();
+    gossipManager.shutdown();
   }
 
   public GossipManager get_gossipManager() {
-    return _gossipManager;
+    return gossipManager;
   }
 
   public void set_gossipManager(GossipManager _gossipManager) {
-    this._gossipManager = _gossipManager;
+    this.gossipManager = _gossipManager;
   }
 
 }

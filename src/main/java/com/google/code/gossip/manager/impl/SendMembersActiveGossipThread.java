@@ -47,8 +47,8 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
     if (member == null) {
       return;
     }
-    try (DatagramSocket socket = new DatagramSocket()){
-      socket.setSoTimeout(_gossipManager.getSettings().getGossipInterval());
+    try (DatagramSocket socket = new DatagramSocket()) {
+      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
       InetAddress dest = InetAddress.getByName(member.getHost());
       JSONArray jsonArray = new JSONArray();
       jsonArray.put(me.toJSONObject());
@@ -60,8 +60,7 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
       int packet_length = json_bytes.length;
       if (packet_length < GossipManager.MAX_PACKET_SIZE) {
         byte[] buf = createBuffer(packet_length, json_bytes);
-        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest,
-                member.getPort());
+        DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, member.getPort());
         socket.send(datagramPacket);
       } else {
         GossipService.LOGGER.error("The length of the to be send message is too large ("
@@ -71,8 +70,8 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
       GossipService.LOGGER.warn(e1);
     }
   }
-  
-  private byte[] createBuffer(int packetLength, byte [] jsonBytes){
+
+  private byte[] createBuffer(int packetLength, byte[] jsonBytes) {
     byte[] lengthBytes = new byte[4];
     lengthBytes[0] = (byte) (packetLength >> 24);
     lengthBytes[1] = (byte) ((packetLength << 8) >> 24);
@@ -84,5 +83,5 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
     byte[] buf = byteBuffer.array();
     return buf;
   }
-  
+
 }
