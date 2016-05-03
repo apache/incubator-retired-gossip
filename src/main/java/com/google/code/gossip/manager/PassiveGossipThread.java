@@ -65,6 +65,9 @@ abstract public class PassiveGossipThread implements Runnable {
               + gossipManager.getMyself().getPort());
       GossipService.LOGGER.debug("I am " + gossipManager.getMyself());
       cluster = gossipManager.getMyself().getClusterName();
+      if (cluster == null){
+        throw new IllegalArgumentException("cluster was null");
+      }
     } catch (SocketException ex) {
       GossipService.LOGGER.warn(ex);
       throw new RuntimeException(ex);

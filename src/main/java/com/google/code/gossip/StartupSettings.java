@@ -62,8 +62,8 @@ public class StartupSettings {
    * @param logLevel
    *          unused
    */
-  public StartupSettings(String id, int port, int logLevel) {
-    this(id, port, new GossipSettings());
+  public StartupSettings(String id, int port, int logLevel, String cluster) {
+    this(id, port, new GossipSettings(), cluster);
   }
 
   /**
@@ -74,10 +74,11 @@ public class StartupSettings {
    * @param port
    *          The port to start the service on.
    */
-  public StartupSettings(String id, int port, GossipSettings gossipSettings) {
+  public StartupSettings(String id, int port, GossipSettings gossipSettings, String cluster) {
     this.id = id;
     this.port = port;
     this.gossipSettings = gossipSettings;
+    this.setCluster(cluster);
     gossipMembers = new ArrayList<>();
   }
 
@@ -179,25 +180,17 @@ public class StartupSettings {
       }
     }
     
-
-    // Lets parse the String as JSON.
     JSONObject jsonObject = new JSONArray(buffer.toString()).getJSONObject(0);
-
-    // Now get the port number.
     int port = jsonObject.getInt("port");
-
-    // Get the id to be used
     String id = jsonObject.getString("id");
-
-    // Get the gossip_interval from the config file.
     int gossipInterval = jsonObject.getInt("gossip_interval");
-
-    // Get the cleanup_interval from the config file.
     int cleanupInterval = jsonObject.getInt("cleanup_interval");
-
-    // Initiate the settings with the port number.
+    String cluster = jsonObject.getString("cluster");
+    if (cluster == null){
+      throw new IllegalArgumentException("cluster was null. It is required");
+    }
     StartupSettings settings = new StartupSettings(id, port, new GossipSettings(gossipInterval,
-            cleanupInterval));
+            cleanupInterval), cluster);
 
     // Now iterate over the members from the config file and add them to the settings.
     String configMembersDetails = "Config-members [";
