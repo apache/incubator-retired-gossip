@@ -96,9 +96,11 @@ abstract public class PassiveGossipThread implements Runnable {
           for (int i = 0; i < packet_length; i++) {
             json_bytes[i] = buf[i + 4];
           }
-          String receivedMessage = new String(json_bytes);
-          GossipService.LOGGER.warn("Received message (" + packet_length + " bytes): "
+          if (GossipService.LOGGER.isDebugEnabled()){
+            String receivedMessage = new String(json_bytes);
+            GossipService.LOGGER.debug("Received message (" + packet_length + " bytes): "
                   + receivedMessage);
+          }
           try {
             List<GossipMember> remoteGossipMembers = new ArrayList<>();
             RemoteGossipMember senderMember = null;
