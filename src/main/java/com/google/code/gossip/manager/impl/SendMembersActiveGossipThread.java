@@ -24,19 +24,33 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.json.JSONArray;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.LocalGossipMember;
 import com.google.code.gossip.manager.ActiveGossipThread;
 import com.google.code.gossip.manager.GossipManager;
+import com.google.code.gossip.model.ActiveGossipMessage;
+import com.google.code.gossip.model.GossipMember;
 
 abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 
+  protected ObjectMapper om = new ObjectMapper();
+  
   public SendMembersActiveGossipThread(GossipManager gossipManager) {
     super(gossipManager);
   }
 
+  private GossipMember convert(LocalGossipMember member){
+    GossipMember gm = new GossipMember();
+    gm.setCluster(member.getClusterName());
+    gm.setHeartbeat(member.getHeartbeat());
+    gm.setHost(member.getHost());
+    gm.setId(member.getId());
+    gm.setPort(member.getPort());
+    return gm;
+  }
+  
   /**
    * Performs the sending of the membership list, after we have incremented our own heartbeat.
    */
@@ -50,13 +64,12 @@ abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
     try (DatagramSocket socket = new DatagramSocket()) {
       socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
       InetAddress dest = InetAddress.getByName(member.getHost());
-      JSONArray jsonArray = new JSONArray();
-      jsonArray.put(me.toJSONObject());
+      ActiveGossipMessage message = new ActiveGossipMessage();
+      message.getMembers().add(convert(me));
       for (LocalGossipMember other : memberList) {
-        jsonArray.put(other.toJSONObject());
-        GossipService.LOGGER.debug(other);
+        message.getMembers().add(convert(other));
       }
-      byte[] json_bytes = jsonArray.toString().getBytes();
+      byte[] json_bytes = om.writeValueAsString(message).getBytes();
       int packet_length = json_bytes.length;
       if (packet_length < GossipManager.MAX_PACKET_SIZE) {
         byte[] buf = createBuffer(packet_length, json_bytes);
