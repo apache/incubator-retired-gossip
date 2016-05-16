@@ -29,16 +29,7 @@ import org.json.JSONObject;
  */
 public abstract class GossipMember implements Comparable<GossipMember> {
 
-  public static final String JSON_HOST = "host";
-
-  public static final String JSON_PORT = "port";
-
-  public static final String JSON_HEARTBEAT = "heartbeat";
-
-  public static final String JSON_ID = "id";
-
-  public static final String JSON_CLUSTER = "cluster";
-
+  
   protected final String host;
 
   protected final int port;
@@ -172,25 +163,6 @@ public abstract class GossipMember implements Comparable<GossipMember> {
     // The object is the same of they both have the same address (hostname and port).
     return getAddress().equals(((LocalGossipMember) obj).getAddress())
             && getClusterName().equals(((LocalGossipMember) obj).getClusterName());
-  }
-
-  /**
-   * Get the JSONObject which is the JSON representation of this GossipMember.
-   * 
-   * @return The JSONObject of this GossipMember.
-   */
-  public JSONObject toJSONObject() {
-    try {
-      JSONObject jsonObject = new JSONObject();
-      jsonObject.put(JSON_CLUSTER, clusterName);
-      jsonObject.put(JSON_HOST, host);
-      jsonObject.put(JSON_PORT, port);
-      jsonObject.put(JSON_ID, id);
-      jsonObject.put(JSON_HEARTBEAT, heartbeat);
-      return jsonObject;
-    } catch (JSONException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   public int compareTo(GossipMember other) {
