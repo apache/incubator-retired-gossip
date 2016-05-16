@@ -29,10 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.RemoteGossipMember;
@@ -49,15 +45,15 @@ abstract public class PassiveGossipThread implements Runnable {
   public static final Logger LOGGER = Logger.getLogger(PassiveGossipThread.class);
 
   /** The socket used for the passive thread of the gossip service. */
-  private DatagramSocket server;
+  private final DatagramSocket server;
 
   private final GossipManager gossipManager;
 
-  private AtomicBoolean keepRunning;
+  private final AtomicBoolean keepRunning;
 
   private final String cluster;
   
-  private ObjectMapper MAPPER = new ObjectMapper();
+  private final ObjectMapper MAPPER = new ObjectMapper();
 
   public PassiveGossipThread(GossipManager gossipManager) {
     this.gossipManager = gossipManager;
