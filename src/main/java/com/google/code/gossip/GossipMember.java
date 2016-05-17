@@ -19,9 +19,6 @@ package com.google.code.gossip;
 
 import java.net.InetSocketAddress;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 /**
  * A abstract class representing a gossip member.
  * 
