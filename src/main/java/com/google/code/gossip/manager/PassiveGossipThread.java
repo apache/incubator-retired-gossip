@@ -28,13 +28,11 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import org.codehaus.jackson.map.ObjectMapper;
 import com.google.code.gossip.GossipMember;
 import com.google.code.gossip.GossipService;
 import com.google.code.gossip.RemoteGossipMember;
+import com.google.code.gossip.model.ActiveGossipMessage;
 
 /**
  * [The passive thread: reply to incoming gossip request.] This class handles the passive cycle,
@@ -47,13 +45,15 @@ abstract public class PassiveGossipThread implements Runnable {
   public static final Logger LOGGER = Logger.getLogger(PassiveGossipThread.class);
 
   /** The socket used for the passive thread of the gossip service. */
-  private DatagramSocket server;
+  private final DatagramSocket server;
 
   private final GossipManager gossipManager;
 
-  private AtomicBoolean keepRunning;
+  private final AtomicBoolean keepRunning;
 
   private final String cluster;
+  
+  private final ObjectMapper MAPPER = new ObjectMapper();
 
   public PassiveGossipThread(GossipManager gossipManager) {
     this.gossipManager = gossipManager;
@@ -92,47 +92,38 @@ abstract public class PassiveGossipThread implements Runnable {
           for (int i = 0; i < packet_length; i++) {
             json_bytes[i] = buf[i + 4];
           }
-          String receivedMessage = new String(json_bytes);
-          GossipService.LOGGER.debug("Received message (" + packet_length + " bytes): "
+          if (GossipService.LOGGER.isDebugEnabled()){
+            String receivedMessage = new String(json_bytes);
+            GossipService.LOGGER.debug("Received message (" + packet_length + " bytes): "
                   + receivedMessage);
+          }
           try {
             List<GossipMember> remoteGossipMembers = new ArrayList<>();
             RemoteGossipMember senderMember = null;
-            JSONArray jsonArray = new JSONArray(receivedMessage);
-            for (int i = 0; i < jsonArray.length(); i++) {
-              JSONObject memberJSONObject = jsonArray.getJSONObject(i);
-              if (memberJSONObject.length() == 5
-                      && cluster.equals(memberJSONObject.get(GossipMember.JSON_CLUSTER))) {
-                RemoteGossipMember member = new RemoteGossipMember(
-                        memberJSONObject.getString(GossipMember.JSON_CLUSTER),
-                        memberJSONObject.getString(GossipMember.JSON_HOST),
-                        memberJSONObject.getInt(GossipMember.JSON_PORT),
-                        memberJSONObject.getString(GossipMember.JSON_ID),
-                        memberJSONObject.getLong(GossipMember.JSON_HEARTBEAT));
-                GossipService.LOGGER.debug(member.toString());
-                // This is the first member found, so this should be the member who is communicating
-                // with me.
-                if (i == 0) {
-                  senderMember = member;
-                }
-                remoteGossipMembers.add(member);
-              } else if (memberJSONObject.length() == 5) {
-                GossipService.LOGGER.warn("The member object does not belong to this cluster.");
-              } else {
-                GossipService.LOGGER
-                        .error("The received member object does not contain 5 objects:\n"
-                                + memberJSONObject.toString());
+            ActiveGossipMessage activeGossipMessage = MAPPER.readValue(json_bytes,
+                    ActiveGossipMessage.class);
+            for (int i = 0; i < activeGossipMessage.getMembers().size(); i++) {
+              RemoteGossipMember member = new RemoteGossipMember(
+                      activeGossipMessage.getMembers().get(i).getCluster(),
+                      activeGossipMessage.getMembers().get(i).getHost(),
+                      activeGossipMessage.getMembers().get(i).getPort(),
+                      activeGossipMessage.getMembers().get(i).getId(),
+                      activeGossipMessage.getMembers().get(i).getHeartbeat());
+              if (!(member.getClusterName().equals(cluster))){
+                GossipService.LOGGER.warn("Note a member of this cluster " + i);
+                continue;
               }
-
+              // This is the first member found, so this should be the member who is communicating
+              // with me.
+              if (i == 0) {
+                senderMember = member;
+              } 
+              remoteGossipMembers.add(member);
             }
             mergeLists(gossipManager, senderMember, remoteGossipMembers);
-          } catch (JSONException e) {
-            GossipService.LOGGER
-                    .error("The received message is not well-formed JSON. The following message has been dropped:\n"
-                            + receivedMessage);
-            System.out.println(e);
+          } catch (RuntimeException ex) {
+            GossipService.LOGGER.error("Unable to process message", ex);
           }
-
         } else {
           GossipService.LOGGER
                   .error("The received message is not of the expected size, it has been dropped.");
