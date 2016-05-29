@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.manager;
+package org.apache.gossip.manager;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.LocalGossipMember;
+import org.apache.gossip.GossipService;
+import org.apache.gossip.LocalGossipMember;
 
 /**
  * [The active thread: periodically send gossip request.] The class handles gossiping the membership

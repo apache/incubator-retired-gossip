@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.manager.random;
+package org.apache.gossip.manager.random;
 
 import java.util.List;
 import java.util.Random;
 
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.LocalGossipMember;
-import com.google.code.gossip.manager.GossipManager;
-import com.google.code.gossip.manager.impl.SendMembersActiveGossipThread;
+import org.apache.gossip.GossipService;
+import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.impl.SendMembersActiveGossipThread;
 
 public class RandomActiveGossipThread extends SendMembersActiveGossipThread {
 

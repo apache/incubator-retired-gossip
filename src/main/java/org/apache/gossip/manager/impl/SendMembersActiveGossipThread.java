@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.manager.impl;
+package org.apache.gossip.manager.impl;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -24,14 +24,13 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import org.apache.gossip.GossipService;
+import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.manager.ActiveGossipThread;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.model.ActiveGossipMessage;
+import org.apache.gossip.model.GossipMember;
 import org.codehaus.jackson.map.ObjectMapper;
-
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.LocalGossipMember;
-import com.google.code.gossip.manager.ActiveGossipThread;
-import com.google.code.gossip.manager.GossipManager;
-import com.google.code.gossip.model.ActiveGossipMessage;
-import com.google.code.gossip.model.GossipMember;
 
 abstract public class SendMembersActiveGossipThread extends ActiveGossipThread {
 

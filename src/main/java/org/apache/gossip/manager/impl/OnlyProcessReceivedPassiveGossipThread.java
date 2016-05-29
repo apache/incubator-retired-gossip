@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.manager.impl;
+package org.apache.gossip.manager.impl;
 
 import java.util.List;
 
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.LocalGossipMember;
-import com.google.code.gossip.RemoteGossipMember;
-import com.google.code.gossip.manager.GossipManager;
-import com.google.code.gossip.manager.PassiveGossipThread;
+import org.apache.gossip.GossipMember;
+import org.apache.gossip.GossipService;
+import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.PassiveGossipThread;
 
 public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread {
 

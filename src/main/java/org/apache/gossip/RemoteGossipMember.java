@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip;
+package org.apache.gossip;
 
 /**
  * The object represents a gossip member with the properties as received from a remote gossip

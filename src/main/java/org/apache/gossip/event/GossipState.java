@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.event;
+package org.apache.gossip.event;
 
 public enum GossipState {
   UP("up"), DOWN("down");

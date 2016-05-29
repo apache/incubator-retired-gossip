@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.manager;
+package org.apache.gossip.manager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -27,12 +27,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.gossip.GossipMember;
+import org.apache.gossip.GossipService;
+import org.apache.gossip.model.ActiveGossipMessage;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.RemoteGossipMember;
-import com.google.code.gossip.model.ActiveGossipMessage;
+import org.apache.gossip.RemoteGossipMember;
 
 /**
  * [The passive thread: reply to incoming gossip request.] This class handles the passive cycle,
