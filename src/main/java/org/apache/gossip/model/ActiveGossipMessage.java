@@ -1,4 +1,4 @@
-package com.google.code.gossip.model;
+package org.apache.gossip.model;
 
 import java.util.ArrayList;
 import java.util.List;

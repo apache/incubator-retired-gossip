@@ -17,10 +17,10 @@
  */
 package io.teknek.gossip;
 
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.GossipSettings;
-import com.google.code.gossip.StartupSettings;
+import org.apache.gossip.GossipMember;
+import org.apache.gossip.GossipService;
+import org.apache.gossip.GossipSettings;
+import org.apache.gossip.StartupSettings;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.junit.Test;

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.manager;
+package org.apache.gossip.manager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -33,12 +33,12 @@ import javax.management.NotificationListener;
 
 import org.apache.log4j.Logger;
 
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.GossipSettings;
-import com.google.code.gossip.LocalGossipMember;
-import com.google.code.gossip.event.GossipListener;
-import com.google.code.gossip.event.GossipState;
+import org.apache.gossip.GossipMember;
+import org.apache.gossip.GossipService;
+import org.apache.gossip.GossipSettings;
+import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.event.GossipListener;
+import org.apache.gossip.event.GossipState;
 
 public abstract class GossipManager extends Thread implements NotificationListener {
 

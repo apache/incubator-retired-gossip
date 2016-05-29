@@ -15,17 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip;
+package org.apache.gossip;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 
+import org.apache.gossip.event.GossipListener;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.random.RandomGossipManager;
 import org.apache.log4j.Logger;
-
-import com.google.code.gossip.event.GossipListener;
-import com.google.code.gossip.manager.GossipManager;
-import com.google.code.gossip.manager.random.RandomGossipManager;
 
 /**
  * This object represents the service which is responsible for gossiping with other gossip members.

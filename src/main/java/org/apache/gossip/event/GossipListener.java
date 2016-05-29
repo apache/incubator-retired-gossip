@@ -15,20 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.google.code.gossip.manager.random;
+package org.apache.gossip.event;
 
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.GossipSettings;
-import com.google.code.gossip.event.GossipListener;
-import com.google.code.gossip.manager.GossipManager;
-import com.google.code.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
+import org.apache.gossip.GossipMember;
 
-import java.util.List;
-
-public class RandomGossipManager extends GossipManager {
-  public RandomGossipManager(String cluster, String address, int port, String id,
-          GossipSettings settings, List<GossipMember> gossipMembers, GossipListener listener) {
-    super(OnlyProcessReceivedPassiveGossipThread.class, RandomActiveGossipThread.class, cluster,
-            address, port, id, settings, gossipMembers, listener);
-  }
+public interface GossipListener {
+  void gossipEvent(GossipMember member, GossipState state);
 }

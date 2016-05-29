@@ -31,12 +31,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import com.google.code.gossip.GossipMember;
-import com.google.code.gossip.GossipService;
-import com.google.code.gossip.GossipSettings;
-import com.google.code.gossip.RemoteGossipMember;
-import com.google.code.gossip.event.GossipListener;
-import com.google.code.gossip.event.GossipState;
+import org.apache.gossip.GossipMember;
+import org.apache.gossip.GossipService;
+import org.apache.gossip.GossipSettings;
+import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.event.GossipListener;
+import org.apache.gossip.event.GossipState;
 
 public class ShutdownDeadtimeTest {
 
