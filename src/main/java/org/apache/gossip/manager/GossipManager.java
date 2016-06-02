@@ -18,6 +18,8 @@
 package org.apache.gossip.manager;
 
 import java.lang.reflect.InvocationTargetException;
+import java.net.BindException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -68,18 +70,18 @@ public abstract class GossipManager extends Thread implements NotificationListen
 
   public GossipManager(Class<? extends PassiveGossipThread> passiveGossipThreadClass,
           Class<? extends ActiveGossipThread> activeGossipThreadClass, String cluster,
-          String address, int port, String id, GossipSettings settings,
+          URI uri, String id, GossipSettings settings,
           List<GossipMember> gossipMembers, GossipListener listener) {
     this.passiveGossipThreadClass = passiveGossipThreadClass;
     this.activeGossipThreadClass = activeGossipThreadClass;
     this.settings = settings;
-    me = new LocalGossipMember(cluster, address, port, id, System.currentTimeMillis(), this,
+    me = new LocalGossipMember(cluster, uri, id, System.currentTimeMillis(), this,
             settings.getCleanupInterval());
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(me)) {
         LocalGossipMember member = new LocalGossipMember(startupMember.getClusterName(),
-                startupMember.getHost(), startupMember.getPort(), startupMember.getId(),
+                startupMember.getUri(), startupMember.getId(),
                 System.currentTimeMillis(), this, settings.getCleanupInterval());
         members.put(member, GossipState.UP);
         GossipService.LOGGER.debug(member);
@@ -180,6 +182,9 @@ public abstract class GossipManager extends Thread implements NotificationListen
       gossipThreadExecutor.execute(activeGossipThread);
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
             | InvocationTargetException | NoSuchMethodException | SecurityException e1) {
+      if (e1 instanceof BindException){
+        LOGGER.fatal("could not bind to "+ me.getUri() + " " + me.getAddress());
+      }
       throw new RuntimeException(e1);
     }
     GossipService.LOGGER.debug("The GossipService is started.");

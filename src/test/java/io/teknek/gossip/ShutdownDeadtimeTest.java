@@ -19,6 +19,8 @@ package io.teknek.gossip;
 
 import io.teknek.tunit.TUnit;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +45,7 @@ public class ShutdownDeadtimeTest {
   private static final Logger log = Logger.getLogger(ShutdownDeadtimeTest.class );
   @Test
   //@Ignore
-  public void DeadNodesDoNotComeAliveAgain() throws InterruptedException, UnknownHostException {
+  public void DeadNodesDoNotComeAliveAgain() throws InterruptedException, UnknownHostException, URISyntaxException {
       GossipSettings settings = new GossipSettings(1000, 10000);
       String cluster = UUID.randomUUID().toString();
       
@@ -51,7 +53,8 @@ public class ShutdownDeadtimeTest {
       int seedNodes = 3;
       List<GossipMember> startupMembers = new ArrayList<>();
       for (int i = 1; i < seedNodes + 1; ++i) {
-          startupMembers.add(new RemoteGossipMember(cluster, "127.0.0.1", 50000 + i, i + ""));
+        URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+        startupMembers.add(new RemoteGossipMember(cluster, uri, i + ""));
       }
 
       log.info( "Adding clients" );
@@ -59,7 +62,8 @@ public class ShutdownDeadtimeTest {
       final int clusterMembers = 5;
       for (int i = 1; i < clusterMembers+1; ++i) {
           final int j = i;
-          GossipService gossipService = new GossipService(cluster, "127.0.0.1", 50000 + i, i + "",
+          URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+          GossipService gossipService = new GossipService(cluster, uri, i + "",
                   startupMembers, settings,
                   new GossipListener(){
                       @Override
@@ -83,7 +87,7 @@ public class ShutdownDeadtimeTest {
       Random r = new Random();
       int randomClientId = r.nextInt(clusterMembers);
       log.info( "shutting down " + randomClientId );
-      final int shutdownPort = clients.get(randomClientId).get_gossipManager().getMyself().getPort();
+      final int shutdownPort = clients.get(randomClientId).get_gossipManager().getMyself().getUri().getPort();
       final String shutdownId = clients.get(randomClientId).get_gossipManager().getMyself().getId();
       clients.get(randomClientId).shutdown();
       TUnit.assertThat(new Callable<Integer> (){
@@ -105,8 +109,9 @@ public class ShutdownDeadtimeTest {
             return total;
         }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(4);
       
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + shutdownPort);
       // start client again
-      GossipService gossipService = new GossipService(cluster, "127.0.0.1", shutdownPort, shutdownId + "",
+      GossipService gossipService = new GossipService(cluster, uri, shutdownId + "",
               startupMembers, settings,
               new GossipListener(){
                   @Override

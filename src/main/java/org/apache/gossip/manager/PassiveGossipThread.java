@@ -23,6 +23,8 @@ import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,18 +60,18 @@ abstract public class PassiveGossipThread implements Runnable {
   public PassiveGossipThread(GossipManager gossipManager) {
     this.gossipManager = gossipManager;
     try {
-      SocketAddress socketAddress = new InetSocketAddress(gossipManager.getMyself().getHost(),
-              gossipManager.getMyself().getPort());
+      SocketAddress socketAddress = new InetSocketAddress(gossipManager.getMyself().getUri().getHost(),
+              gossipManager.getMyself().getUri().getPort());
       server = new DatagramSocket(socketAddress);
-      GossipService.LOGGER.debug("Gossip service successfully initialized on port "
-              + gossipManager.getMyself().getPort());
-      GossipService.LOGGER.debug("I am " + gossipManager.getMyself());
+      LOGGER.debug("Gossip service successfully initialized on port "
+              + gossipManager.getMyself().getUri().getPort());
+      LOGGER.debug("I am " + gossipManager.getMyself());
       cluster = gossipManager.getMyself().getClusterName();
       if (cluster == null){
         throw new IllegalArgumentException("cluster was null");
       }
     } catch (SocketException ex) {
-      GossipService.LOGGER.warn(ex);
+      LOGGER.warn(ex);
       throw new RuntimeException(ex);
     }
     keepRunning = new AtomicBoolean(true);
@@ -103,14 +105,20 @@ abstract public class PassiveGossipThread implements Runnable {
             ActiveGossipMessage activeGossipMessage = MAPPER.readValue(json_bytes,
                     ActiveGossipMessage.class);
             for (int i = 0; i < activeGossipMessage.getMembers().size(); i++) {
+              URI u = null;
+              try {
+                u = new URI(activeGossipMessage.getMembers().get(i).getUri());
+              } catch (URISyntaxException e) {
+                LOGGER.debug("Gossip message with faulty URI", e);
+                continue;
+              }
               RemoteGossipMember member = new RemoteGossipMember(
                       activeGossipMessage.getMembers().get(i).getCluster(),
-                      activeGossipMessage.getMembers().get(i).getHost(),
-                      activeGossipMessage.getMembers().get(i).getPort(),
+                      u,
                       activeGossipMessage.getMembers().get(i).getId(),
                       activeGossipMessage.getMembers().get(i).getHeartbeat());
               if (!(member.getClusterName().equals(cluster))){
-                GossipService.LOGGER.warn("Note a member of this cluster " + i);
+                LOGGER.warn("Note a member of this cluster " + i);
                 continue;
               }
               // This is the first member found, so this should be the member who is communicating
@@ -122,16 +130,15 @@ abstract public class PassiveGossipThread implements Runnable {
             }
             mergeLists(gossipManager, senderMember, remoteGossipMembers);
           } catch (RuntimeException ex) {
-            GossipService.LOGGER.error("Unable to process message", ex);
+            LOGGER.error("Unable to process message", ex);
           }
         } else {
-          GossipService.LOGGER
+          LOGGER
                   .error("The received message is not of the expected size, it has been dropped.");
         }
 
       } catch (IOException e) {
-        GossipService.LOGGER.error(e);
-        System.out.println(e);
+        LOGGER.error(e);
         keepRunning.set(false);
       }
     }

@@ -18,6 +18,7 @@
 package org.apache.gossip;
 
 import java.net.InetAddress;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.List;
 
@@ -45,8 +46,8 @@ public class GossipService {
    */
   public GossipService(StartupSettings startupSettings) throws InterruptedException,
           UnknownHostException {
-    this(startupSettings.getCluster(), InetAddress.getLocalHost().getHostAddress(), startupSettings
-            .getPort(), startupSettings.getId(), startupSettings.getGossipMembers(),
+    this(startupSettings.getCluster(), startupSettings.getUri()
+            , startupSettings.getId(), startupSettings.getGossipMembers(),
             startupSettings.getGossipSettings(), null);
   }
 
@@ -56,18 +57,15 @@ public class GossipService {
    * @throws InterruptedException
    * @throws UnknownHostException
    */
-  public GossipService(String cluster, String ipAddress, int port, String id,
+  public GossipService(String cluster, URI uri, String id,
           List<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener)
           throws InterruptedException, UnknownHostException {
-    gossipManager = new RandomGossipManager(cluster, ipAddress, port, id, settings, gossipMembers,
+    gossipManager = new RandomGossipManager(cluster, uri, id, settings, gossipMembers,
             listener);
   }
 
   public void start() {
-    String address = get_gossipManager().getMyself().getHost() + ":"
-            + get_gossipManager().getMyself().getPort();
-    LOGGER.debug("Starting: " + gossipManager.getName() + " - " + address);
-
+    LOGGER.debug("Starting: " + gossipManager.getName() + " - " + get_gossipManager().getMyself().getUri());
     gossipManager.start();
   }
 

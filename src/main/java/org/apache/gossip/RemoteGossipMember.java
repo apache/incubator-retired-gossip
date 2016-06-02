@@ -17,6 +17,8 @@
  */
 package org.apache.gossip;
 
+import java.net.URI;
+
 /**
  * The object represents a gossip member with the properties as received from a remote gossip
  * member.
@@ -35,19 +37,12 @@ public class RemoteGossipMember extends GossipMember {
    * @param heartbeat
    *          The current heartbeat.
    */
-  public RemoteGossipMember(String clusterName, String hostname, int port, String id, long heartbeat) {
-    super(clusterName, hostname, port, id, heartbeat);
+  public RemoteGossipMember(String clusterName, URI uri, String id, long heartbeat) {
+    super(clusterName, uri, id, heartbeat);
   }
 
-  /**
-   * Construct a RemoteGossipMember with a heartbeat of 0.
-   * 
-   * @param hostname
-   *          The hostname or IP address.
-   * @param port
-   *          The port number.
-   */
-  public RemoteGossipMember(String clusterName, String hostname, int port, String id) {
-    super(clusterName, hostname, port, id, System.currentTimeMillis());
+  public RemoteGossipMember(String clusterName, URI uri, String id) {
+    super(clusterName, uri, id, System.currentTimeMillis());
   }
+
 }

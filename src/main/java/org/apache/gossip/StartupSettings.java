@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,9 +43,8 @@ public class StartupSettings {
   /** The id to use fo the service */
   private String id;
 
-  /** The port to start the gossip service on. */
-  private int port;
-
+  private URI uri;
+  
   private String cluster;
 
   /** The gossip settings used at startup. */
@@ -62,8 +63,16 @@ public class StartupSettings {
    * @param logLevel
    *          unused
    */
-  public StartupSettings(String id, int port, int logLevel, String cluster) {
-    this(id, port, new GossipSettings(), cluster);
+  public StartupSettings(String id, URI uri, int logLevel, String cluster) {
+    this(id, uri, new GossipSettings(), cluster);
+  }
+
+  public URI getUri() {
+    return uri;
+  }
+
+  public void setUri(URI uri) {
+    this.uri = uri;
   }
 
   /**
@@ -74,9 +83,9 @@ public class StartupSettings {
    * @param port
    *          The port to start the service on.
    */
-  public StartupSettings(String id, int port, GossipSettings gossipSettings, String cluster) {
+  public StartupSettings(String id, URI uri, GossipSettings gossipSettings, String cluster) {
     this.id = id;
-    this.port = port;
+    this.uri = uri;
     this.gossipSettings = gossipSettings;
     this.setCluster(cluster);
     gossipMembers = new ArrayList<>();
@@ -107,25 +116,6 @@ public class StartupSettings {
    */
   public String getId() {
     return id;
-  }
-
-  /**
-   * Set the port of the gossip service.
-   * 
-   * @param port
-   *          The port for the gossip service.
-   */
-  public void setPort(int port) {
-    this.port = port;
-  }
-
-  /**
-   * Get the port for the gossip service.
-   * 
-   * @return The port of the gossip service.
-   */
-  public int getPort() {
-    return port;
   }
 
   /**
@@ -168,9 +158,10 @@ public class StartupSettings {
    *           Thrown when the file cannot be found.
    * @throws IOException
    *           Thrown when reading the file gives problems.
+   * @throws URISyntaxException 
    */
   public static StartupSettings fromJSONFile(File jsonFile) throws JSONException,
-          FileNotFoundException, IOException {
+          FileNotFoundException, IOException, URISyntaxException {
     // Read the file to a String.
     StringBuffer buffer = new StringBuffer();
     try (BufferedReader br = new BufferedReader(new FileReader(jsonFile)) ){
@@ -181,7 +172,7 @@ public class StartupSettings {
     }
     
     JSONObject jsonObject = new JSONArray(buffer.toString()).getJSONObject(0);
-    int port = jsonObject.getInt("port");
+    String uri = jsonObject.getString("uri");
     String id = jsonObject.getString("id");
     int gossipInterval = jsonObject.getInt("gossip_interval");
     int cleanupInterval = jsonObject.getInt("cleanup_interval");
@@ -189,7 +180,8 @@ public class StartupSettings {
     if (cluster == null){
       throw new IllegalArgumentException("cluster was null. It is required");
     }
-    StartupSettings settings = new StartupSettings(id, port, new GossipSettings(gossipInterval,
+    URI uri2 = new URI(uri);
+    StartupSettings settings = new StartupSettings(id, uri2, new GossipSettings(gossipInterval,
             cleanupInterval), cluster);
 
     // Now iterate over the members from the config file and add them to the settings.
@@ -197,8 +189,9 @@ public class StartupSettings {
     JSONArray membersJSON = jsonObject.getJSONArray("members");
     for (int i = 0; i < membersJSON.length(); i++) {
       JSONObject memberJSON = membersJSON.getJSONObject(i);
+      URI uri3 = new URI(memberJSON.getString("uri"));
       RemoteGossipMember member = new RemoteGossipMember(memberJSON.getString("cluster"),
-              memberJSON.getString("host"), memberJSON.getInt("port"), "");
+              uri3, "", 0);
       settings.addGossipMember(member);
       configMembersDetails += member.getAddress();
       if (i < (membersJSON.length() - 1))
