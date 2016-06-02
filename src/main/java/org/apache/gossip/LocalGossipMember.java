@@ -17,6 +17,8 @@
  */
 package org.apache.gossip;
 
+import java.net.URI;
+
 import javax.management.NotificationListener;
 
 /**
@@ -32,10 +34,8 @@ public class LocalGossipMember extends GossipMember {
   /**
    * Constructor.
    * 
-   * @param hostname
-   *          The hostname or IP address.
-   * @param port
-   *          The port number.
+   * @param uri
+   *          The uri of the member
    * @param id
    * @param heartbeat
    *          The current heartbeat.
@@ -43,10 +43,9 @@ public class LocalGossipMember extends GossipMember {
    * @param cleanupTimeout
    *          The cleanup timeout for this gossip member.
    */
-  public LocalGossipMember(String clusterName, String hostname, int port, String id,
+  public LocalGossipMember(String clusterName, URI uri, String id,
           long heartbeat, NotificationListener notificationListener, int cleanupTimeout) {
-    super(clusterName, hostname, port, id, heartbeat);
-
+    super(clusterName, uri, id, heartbeat);
     timeoutTimer = new GossipTimeoutTimer(cleanupTimeout, notificationListener, this);
   }
 

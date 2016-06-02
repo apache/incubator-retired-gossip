@@ -20,12 +20,13 @@ package org.apache.gossip;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.json.JSONException;
 
 public class GossipRunner {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws URISyntaxException {
     File configFile;
     if (args.length == 1) {
       configFile = new File("./" + args[0]);
@@ -35,7 +36,7 @@ public class GossipRunner {
     new GossipRunner(configFile);
   }
 
-  public GossipRunner(File configFile) {
+  public GossipRunner(File configFile) throws URISyntaxException {
     if (configFile != null && configFile.exists()) {
       try {
         System.out.println("Parsing the configuration file...");

@@ -3,8 +3,7 @@ package org.apache.gossip.model;
 public class GossipMember {
 
   private String cluster;
-  private String host;
-  private Integer port;
+  private String uri;
   private String id;
   private Long heartbeat;
   
@@ -12,12 +11,11 @@ public class GossipMember {
     
   }
   
-  public GossipMember(String cluster, String host, Integer port, String id, Long heartbeat){
-    this.cluster=cluster;
-    this.host= host;
-    this.port = port;
+  public GossipMember(String cluster, String uri, String id, Long heartbeat){
+    this.cluster = cluster;
+    this.uri = uri;
     this.id = id;
-    
+    this.heartbeat = heartbeat;
   }
 
   public String getCluster() {
@@ -28,20 +26,12 @@ public class GossipMember {
     this.cluster = cluster;
   }
 
-  public String getHost() {
-    return host;
+  public String getUri() {
+    return uri;
   }
 
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  public Integer getPort() {
-    return port;
-  }
-
-  public void setPort(Integer port) {
-    this.port = port;
+  public void setUri(String uri) {
+    this.uri = uri;
   }
 
   public String getId() {

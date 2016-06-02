@@ -23,12 +23,13 @@ import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
 
+import java.net.URI;
 import java.util.List;
 
 public class RandomGossipManager extends GossipManager {
-  public RandomGossipManager(String cluster, String address, int port, String id,
+  public RandomGossipManager(String cluster, URI uri, String id,
                              GossipSettings settings, List<GossipMember> gossipMembers, GossipListener listener) {
     super(OnlyProcessReceivedPassiveGossipThread.class, RandomActiveGossipThread.class, cluster,
-            address, port, id, settings, gossipMembers, listener);
+            uri, id, settings, gossipMembers, listener);
   }
 }

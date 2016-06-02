@@ -18,6 +18,8 @@
 package org.apache.gossip.examples;
 
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,26 +59,28 @@ public class GossipExample extends Thread {
   public void run() {
     try {
       GossipSettings settings = new GossipSettings();
-
       List<GossipService> clients = new ArrayList<>();
-
-      // Get my ip address.
       String myIpAddress = InetAddress.getLocalHost().getHostAddress();
-
       String cluster = "My Gossip Cluster";
 
       // Create the gossip members and put them in a list and give them a port number starting with
       // 2000.
       List<GossipMember> startupMembers = new ArrayList<>();
       for (int i = 0; i < NUMBER_OF_CLIENTS; ++i) {
-        startupMembers.add(new RemoteGossipMember(cluster, myIpAddress, 2000 + i, ""));
+        URI u;
+        try {
+          u = new URI("udp://" + myIpAddress + ":" + (2000 + i));
+        } catch (URISyntaxException e) {
+          throw new RuntimeException(e);
+        }
+        startupMembers.add(new RemoteGossipMember(cluster, u, "", 0 ));
       }
 
       // Lets start the gossip clients.
       // Start the clients, waiting cleaning-interval + 1 second between them which will show the
       // dead list handling.
       for (GossipMember member : startupMembers) {
-        GossipService gossipService = new GossipService(cluster, myIpAddress, member.getPort(), "",
+        GossipService gossipService = new GossipService(cluster,  member.getUri(), "",
                 startupMembers, settings, null);
         clients.add(gossipService);
         gossipService.start();

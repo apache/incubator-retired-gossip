@@ -19,6 +19,8 @@ package io.teknek.gossip;
 
 import io.teknek.tunit.TUnit;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,16 +43,16 @@ public class TenNodeThreeSeedTest {
   private static final Logger log = Logger.getLogger( TenNodeThreeSeedTest.class );
 
   @Test
-  public void test() throws UnknownHostException, InterruptedException{
+  public void test() throws UnknownHostException, InterruptedException, URISyntaxException{
     abc();
   }
 
   @Test
-  public void testAgain() throws UnknownHostException, InterruptedException{
+  public void testAgain() throws UnknownHostException, InterruptedException, URISyntaxException{
     abc();
   }
 
-  public void abc() throws InterruptedException, UnknownHostException{
+  public void abc() throws InterruptedException, UnknownHostException, URISyntaxException{
     GossipSettings settings = new GossipSettings();
     String cluster = UUID.randomUUID().toString();
 
@@ -58,14 +60,16 @@ public class TenNodeThreeSeedTest {
     int seedNodes = 3;
     List<GossipMember> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes+1; ++i) {
-      startupMembers.add(new RemoteGossipMember(cluster, "127.0.0.1", 50000 + i, i + ""));
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      startupMembers.add(new RemoteGossipMember(cluster, uri, i + ""));
     }
 
     log.info( "Adding clients" );
     final List<GossipService> clients = new ArrayList<>();
     final int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
-      GossipService gossipService = new GossipService(cluster, "127.0.0.1", 50000 + i, i + "",
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      GossipService gossipService = new GossipService(cluster, uri, i + "",
               startupMembers, settings,
               new GossipListener(){
         @Override
@@ -75,7 +79,6 @@ public class TenNodeThreeSeedTest {
       });
       clients.add(gossipService);
       gossipService.start();
-      gossipService.get_gossipManager().getMemberList();
     }
     TUnit.assertThat(new Callable<Integer> (){
       public Integer call() throws Exception {
@@ -84,7 +87,7 @@ public class TenNodeThreeSeedTest {
           total += clients.get(i).get_gossipManager().getMemberList().size();
         }
         return total;
-      }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(20);
+      }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(20);
     
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();

@@ -18,6 +18,7 @@
 package org.apache.gossip;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
 
 /**
  * A abstract class representing a gossip member.
@@ -27,9 +28,7 @@ import java.net.InetSocketAddress;
 public abstract class GossipMember implements Comparable<GossipMember> {
 
   
-  protected final String host;
-
-  protected final int port;
+  protected final URI uri;
 
   protected volatile long heartbeat;
 
@@ -54,12 +53,11 @@ public abstract class GossipMember implements Comparable<GossipMember> {
    * @param id
    *          an id that may be replaced after contact
    */
-  public GossipMember(String clusterName, String host, int port, String id, long heartbeat) {
+  public GossipMember(String clusterName, URI uri, String id, long heartbeat) {
     this.clusterName = clusterName;
-    this.host = host;
-    this.port = port;
     this.id = id;
     this.heartbeat = heartbeat;
+    this.uri = uri;
   }
 
   /**
@@ -71,30 +69,13 @@ public abstract class GossipMember implements Comparable<GossipMember> {
     return clusterName;
   }
 
-  /**
-   * Get the hostname or IP address of the remote gossip member.
-   * 
-   * @return The hostname or IP address.
-   */
-  public String getHost() {
-    return host;
-  }
-
-  /**
-   * Get the port number of the remote gossip member.
-   * 
-   * @return The port number.
-   */
-  public int getPort() {
-    return port;
-  }
-
+ 
   /**
    * The member address in the form IP/host:port Similar to the toString in
    * {@link InetSocketAddress}
    */
   public String getAddress() {
-    return host + ":" + port;
+    return uri.getHost() + ":" + uri.getPort();
   }
 
   /**
@@ -139,6 +120,10 @@ public abstract class GossipMember implements Comparable<GossipMember> {
     result = prime * result + ((address == null) ? 0 : address.hashCode()) + clusterName == null ? 0
             : clusterName.hashCode();
     return result;
+  }
+
+  public URI getUri() {
+    return uri;
   }
 
   /**
