@@ -28,6 +28,9 @@ import org.junit.Test;
 
 import javax.management.Notification;
 import javax.management.NotificationListener;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,12 +66,11 @@ public class RandomGossipManagerBuilderTest {
   }
 
   @Test
-  public void createMembersListIfNull() {
+  public void createMembersListIfNull() throws URISyntaxException {
     RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
         .withId("id")
         .cluster("aCluster")
-        .port(8080)
-        .address("localhost")
+        .uri(new URI("udp://localhost:2000"))
         .settings(new GossipSettings())
         .gossipMembers(null).build();
 
@@ -76,19 +78,17 @@ public class RandomGossipManagerBuilderTest {
   }
 
   @Test
-  public void useMemberListIfProvided() {
-    LocalGossipMember member = new LocalGossipMember("aCluster", "localhost", 2000, "aGossipMember",
+  public void useMemberListIfProvided() throws URISyntaxException {
+    LocalGossipMember member = new LocalGossipMember("aCluster", new URI("udp://localhost:2000"), "aGossipMember",
         System.currentTimeMillis(), new TestNotificationListener(), 60000);
-
     List<GossipMember> memberList = new ArrayList<>();
     memberList.add(member);
-
     RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
         .withId("id")
         .cluster("aCluster")
         .settings(new GossipSettings())
+        .uri(new URI("udp://localhost:8000"))
         .gossipMembers(memberList).build();
-
     Assert.assertEquals(1, gossipManager.getMemberList().size());
     Assert.assertEquals(member.getId(), gossipManager.getMemberList().get(0).getId());
   }

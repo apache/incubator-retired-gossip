@@ -26,9 +26,77 @@ import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
 import java.net.URI;
 import java.util.List;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RandomGossipManager extends GossipManager {
-  public RandomGossipManager(String cluster, URI uri, String id,
-                             GossipSettings settings, List<GossipMember> gossipMembers, GossipListener listener) {
+
+  public static ManagerBuilder newBuilder() {
+    return new ManagerBuilder();
+  }
+
+  public static final class ManagerBuilder {
+    private String cluster;
+    private URI uri;
+    private String id;
+    private GossipSettings settings;
+    private List<GossipMember> gossipMembers;
+    private GossipListener listener;
+
+    private ManagerBuilder() {}
+
+    private void checkArgument(boolean check, String msg) {
+      if (!check) {
+        throw new IllegalArgumentException(msg);
+      }
+    }
+
+    public ManagerBuilder cluster(String cluster) {
+      this.cluster = cluster;
+      return this;
+    }
+
+    public ManagerBuilder withId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public ManagerBuilder settings(GossipSettings settings) {
+      this.settings = settings;
+      return this;
+    }
+
+    public ManagerBuilder gossipMembers(List<GossipMember> members) {
+      this.gossipMembers = members;
+      return this;
+    }
+
+    public ManagerBuilder listener(GossipListener listener) {
+      this.listener = listener;
+      return this;
+    }
+
+    public ManagerBuilder uri(URI uri){
+      this.uri = uri;
+      return this;
+    }
+    
+    public RandomGossipManager build() {
+      checkArgument(id != null, "You must specify an id");
+      checkArgument(cluster != null, "You must specify a cluster name");
+      checkArgument(settings != null, "You must specify gossip settings");
+      checkArgument(uri != null, "You must specify a uri");
+
+      if (this.gossipMembers == null) {
+        this.gossipMembers = new ArrayList<>();
+      }
+
+      return new RandomGossipManager(cluster, uri, id, settings, gossipMembers, listener);
+    }
+  }
+
+  private RandomGossipManager(String cluster, URI uri, String id, GossipSettings settings, 
+          List<GossipMember> gossipMembers, GossipListener listener) {
     super(OnlyProcessReceivedPassiveGossipThread.class, RandomActiveGossipThread.class, cluster,
             uri, id, settings, gossipMembers, listener);
   }
