@@ -60,10 +60,6 @@ public class GossipService {
   public GossipService(String cluster, URI uri, String id,
           List<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener)
           throws InterruptedException, UnknownHostException {
-<<<<<<< HEAD
-    gossipManager = new RandomGossipManager(cluster, uri, id, settings, gossipMembers,
-            listener);
-=======
     gossipManager = RandomGossipManager.newBuilder()
         .withId(id)
         .cluster(cluster)
@@ -73,7 +69,6 @@ public class GossipService {
         .gossipMembers(gossipMembers)
         .listener(listener)
         .build();
->>>>>>> fe196cd... GOSSIP-4: Use builder to create RandomGossipManager (Jaideep Dhok via EGC)
   }
 
   public void start() {
