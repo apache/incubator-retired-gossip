@@ -20,7 +20,6 @@ package org.apache.gossip.manager.impl;
 import java.util.List;
 
 import org.apache.gossip.GossipMember;
-import org.apache.gossip.GossipService;
 import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.RemoteGossipMember;
 import org.apache.gossip.manager.GossipManager;

@@ -166,11 +166,3 @@ abstract public class PassiveGossipThread implements Runnable {
   abstract protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
           List<GossipMember> remoteList);
 }
-
-/*
- * random comments // Check whether the package is smaller than the maximal packet length. // A
- * package larger than this would not be possible to be send from a GossipService, // since this is
- * check before sending the message. // This could normally only occur when the list of members is
- * very big, // or when the packet is malformed, and the first 4 bytes is not the right in anymore.
- * // For this reason we regards the message.
- */

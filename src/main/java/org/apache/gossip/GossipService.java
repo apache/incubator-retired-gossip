@@ -17,7 +17,6 @@
  */
 package org.apache.gossip;
 
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.List;
