@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.teknek.gossip;
+package org.apache.gossip;
 
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.GossipService;
