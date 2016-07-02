@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.manager.GossipCore;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.PassiveGossipThread;
 import org.apache.log4j.Logger;
@@ -30,8 +31,8 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
   
   public static final Logger LOGGER = Logger.getLogger(OnlyProcessReceivedPassiveGossipThread.class);
 
-  public OnlyProcessReceivedPassiveGossipThread(GossipManager gossipManager) {
-    super(gossipManager);
+  public OnlyProcessReceivedPassiveGossipThread(GossipManager gossipManager, GossipCore gossipCore) {
+    super(gossipManager, gossipCore);
   }
 
   /**
@@ -110,21 +111,3 @@ public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread 
   }
 
 }
-
-/**
- * old comment section: // If a member is restarted the heartbeat will restart from 1, so we should
- * check // that here. // So a member can become from the dead when it is either larger than a
- * previous // heartbeat (due to network failure) // or when the heartbeat is 1 (after a restart of
- * the service). // TODO: What if the first message of a gossip service is sent to a dead node? The
- * // second member will receive a heartbeat of two. // TODO: The above does happen. Maybe a special
- * message for a revived member? // TODO: Or maybe when a member is declared dead for more than //
- * _settings.getCleanupInterval() ms, reset the heartbeat to 0. // It will then accept a revived
- * member. // The above is now handle by checking whether the heartbeat differs //
- * _settings.getCleanupInterval(), it must be restarted.
- */
-
-/*
- * // The remote member is back from the dead. // Remove it from the dead list. //
- * gossipManager.getDeadList().remove(localDeadMember); // Add it as a new member and add it to the
- * member list.
- */
