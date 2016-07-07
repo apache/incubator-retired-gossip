@@ -29,8 +29,8 @@ limitations under the License.
 
 {% if site.data.contributors %}
 {: .table .table-hover}
-   | Full Name | Apache ID | GitHub | Role | Affiliation
-:- | :-------- | :-------- | :----- | :--- | :----------
+&nbsp; | Full Name | Apache ID | GitHub | Role | Affiliation
+:----- | :-------- | :-------- | :----- | :--- | :----------
 {% for member in site.data.contributors %}<a href="http://github.com/{{ member.githubId }}"><img width="64" src="{% unless c.avatar %}http://github.com/{{ member.githubId }}.png{% else %}{{ member.avatar }}{% endunless %}"></a> | {{member.name}} | {{member.apacheId}} | <a href="http://github.com/{{ member.githubId }}">{{ member.githubId }}</a> | {{member.role}} | {{member.org}}
 {% endfor %}
 {% endif %}
