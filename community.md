@@ -25,9 +25,7 @@ limitations under the License.
 
 {% include JB/setup %}
 
-<br/><br/><br/>
-
-## {{ site.data.project.name }} Community
+# {{ site.data.project.name }} Community
 
 Every volunteer project obtains its strength from the people involved in it. We invite you to participate as much or as little as you choose.
 

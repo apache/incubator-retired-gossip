@@ -25,25 +25,13 @@ limitations under the License.
 
 {% include JB/setup %}
 
-<br/><br/><br/>
-
-### {{ site.data.project.short_name }} Team Members
+# {{ site.data.project.short_name }} Team Members
 
 {% if site.data.contributors %}
-<table class="table table-hover">
-    <tr>
-        <th><b></b></th><th><b>Full Name</b></th><th><b>Apache ID</b></th><th><b>GitHub</b><th><b>Role</b></th><th><b>Affiliation</b></th>
-    </tr>
-    {% for member in site.data.contributors %}
-        <tr>
-        <td><a href="http://github.com/{{ member.githubId }}"><img width="64" src="{% unless c.avatar %}http://github.com/{{ member.githubId }}.png{% else %}{{ member.avatar }}{% endunless %}"></a></td>
-        <td>{{member.name}}</td>
-        <td>{{member.apacheId}}</td>
-        <td><a href="http://github.com/{{ member.githubId }}">{{ member.githubId }}</a></td>
-        <td>{{member.role}}</td>
-        <td>{{member.org}}</td>
-        </tr>
-    {% endfor %}
-</table>
+{: .table .table-hover}
+   | Full Name | Apache ID | GitHub | Role | Affiliation
+:- | :-------- | :-------- | :----- | :--- | :----------
+{% for member in site.data.contributors %}<a href="http://github.com/{{ member.githubId }}"><img width="64" src="{% unless c.avatar %}http://github.com/{{ member.githubId }}.png{% else %}{{ member.avatar }}{% endunless %}"></a> | {{member.name}} | {{member.apacheId}} | <a href="http://github.com/{{ member.githubId }}">{{ member.githubId }}</a> | {{member.role}} | {{member.org}}
+{% endfor %}
 {% endif %}
 

@@ -22,68 +22,58 @@
   githubId: 
   role: Champion
   org: 
-  homepage: 
 
 - name: Sean Busbey
   apacheId: busbey
   githubId:
   role: Mentor
-  homepage: 
 
 - name: Josh Elser
   apacheId: elserj
   githubId: joshelser
   role: Mentor
   org: 
-  homepage: 
 
 - name: Edward Capriolo
   apacheId: ecapriolo
   githubId: 
   role: Committer
   org:
-  homepage: 
 
 - name: Josh Clemm
   apacheId:
   githubId:
   role: Committer
   org:
-  homepage: 
 
 - name: Gary Dusbabek
   apacheId: gdusbabek
   githubId: 
   role: Committer
   org:
-  homepage: 
 
 - name: Dorian Ellerbe
   apacheId: 
   githubId: 
   role: Committer
   org:
-  homepage: 
 
 - name: Sathish Dhinakaran
   apacheId: 
   githubId: 
   role: Committer
   org:
-  homepage: 
 
 - name: Joe Price
   apacheId: 
   githubId: 
   role: Committer
   org:
-  homepage: 
 
 - name: Sree Vaddi
   apacheId: 
   githubId: 
   role: Contributor
   org: 
-  homepage: 
 
 # End contributors.yml
