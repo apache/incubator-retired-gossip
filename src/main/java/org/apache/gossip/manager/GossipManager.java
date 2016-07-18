@@ -132,6 +132,21 @@ public abstract class GossipManager extends Thread implements NotificationListen
     return settings;
   }
 
+  // TODO: Use some java 8 goodness for these functions.
+  
+  /**
+   * @return a read only list of members found in the DOWN state.
+   */
+  public List<LocalGossipMember> getDeadMembers() {
+    List<LocalGossipMember> down = new ArrayList<>();
+    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
+      if (GossipState.DOWN.equals(entry.getValue())) {
+        down.add(entry.getKey());
+      }
+    }
+    return Collections.unmodifiableList(down);
+  }
+
   /**
    * 
    * @return a read only list of members found in the UP state

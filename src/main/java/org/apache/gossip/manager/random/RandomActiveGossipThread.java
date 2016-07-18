@@ -71,12 +71,16 @@ public class RandomActiveGossipThread extends ActiveGossipThread {
   }
 
   protected void sendMembershipList(LocalGossipMember me, List<LocalGossipMember> memberList) {
-    GossipService.LOGGER.debug("Send sendMembershipList() is called.");
+    
     me.setHeartbeat(System.currentTimeMillis());
     LocalGossipMember member = selectPartner(memberList);
     if (member == null) {
+      GossipService.LOGGER.debug("Send sendMembershipList() is called without action");
       return;
+    } else {
+      GossipService.LOGGER.debug("Send sendMembershipList() is called to " + member.toString());
     }
+    
     try (DatagramSocket socket = new DatagramSocket()) {
       socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
       UdpActiveGossipMessage message = new UdpActiveGossipMessage();

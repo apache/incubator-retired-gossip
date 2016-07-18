@@ -45,7 +45,13 @@ abstract public class ActiveGossipThread implements Runnable {
     while (keepRunning.get()) {
       try {
         TimeUnit.MILLISECONDS.sleep(gossipManager.getSettings().getGossipInterval());
+        
+        // contact a live member.
         sendMembershipList(gossipManager.getMyself(), gossipManager.getLiveMembers());
+        
+        // contact a dead member.
+        sendMembershipList(gossipManager.getMyself(), gossipManager.getDeadMembers());
+        
       } catch (InterruptedException e) {
         GossipService.LOGGER.error(e);
         keepRunning.set(false);

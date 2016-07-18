@@ -131,7 +131,7 @@ public class GossipCore {
     if (t == null){
       return null;
     }
-    Future<Response> response = service.submit( new Callable<Response>(){
+    final Future<Response> response = service.submit( new Callable<Response>(){
       @Override
       public Response call() throws Exception {
         while(true){
@@ -156,7 +156,8 @@ public class GossipCore {
       LOGGER.error(e.getMessage(), e);
       return null;
     } catch (TimeoutException e) {
-      LOGGER.error(e.getMessage(), e);
+      boolean cancelled = response.cancel(true);
+      LOGGER.error(String.format("Threadpool timeout attempting to contact %s, cancelled ? %b", uri.toString(), cancelled));
       return null; 
     } finally {
       if (t != null){
