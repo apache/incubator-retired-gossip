@@ -7,6 +7,7 @@ The original implementation was forked from https://code.google.com/p/java-gossi
 Usage
 -----
 
+
 To gossip you need one or more seed nodes. Seed is just a list of places to initially connect to.
 
 ```java
