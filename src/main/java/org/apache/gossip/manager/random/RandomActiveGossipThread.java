@@ -65,6 +65,7 @@ public class RandomActiveGossipThread extends ActiveGossipThread {
       member = memberList.get(randomNeighborIndex);
     } else {
       GossipService.LOGGER.debug("I am alone in this world.");
+      
     }
     return member;
   }

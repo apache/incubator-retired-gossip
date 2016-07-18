@@ -108,7 +108,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
     }
   }
 
-  public void revivieMember(LocalGossipMember m) {
+  public void reviveMember(LocalGossipMember m) {
     for (Entry<LocalGossipMember, GossipState> it : this.members.entrySet()) {
       if (it.getKey().getId().equals(m.getId())) {
         it.getKey().disableTimer();
@@ -121,7 +121,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
     }
   }
 
-  public void createOrRevivieMember(LocalGossipMember m) {
+  public void createOrReviveMember(LocalGossipMember m) {
     members.put(m, GossipState.UP);
     if (listener != null) {
       listener.gossipEvent(m, GossipState.UP);
@@ -136,7 +136,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
    * 
    * @return a read only list of members found in the UP state
    */
-  public List<LocalGossipMember> getMemberList() {
+  public List<LocalGossipMember> getLiveMembers() {
     List<LocalGossipMember> up = new ArrayList<>();
     for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
       if (GossipState.UP.equals(entry.getValue())) {
