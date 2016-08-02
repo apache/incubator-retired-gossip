@@ -58,8 +58,8 @@ public class StartupSettings {
    * 
    * @param id
    *          The id to be used for this service
-   * @param port
-   *          The port to start the service on.
+   * @param uri
+   *          A URI object containing IP/hostname and port
    * @param logLevel
    *          unused
    */
@@ -80,8 +80,8 @@ public class StartupSettings {
    * 
    * @param id
    *          The id to be used for this service
-   * @param port
-   *          The port to start the service on.
+   * @param uri
+   *          A URI object containing IP/hostname and port
    */
   public StartupSettings(String id, URI uri, GossipSettings gossipSettings, String cluster) {
     this.id = id;

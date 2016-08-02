@@ -30,12 +30,10 @@ public class RemoteGossipMember extends GossipMember {
   /**
    * Constructor.
    * 
-   * @param hostname
-   *          The hostname or IP address.
-   * @param port
-   *          The port number.
+   * @param uri
+   *          A URI object containing IP/hostname and port
    * @param heartbeat
-   *          The current heartbeat.
+   *          The current heartbeat
    */
   public RemoteGossipMember(String clusterName, URI uri, String id, long heartbeat) {
     super(clusterName, uri, id, heartbeat);

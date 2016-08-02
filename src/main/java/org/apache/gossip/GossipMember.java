@@ -35,7 +35,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
   protected final String clusterName;
 
   /**
-   * The purpose of the id field is to be able for nodes to identify themselves beyond there
+   * The purpose of the id field is to be able for nodes to identify themselves beyond their
    * host/port. For example an application might generate a persistent id so if they rejoin the
    * cluster at a different host and port we are aware it is the same node.
    */
@@ -43,15 +43,13 @@ public abstract class GossipMember implements Comparable<GossipMember> {
 
   /**
    * Constructor.
-   * 
-   * @param host
-   *          The hostname or IP address.
-   * @param port
-   *          The port number.
+   *
+   * @param uri
+   *          A URI object containing IP/hostname and port
    * @param heartbeat
-   *          The current heartbeat.
+   *          The current heartbeat
    * @param id
-   *          an id that may be replaced after contact
+   *          An id that may be replaced after contact
    */
   public GossipMember(String clusterName, URI uri, String id, long heartbeat) {
     this.clusterName = clusterName;
