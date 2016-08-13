@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.random.RandomGossipManager;
+import org.apache.gossip.model.GossipDataMessage;
 import org.apache.log4j.Logger;
 
 /**
@@ -80,6 +81,19 @@ public class GossipService {
 
   public GossipManager get_gossipManager() {
     return gossipManager;
+  }
+  
+  /**
+   * Gossip data to the entire cluster
+   * @param message
+   */
+  public void gossipData(GossipDataMessage message){
+    gossipManager.gossipData(message);
+  }
+  
+  
+  public GossipDataMessage findGossipData(String nodeId, String key){
+    return this.get_gossipManager().findGossipData(nodeId, key);
   }
 
   public void set_gossipManager(GossipManager _gossipManager) {
