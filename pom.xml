@@ -78,12 +78,14 @@
 			<artifactId>jackson-datatype-json-org</artifactId>
 			<version>${jackson-datatype-json-org.version}</version>
 		</dependency>
+
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>5.0.0-M2</version>
 		</dependency>
+
+
 		<dependency>
 			<groupId>io.teknek</groupId>
 			<artifactId>tunit</artifactId>

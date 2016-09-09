@@ -23,8 +23,7 @@ import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.random.RandomGossipManager;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.management.Notification;
 import javax.management.NotificationListener;
@@ -33,6 +32,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.expectThrows;
+
 
 public class RandomGossipManagerBuilderTest {
 
@@ -50,21 +54,27 @@ public class RandomGossipManagerBuilderTest {
     }
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void idShouldNotBeNull() {
-    RandomGossipManager.newBuilder().cluster("aCluster").build();
+    expectThrows(IllegalArgumentException.class,() -> {
+        RandomGossipManager.newBuilder().cluster("aCluster").build();
+    });
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void clusterShouldNotBeNull() {
-    RandomGossipManager.newBuilder().withId("id").build();
+      expectThrows(IllegalArgumentException.class,() -> {
+          RandomGossipManager.newBuilder().withId("id").build();
+      });
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void settingsShouldNotBeNull() {
-    RandomGossipManager.newBuilder().withId("id").cluster("aCluster").build();
-  }
+      expectThrows(IllegalArgumentException.class,() -> {
+          RandomGossipManager.newBuilder().withId("id").cluster("aCluster").build();
+      });
 
+  }
   @Test
   public void createMembersListIfNull() throws URISyntaxException {
     RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
@@ -74,7 +84,7 @@ public class RandomGossipManagerBuilderTest {
         .settings(new GossipSettings())
         .gossipMembers(null).build();
 
-    Assert.assertNotNull(gossipManager.getLiveMembers());
+    assertNotNull(gossipManager.getLiveMembers());
   }
 
   @Test
@@ -89,8 +99,8 @@ public class RandomGossipManagerBuilderTest {
         .settings(new GossipSettings())
         .uri(new URI("udp://localhost:8000"))
         .gossipMembers(memberList).build();
-    Assert.assertEquals(1, gossipManager.getLiveMembers().size());
-    Assert.assertEquals(member.getId(), gossipManager.getLiveMembers().get(0).getId());
+    assertEquals(1, gossipManager.getLiveMembers().size());
+    assertEquals(member.getId(), gossipManager.getLiveMembers().get(0).getId());
   }
 
 }
