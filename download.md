@@ -26,8 +26,11 @@ limitations under the License.
 
 ## {{ site.data.project.name }} Downloads
 
-There are no official Apache releases for {{ site.data.project.short_name }} yet. You can download and build the latest code from [GitHub]({{ site.data.project.source_repository_mirror }}).
+There are no official Apache releases for {{ site.data.project.short_name }} yet. 
 
+{% comment %}
+You can download and build the latest code from [GitHub]({{ site.data.project.source_repository_mirror }}).
+{% endcomment %}
 
 {% comment %}
 
