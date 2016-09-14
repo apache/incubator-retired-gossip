@@ -27,14 +27,15 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
-
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 import org.apache.log4j.Logger;
 
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.junit.jupiter.api.Test;
 
+@RunWith(JUnitPlatform.class)
 public class TenNodeThreeSeedTest {
   private static final Logger log = Logger.getLogger( TenNodeThreeSeedTest.class );
 

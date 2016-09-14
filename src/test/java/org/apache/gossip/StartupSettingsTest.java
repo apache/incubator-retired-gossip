@@ -32,11 +32,14 @@ import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 /**
  * Tests support of using {@code StartupSettings} and thereby reading
  * setup config from file.
  */
+@RunWith(JUnitPlatform.class)
 public class StartupSettingsTest {
   private static final Logger log = Logger.getLogger( StartupSettingsTest.class );
   private static final String CLUSTER = UUID.randomUUID().toString();

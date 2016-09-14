@@ -24,6 +24,8 @@ import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.random.RandomGossipManager;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 import javax.management.Notification;
 import javax.management.NotificationListener;
@@ -37,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.expectThrows;
 
-
+@RunWith(JUnitPlatform.class)
 public class RandomGossipManagerBuilderTest {
 
   public static class TestGossipListener implements GossipListener {

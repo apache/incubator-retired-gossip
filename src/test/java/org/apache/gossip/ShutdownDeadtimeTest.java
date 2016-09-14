@@ -34,13 +34,17 @@ import org.apache.log4j.Logger;
 
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
+import org.junit.platform.runner.JUnitPlatform;
 import org.junit.jupiter.api.Test;
 
+import org.junit.runner.RunWith;
+
+@RunWith(JUnitPlatform.class)
 public class ShutdownDeadtimeTest {
 
-  private static final Logger log = Logger.getLogger(ShutdownDeadtimeTest.class );
+  private static final Logger log = Logger.getLogger(ShutdownDeadtimeTest.class);
+
   @Test
-  //@Ignore
   public void DeadNodesDoNotComeAliveAgain() throws InterruptedException, UnknownHostException, URISyntaxException {
       GossipSettings settings = new GossipSettings(1000, 10000);
       String cluster = UUID.randomUUID().toString();
