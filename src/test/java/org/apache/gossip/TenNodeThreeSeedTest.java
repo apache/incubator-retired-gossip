@@ -30,10 +30,10 @@ import java.util.concurrent.TimeUnit;
 
 
 import org.apache.log4j.Logger;
-import org.junit.Test;
 
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
+import org.junit.jupiter.api.Test;
 
 public class TenNodeThreeSeedTest {
   private static final Logger log = Logger.getLogger( TenNodeThreeSeedTest.class );

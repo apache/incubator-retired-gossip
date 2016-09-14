@@ -19,9 +19,9 @@ package org.apache.gossip;
 
 import org.apache.log4j.Logger;
 import org.json.JSONException;
-import org.junit.Test;
 
 import io.teknek.tunit.TUnit;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileOutputStream;
