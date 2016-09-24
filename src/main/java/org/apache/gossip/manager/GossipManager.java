@@ -40,9 +40,8 @@ import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
-import org.apache.gossip.manager.random.RandomActiveGossipThread;
 
-public abstract class GossipManager extends Thread implements NotificationListener {
+public abstract class GossipManager implements NotificationListener {
 
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
 
@@ -179,7 +178,7 @@ public abstract class GossipManager extends Thread implements NotificationListen
    * Starts the client. Specifically, start the various cycles for this protocol. Start the gossip
    * thread and start the receiver thread.
    */
-  public void run() {
+  public void init() {
     for (LocalGossipMember member : members.keySet()) {
       if (member != me) {
         member.startTimeoutTimer();
@@ -187,17 +186,9 @@ public abstract class GossipManager extends Thread implements NotificationListen
     }
     passiveGossipThread = new OnlyProcessReceivedPassiveGossipThread(this, gossipCore);
     gossipThreadExecutor.execute(passiveGossipThread);
-    activeGossipThread = new RandomActiveGossipThread(this, this.gossipCore);
-    gossipThreadExecutor.execute(activeGossipThread);
+    activeGossipThread = new ActiveGossipThread(this, this.gossipCore);
+    activeGossipThread.init();
     GossipService.LOGGER.debug("The GossipService is started.");
-    while (gossipServiceRunning.get()) {
-      try {
-        // TODO
-        TimeUnit.MILLISECONDS.sleep(1);
-      } catch (InterruptedException e) {
-        GossipService.LOGGER.warn("The GossipClient was interrupted.");
-      }
-    }
   }
 
   /**

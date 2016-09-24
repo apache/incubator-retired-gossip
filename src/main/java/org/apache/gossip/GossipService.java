@@ -70,8 +70,8 @@ public class GossipService {
   }
 
   public void start() {
-    LOGGER.debug("Starting: " + gossipManager.getName() + " - " + get_gossipManager().getMyself().getUri());
-    gossipManager.start();
+    LOGGER.debug("Starting: " + get_gossipManager().getMyself().getUri());
+    gossipManager.init();
   }
 
   public void shutdown() {
