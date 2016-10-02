@@ -17,7 +17,7 @@ import org.junit.Test;
 import io.teknek.tunit.TUnit;
 
 public class DataTest {
-
+  
   @Test
   public void abc() throws InterruptedException, UnknownHostException, URISyntaxException{
     GossipSettings settings = new GossipSettings();
@@ -36,7 +36,7 @@ public class DataTest {
               startupMembers, settings,
               new GossipListener(){
         public void gossipEvent(GossipMember member, GossipState state) {
-          System.out.println(member + " " + state);
+          
         }
       });
       clients.add(gossipService);

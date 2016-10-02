@@ -2,7 +2,6 @@ package org.apache.gossip.model;
 
 public class GossipDataMessage extends Base {
 
-  
   private String nodeId;
   private String key;
   private Object payload;

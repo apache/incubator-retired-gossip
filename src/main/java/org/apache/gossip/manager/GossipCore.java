@@ -47,6 +47,10 @@ public class GossipCore {
     perNodeData = new ConcurrentHashMap<>();
   }
   
+  /**
+   *  
+   * @param message
+   */
   public void addPerNodeData(GossipDataMessage message){
     ConcurrentHashMap<String,GossipDataMessage> m = new ConcurrentHashMap<>();
     m.put(message.getKey(), message);
@@ -70,7 +74,6 @@ public class GossipCore {
   }
   
   public void recieve(Base base){
-    System.out.println(base);
     if (base instanceof Response){
       if (base instanceof Trackable){
         Trackable t = (Trackable) base;
@@ -80,11 +83,6 @@ public class GossipCore {
     if (base instanceof GossipDataMessage) {
       UdpGossipDataMessage message = (UdpGossipDataMessage) base;
       addPerNodeData(message);
-      /*
-      UdpActiveGossipOk o = new UdpActiveGossipOk();
-      o.setUriFrom(message.getUriFrom());
-      o.setUuid(message.getUuid());
-      sendOneWay(o, senderMember.getUri());*/
     }
     if (base instanceof ActiveGossipMessage){
       List<GossipMember> remoteGossipMembers = new ArrayList<>();
@@ -178,11 +176,11 @@ public class GossipCore {
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {
-      LOGGER.error(e.getMessage(), e);
+      LOGGER.debug(e.getMessage(), e);
       return null;
     } catch (TimeoutException e) {
       boolean cancelled = response.cancel(true);
-      LOGGER.error(String.format("Threadpool timeout attempting to contact %s, cancelled ? %b", uri.toString(), cancelled));
+      LOGGER.debug(String.format("Threadpool timeout attempting to contact %s, cancelled ? %b", uri.toString(), cancelled));
       return null; 
     } finally {
       if (t != null){

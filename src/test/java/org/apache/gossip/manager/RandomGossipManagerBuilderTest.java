@@ -24,6 +24,8 @@ import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.random.RandomGossipManager;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 import javax.management.Notification;
 import javax.management.NotificationListener;
@@ -37,20 +39,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.expectThrows;
 
-
+@RunWith(JUnitPlatform.class)
 public class RandomGossipManagerBuilderTest {
 
   public static class TestGossipListener implements GossipListener {
     @Override
     public void gossipEvent(GossipMember member, GossipState state) {
-      System.out.println("Got gossip event");
     }
   }
 
   public static class TestNotificationListener implements NotificationListener {
     @Override
     public void handleNotification(Notification notification, Object o) {
-      System.out.println("Got notification event");
     }
   }
 
@@ -73,8 +73,8 @@ public class RandomGossipManagerBuilderTest {
       expectThrows(IllegalArgumentException.class,() -> {
           RandomGossipManager.newBuilder().withId("id").cluster("aCluster").build();
       });
-
   }
+  
   @Test
   public void createMembersListIfNull() throws URISyntaxException {
     RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
