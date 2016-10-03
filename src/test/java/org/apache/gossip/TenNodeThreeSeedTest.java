@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip;
+package org.apache.gossip; 
 
 import io.teknek.tunit.TUnit;
 
@@ -33,6 +33,7 @@ import org.apache.log4j.Logger;
 
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
+import org.junit.After;
 import org.junit.jupiter.api.Test;
 
 @RunWith(JUnitPlatform.class)

@@ -20,17 +20,23 @@ package org.apache.gossip.manager;
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.util.List;
+
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import org.apache.gossip.GossipService;
+
 import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.model.ActiveGossipOk;
+import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.GossipMember;
 import org.apache.gossip.model.Response;
 import org.apache.gossip.udp.UdpActiveGossipMessage;
+import org.apache.gossip.udp.UdpGossipDataMessage;
+
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -41,21 +47,21 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class ActiveGossipThread {
 
-  public static final Logger LOGGER = Logger.getLogger(ActiveGossipThread.class);
+  private static final Logger LOGGER = Logger.getLogger(ActiveGossipThread.class);
   
-  private ScheduledExecutorService scheduledExecutorService ;
-  private ObjectMapper MAPPER = new ObjectMapper();
+  private final GossipManager gossipManager;
   private final Random random;
-  protected final GossipManager gossipManager;
   private final GossipCore gossipCore;
+  private ScheduledExecutorService scheduledExecutorService;
+  private ObjectMapper MAPPER = new ObjectMapper();
 
   public ActiveGossipThread(GossipManager gossipManager, GossipCore gossipCore) {
     this.gossipManager = gossipManager;
-    this.scheduledExecutorService = Executors.newScheduledThreadPool(1024);
+    random = new Random();
     this.gossipCore = gossipCore;
-    this.random = new Random();
+    this.scheduledExecutorService = Executors.newScheduledThreadPool(1024);
   }
-
+ 
   public void init() {
     scheduledExecutorService.scheduleAtFixedRate(
             () -> sendMembershipList(gossipManager.getMyself(), gossipManager.getLiveMembers()), 0,
@@ -63,29 +69,65 @@ public class ActiveGossipThread {
     scheduledExecutorService.scheduleAtFixedRate(
             () -> sendMembershipList(gossipManager.getMyself(), gossipManager.getDeadMembers()), 0,
             gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
+    scheduledExecutorService.scheduleAtFixedRate(
+            () -> sendData(gossipManager.getMyself(), gossipManager.getLiveMembers()), 0,
+            gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
   }
   
   public void shutdown() {
-    this.scheduledExecutorService.shutdown();
+    scheduledExecutorService.shutdown();
     try {
-      this.scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);
+      scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      LOGGER.warn("Did not complete shutdown", e);
+      LOGGER.debug("Issue during shurdown" + e);
     }
   }
 
+  public void sendData(LocalGossipMember me, List<LocalGossipMember> memberList){
+    LocalGossipMember member = selectPartner(memberList);
+    if (member == null) {
+      LOGGER.debug("Send sendMembershipList() is called without action");
+      return;
+    }
+    try (DatagramSocket socket = new DatagramSocket()) {
+      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
+      for (Entry<String, ConcurrentHashMap<String, GossipDataMessage>> entry : gossipCore.getPerNodeData().entrySet()){
+        for (Entry<String, GossipDataMessage> innerEntry : entry.getValue().entrySet()){
+          UdpGossipDataMessage message = new UdpGossipDataMessage();
+          message.setUuid(UUID.randomUUID().toString());
+          message.setUriFrom(me.getId());
+          message.setExpireAt(innerEntry.getValue().getExpireAt());
+          message.setKey(innerEntry.getValue().getKey());
+          message.setNodeId(innerEntry.getValue().getNodeId());
+          message.setTimestamp(innerEntry.getValue().getTimestamp());
+          message.setPayload(innerEntry.getValue().getPayload());
+          message.setTimestamp(innerEntry.getValue().getTimestamp());
+          byte[] json_bytes = MAPPER.writeValueAsString(message).getBytes();
+          int packet_length = json_bytes.length;
+          if (packet_length < GossipManager.MAX_PACKET_SIZE) {
+            gossipCore.sendOneWay(message, member.getUri());
+          } else {
+            LOGGER.error("The length of the to be send message is too large ("
+                    + packet_length + " > " + GossipManager.MAX_PACKET_SIZE + ").");
+          }
+        }
+      }
+    } catch (IOException e1) {
+      LOGGER.warn(e1);
+    }
+  }
+  
   /**
    * Performs the sending of the membership list, after we have incremented our own heartbeat.
    */
- protected void sendMembershipList(LocalGossipMember me, List<LocalGossipMember> memberList) {
-    
+  protected void sendMembershipList(LocalGossipMember me, List<LocalGossipMember> memberList) {  
     me.setHeartbeat(System.currentTimeMillis());
     LocalGossipMember member = selectPartner(memberList);
     if (member == null) {
-      GossipService.LOGGER.debug("Send sendMembershipList() is called without action");
+      LOGGER.debug("Send sendMembershipList() is called without action");
       return;
     } else {
-      GossipService.LOGGER.debug("Send sendMembershipList() is called to " + member.toString());
+      LOGGER.debug("Send sendMembershipList() is called to " + member.toString());
     }
     
     try (DatagramSocket socket = new DatagramSocket()) {
@@ -107,31 +149,30 @@ public class ActiveGossipThread {
           LOGGER.warn("Message "+ message + " generated response "+ r);
         }
       } else {
-        GossipService.LOGGER.error("The length of the to be send message is too large ("
+        LOGGER.error("The length of the to be send message is too large ("
                 + packet_length + " > " + GossipManager.MAX_PACKET_SIZE + ").");
       }
     } catch (IOException e1) {
-      GossipService.LOGGER.warn(e1);
+      LOGGER.warn(e1);
     }
   }
+  
   /**
-   * Abstract method which should be implemented by a subclass. This method should return a member
-   * of the list to gossip with.
    * 
    * @param memberList
    *          The list of members which are stored in the local list of members.
    * @return The chosen LocalGossipMember to gossip with.
    */
- protected LocalGossipMember selectPartner(List<LocalGossipMember> memberList) {
-   LocalGossipMember member = null;
-   if (memberList.size() > 0) {
-     int randomNeighborIndex = random.nextInt(memberList.size());
-     member = memberList.get(randomNeighborIndex);
-   } else {
-     LOGGER.debug("I am alone in this world.");
-   }
-   return member;
- }
+  protected LocalGossipMember selectPartner(List<LocalGossipMember> memberList) {
+    LocalGossipMember member = null;
+    if (memberList.size() > 0) {
+      int randomNeighborIndex = random.nextInt(memberList.size());
+      member = memberList.get(randomNeighborIndex);
+    } else {
+      LOGGER.debug("I am alone in this world.");
+    }
+    return member;
+  }
   
   private GossipMember convert(LocalGossipMember member){
     GossipMember gm = new GossipMember();

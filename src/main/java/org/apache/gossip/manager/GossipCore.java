@@ -21,10 +21,12 @@ import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.RemoteGossipMember;
 import org.apache.gossip.model.ActiveGossipMessage;
 import org.apache.gossip.model.Base;
+import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.Response;
 import org.apache.gossip.udp.Trackable;
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpActiveGossipOk;
+import org.apache.gossip.udp.UdpGossipDataMessage;
 import org.apache.gossip.udp.UdpNotAMemberFault;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -34,15 +36,32 @@ public class GossipCore {
   public static final Logger LOGGER = Logger.getLogger(GossipCore.class);
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private final GossipManager gossipManager;
-
   private ConcurrentHashMap<String, Base> requests;
-  
   private ExecutorService service;
+  private final ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> perNodeData;
   
   public GossipCore(GossipManager manager){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
     service = Executors.newFixedThreadPool(500);
+    perNodeData = new ConcurrentHashMap<>();
+  }
+  
+  /**
+   *  
+   * @param message
+   */
+  public void addPerNodeData(GossipDataMessage message){
+    ConcurrentHashMap<String,GossipDataMessage> m = new ConcurrentHashMap<>();
+    m.put(message.getKey(), message);
+    m = perNodeData.putIfAbsent(message.getNodeId(), m);
+    if (m != null){
+      m.put(message.getKey(), message);    //TODO only put if > ts
+    }
+  }
+  
+  public ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> getPerNodeData(){
+    return perNodeData;
   }
   
   public void shutdown(){
@@ -60,6 +79,10 @@ public class GossipCore {
         Trackable t = (Trackable) base;
         requests.put(t.getUuid() + "/" + t.getUriFrom(), (Base) t);
       }
+    }
+    if (base instanceof GossipDataMessage) {
+      UdpGossipDataMessage message = (UdpGossipDataMessage) base;
+      addPerNodeData(message);
     }
     if (base instanceof ActiveGossipMessage){
       List<GossipMember> remoteGossipMembers = new ArrayList<>();
@@ -153,11 +176,11 @@ public class GossipCore {
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {
-      LOGGER.error(e.getMessage(), e);
+      LOGGER.debug(e.getMessage(), e);
       return null;
     } catch (TimeoutException e) {
       boolean cancelled = response.cancel(true);
-      LOGGER.error(String.format("Threadpool timeout attempting to contact %s, cancelled ? %b", uri.toString(), cancelled));
+      LOGGER.debug(String.format("Threadpool timeout attempting to contact %s, cancelled ? %b", uri.toString(), cancelled));
       return null; 
     } finally {
       if (t != null){

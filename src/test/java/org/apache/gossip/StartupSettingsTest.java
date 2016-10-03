@@ -21,6 +21,8 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 
 import io.teknek.tunit.TUnit;
+
+import org.junit.After;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -44,6 +46,7 @@ public class StartupSettingsTest {
   private static final Logger log = Logger.getLogger( StartupSettingsTest.class );
   private static final String CLUSTER = UUID.randomUUID().toString();
 
+  
   @Test
   public void testUsingSettingsFile() throws IOException, InterruptedException, JSONException, URISyntaxException {
     File settingsFile = File.createTempFile("gossipTest",".json");

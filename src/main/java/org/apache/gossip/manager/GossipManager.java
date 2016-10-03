@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +41,9 @@ import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
+
+import org.apache.gossip.model.GossipDataMessage;
+
 
 public abstract class GossipManager implements NotificationListener {
 
@@ -213,4 +217,19 @@ public abstract class GossipManager implements NotificationListener {
       LOGGER.error(e);
     }
   }
+  
+  public void gossipData(GossipDataMessage message){
+    message.setNodeId(me.getId());
+    gossipCore.addPerNodeData(message);
+  }
+  
+  public GossipDataMessage findGossipData(String nodeId, String key){
+    ConcurrentHashMap<String, GossipDataMessage> j = gossipCore.getPerNodeData().get(nodeId);
+    if (j == null){
+      return null;
+    } else {
+      return j.get(key);
+    }
+  }
+            
 }

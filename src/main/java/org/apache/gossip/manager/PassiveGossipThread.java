@@ -121,17 +121,4 @@ abstract public class PassiveGossipThread implements Runnable {
     }
   }
 
-  /**
-   * Abstract method for merging the local and remote list.
-   * 
-   * @param gossipManager
-   *          The GossipManager for retrieving the local members and dead members list.
-   * @param senderMember
-   *          The member who is sending this list, this could be used to send a response if the
-   *          remote list contains out-dated information.
-   * @param remoteList
-   *          The list of members known at the remote side.
-   */
-  abstract protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
-          List<GossipMember> remoteList);
 }

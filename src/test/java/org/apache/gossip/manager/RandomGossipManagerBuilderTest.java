@@ -45,14 +45,12 @@ public class RandomGossipManagerBuilderTest {
   public static class TestGossipListener implements GossipListener {
     @Override
     public void gossipEvent(GossipMember member, GossipState state) {
-      System.out.println("Got gossip event");
     }
   }
 
   public static class TestNotificationListener implements NotificationListener {
     @Override
     public void handleNotification(Notification notification, Object o) {
-      System.out.println("Got notification event");
     }
   }
 
@@ -75,8 +73,8 @@ public class RandomGossipManagerBuilderTest {
       expectThrows(IllegalArgumentException.class,() -> {
           RandomGossipManager.newBuilder().withId("id").cluster("aCluster").build();
       });
-
   }
+  
   @Test
   public void createMembersListIfNull() throws URISyntaxException {
     RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
