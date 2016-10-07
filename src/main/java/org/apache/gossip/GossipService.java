@@ -24,19 +24,18 @@ import java.util.List;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.random.RandomGossipManager;
-import org.apache.gossip.model.GossipDataMessage;
+import org.apache.gossip.model.GossipDataMessage; 
 import org.apache.log4j.Logger;
 
 /**
  * This object represents the service which is responsible for gossiping with other gossip members.
  * 
- * @author joshclemm, harmenw
  */
 public class GossipService {
 
   public static final Logger LOGGER = Logger.getLogger(GossipService.class);
 
-  private GossipManager gossipManager;
+  private final GossipManager gossipManager;
 
   /**
    * Constructor with the default settings.
@@ -71,7 +70,7 @@ public class GossipService {
   }
 
   public void start() {
-    LOGGER.debug("Starting: " + get_gossipManager().getMyself().getUri());
+    LOGGER.debug("Starting: " + getGossipManager().getMyself().getUri());
     gossipManager.init();
   }
 
@@ -79,25 +78,26 @@ public class GossipService {
     gossipManager.shutdown();
   }
 
-  public GossipManager get_gossipManager() {
+  public GossipManager getGossipManager() {
     return gossipManager;
   }
   
   /**
-   * Gossip data to the entire cluster
+   * Gossip data in a namespace that is per-node { node-id { key->value } }
    * @param message
    */
-  public void gossipData(GossipDataMessage message){
-    gossipManager.gossipData(message);
+  public void gossipPerNodeData(GossipDataMessage message){
+    gossipManager.gossipPerNodeData(message);
   }
   
-  
-  public GossipDataMessage findGossipData(String nodeId, String key){
-    return this.get_gossipManager().findGossipData(nodeId, key);
-  }
-
-  public void set_gossipManager(GossipManager _gossipManager) {
-    this.gossipManager = _gossipManager;
+  /**
+   * Retrieve per-node gossip data by key
+   * @param nodeId
+   * @param key
+   * @return return the value if found or null if not found or expired
+   */
+  public GossipDataMessage findPerNodeData(String nodeId, String key){ 
+    return getGossipManager().findGossipData(nodeId, key);
   }
 
 }

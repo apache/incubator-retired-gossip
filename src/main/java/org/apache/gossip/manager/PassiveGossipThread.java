@@ -23,15 +23,11 @@ import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.gossip.GossipMember;
-import org.apache.gossip.GossipService;
 import org.apache.gossip.model.Base;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.apache.gossip.RemoteGossipMember;
 
 /**
  * [The passive thread: reply to incoming gossip request.] This class handles the passive cycle,
@@ -107,9 +103,9 @@ abstract public class PassiveGossipThread implements Runnable {
   }
 
   private void debug(int packetLength, byte[] jsonBytes) {
-    if (GossipService.LOGGER.isDebugEnabled()){
+    if (LOGGER.isDebugEnabled()){
       String receivedMessage = new String(jsonBytes);
-      GossipService.LOGGER.debug("Received message (" + packetLength + " bytes): "
+      LOGGER.debug("Received message (" + packetLength + " bytes): "
             + receivedMessage);
     }
   }

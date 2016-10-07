@@ -82,7 +82,7 @@ public class TenNodeThreeSeedTest {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).get_gossipManager().getLiveMembers().size();
+          total += clients.get(i).getGossipManager().getLiveMembers().size();
         }
         return total;
       }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(20);

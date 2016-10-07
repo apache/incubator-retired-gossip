@@ -47,16 +47,21 @@ public class GossipCore {
     perNodeData = new ConcurrentHashMap<>();
   }
   
-  /**
-   *  
-   * @param message
-   */
+
   public void addPerNodeData(GossipDataMessage message){
-    ConcurrentHashMap<String,GossipDataMessage> m = new ConcurrentHashMap<>();
-    m.put(message.getKey(), message);
-    m = perNodeData.putIfAbsent(message.getNodeId(), m);
-    if (m != null){
-      m.put(message.getKey(), message);    //TODO only put if > ts
+    ConcurrentHashMap<String,GossipDataMessage> nodeMap = new ConcurrentHashMap<>();
+    nodeMap.put(message.getKey(), message);
+    nodeMap = perNodeData.putIfAbsent(message.getNodeId(), nodeMap);
+    if (nodeMap != null){
+      //m.put(message.getKey(), message);    //TODO only put if > ts
+      GossipDataMessage current = nodeMap.get(message.getKey());
+      if (current == null){
+        nodeMap.replace(message.getKey(), null, message);
+      } else {
+        if (current.getTimestamp() < message.getTimestamp()){
+          nodeMap.replace(message.getKey(), current, message);
+        }
+      }
     }
   }
   

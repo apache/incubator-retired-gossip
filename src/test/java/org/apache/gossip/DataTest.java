@@ -46,17 +46,17 @@ public class DataTest {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).get_gossipManager().getLiveMembers().size();
+          total += clients.get(i).getGossipManager().getLiveMembers().size();
         }
         return total;
       }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(2);
-    clients.get(0).gossipData(msg());
+    clients.get(0).gossipPerNodeData(msg());
     Thread.sleep(10000);
     TUnit.assertThat(
             
             new Callable<Object> (){
               public Object call() throws Exception {
-                GossipDataMessage x = clients.get(1).findGossipData(1+"" , "a");
+                GossipDataMessage x = clients.get(1).findPerNodeData(1+"" , "a");
                 if (x == null) return "";
                 else return x.getPayload();
               }})

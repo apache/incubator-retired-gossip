@@ -78,7 +78,7 @@ public class ShutdownDeadtimeTest {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).get_gossipManager().getLiveMembers().size();
+          total += clients.get(i).getGossipManager().getLiveMembers().size();
         }
         return total;
       }
@@ -88,15 +88,15 @@ public class ShutdownDeadtimeTest {
     Random r = new Random();
     int randomClientId = r.nextInt(clusterMembers);
     log.info("shutting down " + randomClientId);
-    final int shutdownPort = clients.get(randomClientId).get_gossipManager().getMyself().getUri()
+    final int shutdownPort = clients.get(randomClientId).getGossipManager().getMyself().getUri()
             .getPort();
-    final String shutdownId = clients.get(randomClientId).get_gossipManager().getMyself().getId();
+    final String shutdownId = clients.get(randomClientId).getGossipManager().getMyself().getId();
     clients.get(randomClientId).shutdown();
     TUnit.assertThat(new Callable<Integer>() {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).get_gossipManager().getLiveMembers().size();
+          total += clients.get(i).getGossipManager().getLiveMembers().size();
         }
         return total;
       }
@@ -107,7 +107,7 @@ public class ShutdownDeadtimeTest {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers - 1; ++i) {
-          total += clients.get(i).get_gossipManager().getDeadList().size();
+          total += clients.get(i).getGossipManager().getDeadList().size();
         }
         return total;
       }
@@ -130,7 +130,7 @@ public class ShutdownDeadtimeTest {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).get_gossipManager().getLiveMembers().size();
+          total += clients.get(i).getGossipManager().getLiveMembers().size();
         }
         return total;
       }
