@@ -7,6 +7,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.gossip.model.GossipDataMessage;
+import org.apache.gossip.model.SharedGossipDataMessage;
 
 /**
  * We wish to periodically sweep user data and remove entries past their timestamp. This
@@ -28,12 +29,21 @@ public class DataReaper {
   
   public void init(){
     Runnable reapPerNodeData = () -> {
-      runOnce();
+      runPerNodeOnce();
+      runSharedOnce();
     };
     scheduledExecutor.scheduleAtFixedRate(reapPerNodeData, 0, 5, TimeUnit.SECONDS);
   }
   
-  void runOnce(){
+  void runSharedOnce(){
+    for (Entry<String, SharedGossipDataMessage> entry : gossipCore.getSharedData().entrySet()){
+      if (entry.getValue().getExpireAt() < clock.currentTimeMillis()){
+        gossipCore.getSharedData().remove(entry.getKey(), entry.getValue());
+      }
+    }
+  }
+  
+  void runPerNodeOnce(){
     for (Entry<String, ConcurrentHashMap<String, GossipDataMessage>> node : gossipCore.getPerNodeData().entrySet()){
       reapData(node.getValue());
     }

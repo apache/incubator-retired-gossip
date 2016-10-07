@@ -44,6 +44,7 @@ import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
 
 import org.apache.gossip.model.GossipDataMessage;
+import org.apache.gossip.model.SharedGossipDataMessage;
 
 
 public abstract class GossipManager implements NotificationListener {
@@ -235,7 +236,15 @@ public abstract class GossipManager implements NotificationListener {
     gossipCore.addPerNodeData(message);
   }
   
-  public GossipDataMessage findGossipData(String nodeId, String key){
+  public void gossipSharedData(SharedGossipDataMessage message){
+    Objects.nonNull(message.getKey());
+    Objects.nonNull(message.getTimestamp());
+    Objects.nonNull(message.getPayload());
+    message.setNodeId(me.getId());
+    gossipCore.addSharedData(message);
+  }
+  
+  public GossipDataMessage findPerNodeGossipData(String nodeId, String key){
     ConcurrentHashMap<String, GossipDataMessage> j = gossipCore.getPerNodeData().get(nodeId);
     if (j == null){
       return null;
@@ -247,6 +256,18 @@ public abstract class GossipManager implements NotificationListener {
       if (l.getExpireAt() != null && l.getExpireAt() < clock.currentTimeMillis()) {
         return null;
       }
+      return l;
+    }
+  }
+  
+  public SharedGossipDataMessage findSharedGossipData(String key){
+    SharedGossipDataMessage l = gossipCore.getSharedData().get(key);
+    if (l == null){
+      return null;
+    }
+    if (l.getExpireAt() < clock.currentTimeMillis()){
+      return null;
+    } else {
       return l;
     }
   }

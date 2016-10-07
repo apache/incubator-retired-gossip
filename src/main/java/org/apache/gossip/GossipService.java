@@ -24,7 +24,8 @@ import java.util.List;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.random.RandomGossipManager;
-import org.apache.gossip.model.GossipDataMessage; 
+import org.apache.gossip.model.GossipDataMessage;
+import org.apache.gossip.model.SharedGossipDataMessage;
 import org.apache.log4j.Logger;
 
 /**
@@ -97,7 +98,23 @@ public class GossipService {
    * @return return the value if found or null if not found or expired
    */
   public GossipDataMessage findPerNodeData(String nodeId, String key){ 
-    return getGossipManager().findGossipData(nodeId, key);
+    return getGossipManager().findPerNodeGossipData(nodeId, key);
   }
 
+  /**
+   * Gossip shared data
+   * @param message
+   */
+  public void gossipSharedData(SharedGossipDataMessage message){
+    gossipManager.gossipSharedData(message);
+  }
+  
+  /**
+   * 
+   * @param key the key to search for
+   * @return
+   */
+  public SharedGossipDataMessage findSharedData(String key){
+    return getGossipManager().findSharedGossipData(key);
+  }
 }

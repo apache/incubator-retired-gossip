@@ -4,6 +4,7 @@ import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpActiveGossipOk;
 import org.apache.gossip.udp.UdpGossipDataMessage;
 import org.apache.gossip.udp.UdpNotAMemberFault;
+import org.apache.gossip.udp.UdpSharedGossipDataMessage;
 import org.codehaus.jackson.annotate.JsonSubTypes;
 import org.codehaus.jackson.annotate.JsonSubTypes.Type;
 import org.codehaus.jackson.annotate.JsonTypeInfo;
@@ -20,7 +21,9 @@ import org.codehaus.jackson.annotate.JsonTypeInfo;
         @Type(value = UdpActiveGossipMessage.class, name = "UdpActiveGossipMessage"),
         @Type(value = UdpNotAMemberFault.class, name = "UdpNotAMemberFault"),
         @Type(value = GossipDataMessage.class, name = "GossipDataMessage"),
-        @Type(value = UdpGossipDataMessage.class, name = "UdpGossipDataMessage")
+        @Type(value = UdpGossipDataMessage.class, name = "UdpGossipDataMessage"),
+        @Type(value = SharedGossipDataMessage.class, name = "SharedGossipDataMessage"),
+        @Type(value = UdpSharedGossipDataMessage.class, name = "UdpSharedGossipDataMessage")
         })
 public class Base {
 

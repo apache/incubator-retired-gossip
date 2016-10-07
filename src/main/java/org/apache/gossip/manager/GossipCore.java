@@ -23,11 +23,13 @@ import org.apache.gossip.model.ActiveGossipMessage;
 import org.apache.gossip.model.Base;
 import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.Response;
+import org.apache.gossip.model.SharedGossipDataMessage;
 import org.apache.gossip.udp.Trackable;
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpActiveGossipOk;
 import org.apache.gossip.udp.UdpGossipDataMessage;
 import org.apache.gossip.udp.UdpNotAMemberFault;
+import org.apache.gossip.udp.UdpSharedGossipDataMessage;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -39,24 +41,35 @@ public class GossipCore {
   private ConcurrentHashMap<String, Base> requests;
   private ExecutorService service;
   private final ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> perNodeData;
+  private final ConcurrentHashMap<String, SharedGossipDataMessage> sharedData;
   
   public GossipCore(GossipManager manager){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
     service = Executors.newFixedThreadPool(500);
     perNodeData = new ConcurrentHashMap<>();
+    sharedData = new ConcurrentHashMap<>();
   }
   
+  public void addSharedData(SharedGossipDataMessage message){
+     SharedGossipDataMessage previous = sharedData.get(message.getKey());
+     if (previous == null){
+       sharedData.putIfAbsent(message.getKey(), message);
+     } else {
+       if (previous.getTimestamp() < message.getTimestamp()){
+         sharedData.replace(message.getKey(), previous, message);
+       }
+     }
+  }
 
   public void addPerNodeData(GossipDataMessage message){
     ConcurrentHashMap<String,GossipDataMessage> nodeMap = new ConcurrentHashMap<>();
     nodeMap.put(message.getKey(), message);
     nodeMap = perNodeData.putIfAbsent(message.getNodeId(), nodeMap);
     if (nodeMap != null){
-      //m.put(message.getKey(), message);    //TODO only put if > ts
       GossipDataMessage current = nodeMap.get(message.getKey());
       if (current == null){
-        nodeMap.replace(message.getKey(), null, message);
+        nodeMap.putIfAbsent(message.getKey(), message);
       } else {
         if (current.getTimestamp() < message.getTimestamp()){
           nodeMap.replace(message.getKey(), current, message);
@@ -69,6 +82,10 @@ public class GossipCore {
     return perNodeData;
   }
   
+  public ConcurrentHashMap<String, SharedGossipDataMessage> getSharedData() {
+    return sharedData;
+  }
+
   public void shutdown(){
     service.shutdown();
     try {
@@ -88,6 +105,10 @@ public class GossipCore {
     if (base instanceof GossipDataMessage) {
       UdpGossipDataMessage message = (UdpGossipDataMessage) base;
       addPerNodeData(message);
+    }
+    if (base instanceof SharedGossipDataMessage){
+      UdpSharedGossipDataMessage message = (UdpSharedGossipDataMessage) base;
+      addSharedData(message);
     }
     if (base instanceof ActiveGossipMessage){
       List<GossipMember> remoteGossipMembers = new ArrayList<>();

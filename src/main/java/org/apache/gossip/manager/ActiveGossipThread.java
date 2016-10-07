@@ -34,9 +34,10 @@ import org.apache.gossip.model.ActiveGossipOk;
 import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.GossipMember;
 import org.apache.gossip.model.Response;
+import org.apache.gossip.model.SharedGossipDataMessage;
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpGossipDataMessage;
-
+import org.apache.gossip.udp.UdpSharedGossipDataMessage;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -70,7 +71,10 @@ public class ActiveGossipThread {
             () -> sendMembershipList(gossipManager.getMyself(), gossipManager.getDeadMembers()), 0,
             gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
     scheduledExecutorService.scheduleAtFixedRate(
-            () -> sendData(gossipManager.getMyself(), gossipManager.getLiveMembers()), 0,
+            () -> sendPerNodeData(gossipManager.getMyself(), gossipManager.getLiveMembers()), 0,
+            gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
+    scheduledExecutorService.scheduleAtFixedRate(
+            () -> sendSharedData(gossipManager.getMyself(), gossipManager.getLiveMembers()), 0,
             gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
   }
   
@@ -83,7 +87,39 @@ public class ActiveGossipThread {
     }
   }
 
-  public void sendData(LocalGossipMember me, List<LocalGossipMember> memberList){
+  public void sendSharedData(LocalGossipMember me, List<LocalGossipMember> memberList){
+    LocalGossipMember member = selectPartner(memberList);
+    if (member == null) {
+      LOGGER.debug("Send sendMembershipList() is called without action");
+      return;
+    }
+    try (DatagramSocket socket = new DatagramSocket()) {
+      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
+      for (Entry<String, SharedGossipDataMessage> innerEntry : this.gossipCore.getSharedData().entrySet()){
+          UdpSharedGossipDataMessage message = new UdpSharedGossipDataMessage();
+          message.setUuid(UUID.randomUUID().toString());
+          message.setUriFrom(me.getId());
+          message.setExpireAt(innerEntry.getValue().getExpireAt());
+          message.setKey(innerEntry.getValue().getKey());
+          message.setNodeId(innerEntry.getValue().getNodeId());
+          message.setTimestamp(innerEntry.getValue().getTimestamp());
+          message.setPayload(innerEntry.getValue().getPayload());
+          message.setTimestamp(innerEntry.getValue().getTimestamp());
+          byte[] json_bytes = MAPPER.writeValueAsString(message).getBytes();
+          int packet_length = json_bytes.length;
+          if (packet_length < GossipManager.MAX_PACKET_SIZE) {
+            gossipCore.sendOneWay(message, member.getUri());
+          } else {
+            LOGGER.error("The length of the to be send message is too large ("
+                    + packet_length + " > " + GossipManager.MAX_PACKET_SIZE + ").");
+          }
+      }
+    } catch (IOException e1) {
+      LOGGER.warn(e1);
+    }
+  }
+  
+  public void sendPerNodeData(LocalGossipMember me, List<LocalGossipMember> memberList){
     LocalGossipMember member = selectPartner(memberList);
     if (member == null) {
       LOGGER.debug("Send sendMembershipList() is called without action");
