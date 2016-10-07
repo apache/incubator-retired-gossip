@@ -8,12 +8,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.DiscardPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.gossip.GossipMember;
@@ -42,11 +46,14 @@ public class GossipCore {
   private ExecutorService service;
   private final ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> perNodeData;
   private final ConcurrentHashMap<String, SharedGossipDataMessage> sharedData;
+  private final BlockingQueue<Runnable> workQueue;
+  
   
   public GossipCore(GossipManager manager){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
-    service = Executors.newFixedThreadPool(500);
+    workQueue = new ArrayBlockingQueue<>(1024);
+    service = new ThreadPoolExecutor(1, 5, 1, TimeUnit.SECONDS, workQueue, new DiscardPolicy());
     perNodeData = new ConcurrentHashMap<>();
     sharedData = new ConcurrentHashMap<>();
   }

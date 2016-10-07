@@ -60,7 +60,7 @@ public class ActiveGossipThread {
     this.gossipManager = gossipManager;
     random = new Random();
     this.gossipCore = gossipCore;
-    this.scheduledExecutorService = Executors.newScheduledThreadPool(1024);
+    this.scheduledExecutorService = Executors.newScheduledThreadPool(2);
   }
  
   public void init() {
