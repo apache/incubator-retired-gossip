@@ -1,4 +1,4 @@
-# Gossip ![Build status](https://travis-ci.org/edwardcapriolo/gossip.svg?branch=master)
+# Gossip ![Build status](https://travis-ci.org/edwardcapriolo/incubator-gossip.svg?)
 
 Gossip protocol is a method for a group of nodes to discover and check the liveliness of a cluster. More information can be found at http://en.wikipedia.org/wiki/Gossip_protocol.
 
@@ -106,17 +106,3 @@ Users can also attach an event listener:
   });
 ```
 
-
-Maven
-------
-
-
-You can get this software from maven central.
-
-```xml
-  <dependency>
-       <groupId>io.teknek</groupId>
-      <artifactId>gossip</artifactId>
-      <version>${pick_the_latest_version}</version>
-  </dependency>
-```

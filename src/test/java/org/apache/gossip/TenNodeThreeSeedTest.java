@@ -33,7 +33,6 @@ import org.apache.log4j.Logger;
 
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
-import org.junit.After;
 import org.junit.jupiter.api.Test;
 
 @RunWith(JUnitPlatform.class)
