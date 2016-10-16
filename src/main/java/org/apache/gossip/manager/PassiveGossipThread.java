@@ -86,7 +86,7 @@ abstract public class PassiveGossipThread implements Runnable {
           debug(packet_length, json_bytes);
           try {
             Base activeGossipMessage = MAPPER.readValue(json_bytes, Base.class);
-            gossipCore.recieve(activeGossipMessage);
+            gossipCore.receive(activeGossipMessage);
           } catch (RuntimeException ex) {//TODO trap json exception
             LOGGER.error("Unable to process message", ex);
           }

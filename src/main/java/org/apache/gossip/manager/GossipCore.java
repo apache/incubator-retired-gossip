@@ -102,7 +102,7 @@ public class GossipCore {
     }
   }
   
-  public void recieve(Base base){
+  public void receive(Base base){
     if (base instanceof Response){
       if (base instanceof Trackable){
         Trackable t = (Trackable) base;
