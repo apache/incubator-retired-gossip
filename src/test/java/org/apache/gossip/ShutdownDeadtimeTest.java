@@ -107,7 +107,7 @@ public class ShutdownDeadtimeTest {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers - 1; ++i) {
-          total += clients.get(i).getGossipManager().getDeadList().size();
+          total += clients.get(i).getGossipManager().getDeadMembers().size();
         }
         return total;
       }

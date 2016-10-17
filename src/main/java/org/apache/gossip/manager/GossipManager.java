@@ -176,16 +176,6 @@ public abstract class GossipManager implements NotificationListener {
     return me;
   }
 
-  public List<LocalGossipMember> getDeadList() {
-    List<LocalGossipMember> up = new ArrayList<>();
-    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
-      if (GossipState.DOWN.equals(entry.getValue())) {
-        up.add(entry.getKey());
-      }
-    }
-    return Collections.unmodifiableList(up);
-  }
-
   /**
    * Starts the client. Specifically, start the various cycles for this protocol. Start the gossip
    * thread and start the receiver thread.

@@ -87,7 +87,7 @@ The status can be polled using the getters that return immutable lists.
 
 ```java
    List<LocalGossipMember> getMemberList()
-   public List<LocalGossipMember> getDeadList()
+   public List<LocalGossipMember> getDeadMembers()
 ```
 
 These can be accessed from the `GossipManager` on your `GossipService`, e.g:
