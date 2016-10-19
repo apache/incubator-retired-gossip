@@ -36,7 +36,7 @@ Later we can check that the nodes discover each other
 ```java
   Thread.sleep(10000);
   for (int i = 0; i < clusterMembers; ++i) {
-    Assert.assertEquals(4, clients.get(i).get_gossipManager().getMemberList().size());
+    Assert.assertEquals(4, clients.get(i).getGossipManager().getLiveMembers().size());
   }
 ```
 
@@ -86,12 +86,12 @@ Event Listener
 The status can be polled using the getters that return immutable lists.
 
 ```java
-   List<LocalGossipMember> getMemberList()
-   public List<LocalGossipMember> getDeadList()
+   public List<LocalGossipMember> getLiveMembers()
+   public List<LocalGossipMember> getDeadMembers()
 ```
 
 These can be accessed from the `GossipManager` on your `GossipService`, e.g:
-`gossipService.get_gossipManager().getMemberList();`
+`gossipService.getGossipManager().getLiveMembers();`
 
 Users can also attach an event listener:
 
