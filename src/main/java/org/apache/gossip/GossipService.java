@@ -84,8 +84,9 @@ public class GossipService {
   }
   
   /**
-   * Gossip data in a namespace that is per-node { node-id { key->value } }
+   * Gossip data in a namespace that is per-node { node-id { key, value } }
    * @param message
+   *    message to be gossip'ed across the cluster
    */
   public void gossipPerNodeData(GossipDataMessage message){
     gossipManager.gossipPerNodeData(message);
@@ -93,17 +94,21 @@ public class GossipService {
   
   /**
    * Retrieve per-node gossip data by key
+   * 
    * @param nodeId
+   *          the id of the node that owns the data
    * @param key
-   * @return return the value if found or null if not found or expired
+   *          the key in the per-node map to find the data
+   * @return the value if found or null if not found or expired
    */
   public GossipDataMessage findPerNodeData(String nodeId, String key){ 
     return getGossipManager().findPerNodeGossipData(nodeId, key);
   }
 
   /**
-   * Gossip shared data
+   * 
    * @param message
+   *          Shared data to gossip around the cluster
    */
   public void gossipSharedData(SharedGossipDataMessage message){
     gossipManager.gossipSharedData(message);
@@ -111,8 +116,9 @@ public class GossipService {
   
   /**
    * 
-   * @param key the key to search for
-   * @return
+   * @param key
+   *          the key to search for
+   * @return the value associated with given key
    */
   public SharedGossipDataMessage findSharedData(String key){
     return getGossipManager().findSharedGossipData(key);

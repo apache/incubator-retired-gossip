@@ -23,7 +23,6 @@ import java.net.URI;
 /**
  * A abstract class representing a gossip member.
  * 
- * @author joshclemm, harmenw
  */
 public abstract class GossipMember implements Comparable<GossipMember> {
 
@@ -44,6 +43,8 @@ public abstract class GossipMember implements Comparable<GossipMember> {
   /**
    * Constructor.
    *
+   * @param clusterName
+   *          The name of the cluster 
    * @param uri
    *          A URI object containing IP/hostname and port
    * @param heartbeat
@@ -69,7 +70,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
 
  
   /**
-   * The member address in the form IP/host:port Similar to the toString in
+   * @return The member address in the form IP/host:port Similar to the toString in
    * {@link InetSocketAddress}
    */
   public String getAddress() {

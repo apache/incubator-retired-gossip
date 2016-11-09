@@ -37,6 +37,7 @@ public class LocalGossipMember extends GossipMember {
    * @param uri
    *          The uri of the member
    * @param id
+   *          id of the node
    * @param heartbeat
    *          The current heartbeat.
    * @param notificationListener
