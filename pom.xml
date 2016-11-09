@@ -29,11 +29,11 @@
 	<groupId>org.apache.gossip</groupId>
 	<artifactId>gossip</artifactId>
 	<name>gossip</name>
-	<version>0.1.0-incubating</version>
+	<version>0.1.0-incubating-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<description>A peer to peer cluster discovery service</description>
 	<url>http://gossip.incubator.apache.org/</url>
-	
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
@@ -136,6 +136,20 @@
 	<build>
 		<pluginManagement>
 			<plugins>
+            				<!-- we need to tweak the maven-release-plugin for GIT -->
+            				<plugin>
+                				<groupId>org.apache.maven.plugins</groupId>
+                				<artifactId>maven-release-plugin</artifactId>
+                				<version>2.5.1</version>
+                				<configuration>
+			                    		<pushChanges>false</pushChanges>
+                    					<localCheckout>true</localCheckout>
+                    					<autoVersionSubmodules>true</autoVersionSubmodules>
+
+                    					<releaseProfiles>distribution</releaseProfiles>
+                    					<preparationGoals>clean install</preparationGoals>
+                				</configuration>
+            				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
