@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
- <!--
+<!--
  	Licensed to the Apache Software Foundation (ASF) under one or more
  	contributor license agreements.  See the NOTICE file distributed with
  	this work for additional information regarding copyright ownership.
@@ -200,6 +200,24 @@
                     			</dependency>
                 		</dependencies>
             		</plugin>
+			<plugin>
+        			<groupId>org.apache.rat</groupId>
+        			<artifactId>apache-rat-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>README.md</exclude>
+						<exclude>eclipse_template.xml</exclude>
+					</excludes>
+				</configuration>
+        			<executions>
+          				<execution>
+            					<phase>verify</phase>
+            					<goals>
+              						<goal>check</goal>
+            					</goals>
+          				</execution>
+        			</executions>
+      			</plugin>
         	</plugins>
 	</build>
 	
