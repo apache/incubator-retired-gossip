@@ -22,9 +22,11 @@ import org.apache.gossip.udp.UdpActiveGossipOk;
 import org.apache.gossip.udp.UdpGossipDataMessage;
 import org.apache.gossip.udp.UdpNotAMemberFault;
 import org.apache.gossip.udp.UdpSharedGossipDataMessage;
-import org.codehaus.jackson.annotate.JsonSubTypes;
-import org.codehaus.jackson.annotate.JsonSubTypes.Type;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+
 
 @JsonTypeInfo(  
         use = JsonTypeInfo.Id.CLASS,  

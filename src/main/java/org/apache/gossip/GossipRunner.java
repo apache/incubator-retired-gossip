@@ -22,7 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import org.json.JSONException;
+
 
 public class GossipRunner {
 
@@ -46,8 +46,6 @@ public class GossipRunner {
         gossipService.start();
       } catch (FileNotFoundException e) {
         System.err.println("The given file is not found!");
-      } catch (JSONException e) {
-        System.err.println("The given file is not in the correct JSON format!");
       } catch (IOException e) {
         System.err.println("Could not read the configuration file: " + e.getMessage());
       } catch (InterruptedException e) {

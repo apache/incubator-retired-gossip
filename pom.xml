@@ -38,7 +38,7 @@
 		<java.version>1.8</java.version>
 		
 		<!-- dependecy versions -->
-		<jackson-datatype-json-org.version>1.8.0</jackson-datatype-json-org.version>
+		<jackson.version>2.8.5</jackson.version>
 		<junit.jupiter.version>5.0.0-M2</junit.jupiter.version>
 		<junit.platform.version>1.0.0-M2</junit.platform.version>
 		<junit.vintage.version>4.12.0-M2</junit.vintage.version>
@@ -75,9 +75,14 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>com.fasterxml.jackson</groupId>
-			<artifactId>jackson-datatype-json-org</artifactId>
-			<version>${jackson-datatype-json-org.version}</version>
+    			<groupId>com.fasterxml.jackson.core</groupId>
+    			<artifactId>jackson-core</artifactId>
+    			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
