@@ -18,7 +18,6 @@
 package org.apache.gossip;
 
 import org.apache.log4j.Logger;
-import org.json.JSONException;
 
 import io.teknek.tunit.TUnit;
 
@@ -47,7 +46,7 @@ public class StartupSettingsTest {
 
   
   @Test
-  public void testUsingSettingsFile() throws IOException, InterruptedException, JSONException, URISyntaxException {
+  public void testUsingSettingsFile() throws IOException, InterruptedException, URISyntaxException {
     File settingsFile = File.createTempFile("gossipTest",".json");
     log.debug( "Using settings file: " + settingsFile.getAbsolutePath() );
     settingsFile.deleteOnExit();

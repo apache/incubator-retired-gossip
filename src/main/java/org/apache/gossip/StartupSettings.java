@@ -25,17 +25,18 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * This object represents the settings used when starting the gossip service.
  * 
- * @author harmenw
  */
 public class StartupSettings {
   private static final Logger log = Logger.getLogger(StartupSettings.class);
@@ -160,7 +161,7 @@ public class StartupSettings {
    *           Thrown when reading the file gives problems.
    * @throws URISyntaxException 
    */
-  public static StartupSettings fromJSONFile(File jsonFile) throws JSONException,
+  public static StartupSettings fromJSONFile(File jsonFile) throws  
           FileNotFoundException, IOException, URISyntaxException {
     // Read the file to a String.
     StringBuffer buffer = new StringBuffer();
@@ -170,32 +171,31 @@ public class StartupSettings {
         buffer.append(line.trim());
       }
     }
-    
-    JSONObject jsonObject = new JSONArray(buffer.toString()).getJSONObject(0);
-    String uri = jsonObject.getString("uri");
-    String id = jsonObject.getString("id");
-    int gossipInterval = jsonObject.getInt("gossip_interval");
-    int cleanupInterval = jsonObject.getInt("cleanup_interval");
-    String cluster = jsonObject.getString("cluster");
+    ObjectMapper om = new ObjectMapper();
+    JsonNode root = om.readTree(jsonFile);
+    JsonNode jsonObject = root.get(0);
+    String uri = jsonObject.get("uri").textValue();
+    String id = jsonObject.get("id").textValue();
+    int gossipInterval = jsonObject.get("gossip_interval").intValue();
+    int cleanupInterval = jsonObject.get("cleanup_interval").intValue();
+    String cluster = jsonObject.get("cluster").textValue();
     if (cluster == null){
       throw new IllegalArgumentException("cluster was null. It is required");
     }
     URI uri2 = new URI(uri);
     StartupSettings settings = new StartupSettings(id, uri2, new GossipSettings(gossipInterval,
             cleanupInterval), cluster);
-
-    // Now iterate over the members from the config file and add them to the settings.
     String configMembersDetails = "Config-members [";
-    JSONArray membersJSON = jsonObject.getJSONArray("members");
-    for (int i = 0; i < membersJSON.length(); i++) {
-      JSONObject memberJSON = membersJSON.getJSONObject(i);
-      URI uri3 = new URI(memberJSON.getString("uri"));
-      RemoteGossipMember member = new RemoteGossipMember(memberJSON.getString("cluster"),
+    JsonNode membersJSON = jsonObject.get("members");
+    Iterator<JsonNode> it = membersJSON.iterator();
+    while (it.hasNext()){
+      JsonNode child = it.next();
+      URI uri3 = new URI(child.get("uri").textValue());
+      RemoteGossipMember member = new RemoteGossipMember(child.get("cluster").asText(),
               uri3, "", 0);
       settings.addGossipMember(member);
       configMembersDetails += member.getAddress();
-      if (i < (membersJSON.length() - 1))
-        configMembersDetails += ", ";
+      configMembersDetails += ", ";
     }
     log.info(configMembersDetails + "]");
 

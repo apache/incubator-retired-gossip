@@ -27,7 +27,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.gossip.model.Base;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * [The passive thread: reply to incoming gossip request.] This class handles the passive cycle,

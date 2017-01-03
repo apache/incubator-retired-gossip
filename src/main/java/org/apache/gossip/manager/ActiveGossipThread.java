@@ -39,7 +39,9 @@ import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpGossipDataMessage;
 import org.apache.gossip.udp.UdpSharedGossipDataMessage;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 /**
  * [The active thread: periodically send gossip request.] The class handles gossiping the membership
