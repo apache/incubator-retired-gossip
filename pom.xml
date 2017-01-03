@@ -28,7 +28,7 @@
 	<groupId>org.apache.gossip</groupId>
 	<artifactId>gossip</artifactId>
 	<name>gossip</name>
-	<version>0.1.1-incubating-SNAPSHOT</version>
+	<version>0.1.1-incubating</version>
 	<packaging>jar</packaging>
 	<description>A peer to peer cluster discovery service</description>
 	<url>http://gossip.incubator.apache.org/</url>
@@ -65,7 +65,7 @@
 		<connection>scm:git:git@github.com:apache/incubator-gossip.git</connection>
 		<developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-gossip.git</developerConnection>
 		<url>scm:git:git@github.com:apache/incubator-gossip.git</url>
-	  <tag>HEAD</tag>
+	  <tag>gossip-0.1.1-incubating</tag>
   </scm>
 	
 	<issueManagement>
