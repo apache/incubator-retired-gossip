@@ -153,8 +153,6 @@ public class StartupSettings {
    * @param jsonFile
    *          The file object which refers to the JSON config file.
    * @return The StartupSettings object with the settings from the config file.
-   * @throws JSONException
-   *           Thrown when the file is not well-formed JSON.
    * @throws FileNotFoundException
    *           Thrown when the file cannot be found.
    * @throws IOException
