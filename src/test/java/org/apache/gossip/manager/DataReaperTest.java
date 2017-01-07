@@ -37,7 +37,8 @@ public class DataReaperTest {
     String value = "a";
     GossipSettings settings = new GossipSettings();
     GossipManager gm = RandomGossipManager.newBuilder().cluster("abc").settings(settings)
-            .withId(myId).uri(URI.create("udp://localhost:5000")).build();
+            .withId(myId).uri(URI.create("udp://localhost:6000")).build();
+    gm.init();
     gm.gossipPerNodeData(perNodeDatum(key, value));
     gm.gossipSharedData(sharedDatum(key, value));
     Assert.assertEquals(value, gm.findPerNodeGossipData(myId, key).getPayload());
@@ -46,6 +47,7 @@ public class DataReaperTest {
     gm.getDataReaper().runSharedOnce();
     TUnit.assertThat(() -> gm.findPerNodeGossipData(myId, key)).equals(null);
     TUnit.assertThat(() -> gm.findSharedGossipData(key)).equals(null);
+    gm.shutdown();
   }
 
   private GossipDataMessage perNodeDatum(String key, String value) {
@@ -74,7 +76,8 @@ public class DataReaperTest {
     String value = "a";
     GossipSettings settings = new GossipSettings();
     GossipManager gm = RandomGossipManager.newBuilder().cluster("abc").settings(settings)
-            .withId(myId).uri(URI.create("udp://localhost:5000")).build();
+            .withId(myId).uri(URI.create("udp://localhost:7000")).build();
+    gm.init();
     GossipDataMessage before = perNodeDatum(key, value);
     GossipDataMessage after = perNodeDatum(key, "b");
     after.setTimestamp(after.getTimestamp() - 1);
@@ -82,6 +85,7 @@ public class DataReaperTest {
     Assert.assertEquals(value, gm.findPerNodeGossipData(myId, key).getPayload());
     gm.gossipPerNodeData(after);
     Assert.assertEquals(value, gm.findPerNodeGossipData(myId, key).getPayload());
+    gm.shutdown();
   }
 
 }

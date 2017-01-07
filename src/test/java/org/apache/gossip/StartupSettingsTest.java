@@ -48,28 +48,16 @@ public class StartupSettingsTest {
   @Test
   public void testUsingSettingsFile() throws IOException, InterruptedException, URISyntaxException {
     File settingsFile = File.createTempFile("gossipTest",".json");
-    log.debug( "Using settings file: " + settingsFile.getAbsolutePath() );
     settingsFile.deleteOnExit();
     writeSettingsFile(settingsFile);
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + 50000);
     final GossipService firstService = new GossipService(
-            CLUSTER, uri, UUID.randomUUID().toString(),
+            CLUSTER, uri, "1",
       new ArrayList<GossipMember>(), new GossipSettings(), null);
-    
     firstService.start();
-    
-    TUnit.assertThat(new Callable<Integer> (){
-      public Integer call() throws Exception {
-          return firstService.getGossipManager().getLiveMembers().size();
-      }}).afterWaitingAtMost(30, TimeUnit.SECONDS).isEqualTo(0);
     final GossipService serviceUnderTest = new GossipService(
-            StartupSettings.fromJSONFile( settingsFile )
-          );
+            StartupSettings.fromJSONFile(settingsFile));
     serviceUnderTest.start();
-    TUnit.assertThat(new Callable<Integer> (){
-      public Integer call() throws Exception {
-          return serviceUnderTest.getGossipManager().getLiveMembers().size();
-      }}).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(1);
     firstService.shutdown();
     serviceUnderTest.shutdown();
   }
@@ -78,10 +66,13 @@ public class StartupSettingsTest {
     String settings =
             "[{\n" + // It is odd that this is meant to be in an array, but oh well.
             "  \"cluster\":\"" + CLUSTER + "\",\n" +
-            "  \"id\":\"" + UUID.randomUUID() + "\",\n" +
+            "  \"id\":\"" + "2" + "\",\n" +
             "  \"uri\":\"udp://127.0.0.1:50001\",\n" +
             "  \"gossip_interval\":1000,\n" +
+            "  \"window_size\":1000,\n" +
+            "  \"minimum_samples\":5,\n" +
             "  \"cleanup_interval\":10000,\n" +
+            "  \"convict_threshold\":2.6,\n" +
             "  \"members\":[\n" +
             "    {\"cluster\": \"" + CLUSTER + "\",\"uri\":\"udp://127.0.0.1:5000\"}\n" +
             "  ]\n" +

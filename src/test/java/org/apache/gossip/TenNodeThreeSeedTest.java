@@ -29,54 +29,39 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
-import org.apache.log4j.Logger;
-
-import org.apache.gossip.event.GossipListener;
-import org.apache.gossip.event.GossipState;
 import org.junit.jupiter.api.Test;
 
 @RunWith(JUnitPlatform.class)
 public class TenNodeThreeSeedTest {
-  private static final Logger log = Logger.getLogger( TenNodeThreeSeedTest.class );
 
   @Test
-  public void test() throws UnknownHostException, InterruptedException, URISyntaxException{
-    abc();
+  public void test() throws UnknownHostException, InterruptedException, URISyntaxException {
+    abc(30150);
   }
 
   @Test
   public void testAgain() throws UnknownHostException, InterruptedException, URISyntaxException{
-    abc();
+    abc(30100);
   }
 
-  public void abc() throws InterruptedException, UnknownHostException, URISyntaxException{
+  public void abc(int base) throws InterruptedException, UnknownHostException, URISyntaxException{
     GossipSettings settings = new GossipSettings();
     String cluster = UUID.randomUUID().toString();
-
-    log.info( "Adding seed nodes" );
     int seedNodes = 3;
     List<GossipMember> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes+1; ++i) {
-      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (base + i));
       startupMembers.add(new RemoteGossipMember(cluster, uri, i + ""));
     }
-
-    log.info( "Adding clients" );
     final List<GossipService> clients = new ArrayList<>();
     final int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
-      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (base + i));
       GossipService gossipService = new GossipService(cluster, uri, i + "",
-              startupMembers, settings,
-              new GossipListener(){
-        @Override
-        public void gossipEvent(GossipMember member, GossipState state) {
-          log.info(member+" "+ state);
-        }
-      });
+              startupMembers, settings, (a,b) -> {});
       clients.add(gossipService);
       gossipService.start();
-    }
+    }    
     TUnit.assertThat(new Callable<Integer> (){
       public Integer call() throws Exception {
         int total = 0;
@@ -84,8 +69,8 @@ public class TenNodeThreeSeedTest {
           total += clients.get(i).getGossipManager().getLiveMembers().size();
         }
         return total;
-      }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(20);
-    
+      }}).afterWaitingAtMost(40, TimeUnit.SECONDS).isEqualTo(20);
+          
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();
     }

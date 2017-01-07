@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -33,12 +34,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor.DiscardPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.event.GossipState;
 import org.apache.gossip.model.ActiveGossipMessage;
 import org.apache.gossip.model.Base;
 import org.apache.gossip.model.GossipDataMessage;
@@ -71,7 +72,7 @@ public class GossipCore {
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
     workQueue = new ArrayBlockingQueue<>(1024);
-    service = new ThreadPoolExecutor(1, 5, 1, TimeUnit.SECONDS, workQueue, new DiscardPolicy());
+    service = new ThreadPoolExecutor(1, 5, 1, TimeUnit.SECONDS, workQueue, new ThreadPoolExecutor.DiscardOldestPolicy());
     perNodeData = new ConcurrentHashMap<>();
     sharedData = new ConcurrentHashMap<>();
   }
@@ -195,6 +196,11 @@ public class GossipCore {
   }
   
   public Response send(Base message, URI uri){
+    if (LOGGER.isDebugEnabled()){
+      LOGGER.debug("Sending " + message);  
+      LOGGER.debug("Current request queue " + requests);
+    }
+    
     final Trackable t;
     if (message instanceof Trackable){
       t = (Trackable) message;
@@ -223,7 +229,8 @@ public class GossipCore {
     });
     
     try {
-      return response.get(10, TimeUnit.SECONDS);
+      //TODO this needs to be a setting base on attempts/second
+      return response.get(1, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     } catch (ExecutionException e) {
@@ -261,81 +268,67 @@ public class GossipCore {
   
 
   /**
-   * Merge remote list (received from peer), and our local member list. Simply, we must update the
-   * heartbeats that the remote list has with our list. Also, some additional logic is needed to
-   * make sure we have not timed out a member and then immediately received a list with that member.
+   * Merge lists from remote members and update heartbeats
    * 
    * @param gossipManager
    * @param senderMember
    * @param remoteList
    * 
-   * COPIED FROM PASSIVE GOSSIP THREAD
    */
   protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
           List<GossipMember> remoteList) {
-
+    if (LOGGER.isDebugEnabled()){
+      debugState(senderMember, remoteList);
+    }
     // if the person sending to us is in the dead list consider them up
     for (LocalGossipMember i : gossipManager.getDeadMembers()) {
       if (i.getId().equals(senderMember.getId())) {
-        LOGGER.info(gossipManager.getMyself() + " contacted by dead member " + senderMember.getUri());
-        LocalGossipMember newLocalMember = new LocalGossipMember(senderMember.getClusterName(),
-                senderMember.getUri(), senderMember.getId(),
-                senderMember.getHeartbeat(), gossipManager, gossipManager.getSettings()
-                        .getCleanupInterval());
-        gossipManager.reviveMember(newLocalMember);
-        newLocalMember.startTimeoutTimer();
+        LOGGER.debug(gossipManager.getMyself() + " contacted by dead member " + senderMember.getUri());
+        i.recordHeartbeat(senderMember.getHeartbeat());
+        i.setHeartbeat(senderMember.getHeartbeat());
+        //TODO set node to  UP here
+        
       }
     }
     for (GossipMember remoteMember : remoteList) {
       if (remoteMember.getId().equals(gossipManager.getMyself().getId())) {
         continue;
       }
-      if (gossipManager.getLiveMembers().contains(remoteMember)) {
-        LocalGossipMember localMember = gossipManager.getLiveMembers().get(
-                gossipManager.getLiveMembers().indexOf(remoteMember));
-        if (remoteMember.getHeartbeat() > localMember.getHeartbeat()) {
-          localMember.setHeartbeat(remoteMember.getHeartbeat());
-          localMember.resetTimeoutTimer();
-        }
-      } else if (!gossipManager.getLiveMembers().contains(remoteMember)
-              && !gossipManager.getDeadMembers().contains(remoteMember)) {
-        LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getClusterName(),
-                remoteMember.getUri(), remoteMember.getId(),
-                remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings()
-                        .getCleanupInterval());
-        gossipManager.createOrReviveMember(newLocalMember);
-        newLocalMember.startTimeoutTimer();
-      } else {
-        if (gossipManager.getDeadMembers().contains(remoteMember)) {
-          LocalGossipMember localDeadMember = gossipManager.getDeadMembers().get(
-                  gossipManager.getDeadMembers().indexOf(remoteMember));
-          if (remoteMember.getHeartbeat() > localDeadMember.getHeartbeat()) {
-            LocalGossipMember newLocalMember = new LocalGossipMember(remoteMember.getClusterName(),
-                    remoteMember.getUri(), remoteMember.getId(),
-                    remoteMember.getHeartbeat(), gossipManager, gossipManager.getSettings()
-                            .getCleanupInterval());
-            gossipManager.reviveMember(newLocalMember);
-            newLocalMember.startTimeoutTimer();
-            LOGGER.debug("Removed remote member " + remoteMember.getAddress()
-                    + " from dead list and added to local member list.");
-          } else {
-            LOGGER.debug("me " + gossipManager.getMyself());
-            LOGGER.debug("sender " + senderMember);
-            LOGGER.debug("remote " + remoteList);
-            LOGGER.debug("live " + gossipManager.getLiveMembers());
-            LOGGER.debug("dead " + gossipManager.getDeadMembers());
+      LocalGossipMember m = new LocalGossipMember(remoteMember.getClusterName(), 
+      remoteMember.getUri(), 
+      remoteMember.getId(), 
+      remoteMember.getHeartbeat(), 
+      gossipManager.getSettings().getWindowSize(),
+      gossipManager.getSettings().getMinimumSamples());
+      m.recordHeartbeat(remoteMember.getHeartbeat());
+      
+      Object result = gossipManager.getMembers().putIfAbsent(m, GossipState.UP);
+      if (result != null){
+        for (Entry<LocalGossipMember, GossipState> l : gossipManager.getMembers().entrySet()){
+          if (l.getKey().getId().equals(remoteMember.getId())){
+            //if (l.getKey().getHeartbeat() < remoteMember.getHeartbeat()){
+              l.getKey().recordHeartbeat(remoteMember.getHeartbeat());
+              l.getKey().setHeartbeat(remoteMember.getHeartbeat());
+            //}
           }
-        } else {
-          LOGGER.debug("me " + gossipManager.getMyself());
-          LOGGER.debug("sender " + senderMember);
-          LOGGER.debug("remote " + remoteList);
-          LOGGER.debug("live " + gossipManager.getLiveMembers());
-          LOGGER.debug("dead " + gossipManager.getDeadMembers());
-          // throw new IllegalArgumentException("wtf");
         }
       }
     }
+    if (LOGGER.isDebugEnabled()){
+      debugState(senderMember, remoteList);
+    }
   }
-
   
+  private void debugState(RemoteGossipMember senderMember,
+          List<GossipMember> remoteList){
+    LOGGER.warn(
+          "-----------------------\n" + 
+          "Me " + gossipManager.getMyself() + "\n" +
+          "Sender " + senderMember + "\n" +
+          "RemoteList " + remoteList + "\n" +
+          "Live " + gossipManager.getLiveMembers()+ "\n" +
+          "Dead " + gossipManager.getDeadMembers()+ "\n" +
+          "=======================");
+  }
+ 
 }

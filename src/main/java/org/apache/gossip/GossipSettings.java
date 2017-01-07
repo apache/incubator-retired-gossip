@@ -25,11 +25,20 @@ package org.apache.gossip;
 public class GossipSettings {
 
   /** Time between gossip'ing in ms. Default is 1 second. */
-  private int gossipInterval = 1000;
+  private int gossipInterval = 10;
 
   /** Time between cleanups in ms. Default is 10 seconds. */
   private int cleanupInterval = 10000;
 
+  /** the minimum samples needed before reporting a result */
+  private int minimumSamples = 1;
+  
+  /** the number of samples to keep per host */
+  private int windowSize = 5000;
+  
+  /** the threshold for the detector */
+  //private double convictThreshold = 2.606201185901408;
+  private double convictThreshold = 4.5;
   /**
    * Construct GossipSettings with default settings.
    */
@@ -44,9 +53,12 @@ public class GossipSettings {
    * @param cleanupInterval
    *          The cleanup interval in ms.
    */
-  public GossipSettings(int gossipInterval, int cleanupInterval) {
+  public GossipSettings(int gossipInterval, int cleanupInterval, int windowSize, int minimumSamples, double convictThreshold) {
     this.gossipInterval = gossipInterval;
     this.cleanupInterval = cleanupInterval;
+    this.windowSize = windowSize;
+    this.minimumSamples = minimumSamples;
+    this.convictThreshold = convictThreshold;
   }
 
   /**
@@ -87,4 +99,33 @@ public class GossipSettings {
   public int getCleanupInterval() {
     return cleanupInterval;
   }
+
+  public int getMinimumSamples() {
+    return minimumSamples;
+  }
+
+  public void setMinimumSamples(int minimumSamples) {
+    this.minimumSamples = minimumSamples;
+  }
+
+  public int getWindowSize() {
+    return windowSize;
+  }
+
+  public void setWindowSize(int windowSize) {
+    this.windowSize = windowSize;
+  }
+
+  public double getConvictThreshold() {
+    return convictThreshold;
+  }
+
+  public void setConvictThreshold(double convictThreshold) {
+    this.convictThreshold = convictThreshold;
+  }
+
+  public void setGossipInterval(int gossipInterval) {
+    this.gossipInterval = gossipInterval;
+  }
+  
 }

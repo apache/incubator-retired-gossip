@@ -19,52 +19,50 @@ package org.apache.gossip;
 
 import java.net.URI;
 
-import javax.management.NotificationListener;
+import org.apache.gossip.accrual.FailureDetector;
 
 /**
  * This object represent a gossip member with the properties known locally. These objects are stored
- * in the local list of gossip member.s
+ * in the local list of gossip members.
  * 
- * @author harmenw
  */
 public class LocalGossipMember extends GossipMember {
-  /** The timeout timer for this gossip member. */
-  private final transient GossipTimeoutTimer timeoutTimer;
+  /** The failure detector for this member */
+  private transient final FailureDetector detector;
 
   /**
-   * Constructor.
    * 
    * @param uri
    *          The uri of the member
    * @param id
    *          id of the node
    * @param heartbeat
-   *          The current heartbeat.
-   * @param notificationListener
-   * @param cleanupTimeout
-   *          The cleanup timeout for this gossip member.
+   *          The current heartbeat
    */
   public LocalGossipMember(String clusterName, URI uri, String id,
-          long heartbeat, NotificationListener notificationListener, int cleanupTimeout) {
+          long heartbeat, int windowSize, int minSamples) {
     super(clusterName, uri, id, heartbeat);
-    timeoutTimer = new GossipTimeoutTimer(cleanupTimeout, notificationListener, this);
+    detector = new FailureDetector(this, minSamples, windowSize);
   }
 
-  /**
-   * Start the timeout timer.
-   */
-  public void startTimeoutTimer() {
-    timeoutTimer.start();
+  public void recordHeartbeat(long now){
+    detector.recordHeartbeat(now);
+  }
+  
+  public Double detect(long now) {
+    return detector.computePhiMeasure(now);
   }
 
-  /**
-   * Reset the timeout timer.
-   */
-  public void resetTimeoutTimer() {
-    timeoutTimer.reset();
+  @Override
+  public String toString() {
+    Double d = null;
+    try {
+      d = detect(System.nanoTime());
+    } catch (RuntimeException ex) {}
+    return "LocalGossipMember [uri=" + uri + ", heartbeat=" + heartbeat + ", clusterName="
+            + clusterName + ", id=" + id + ", currentdetect=" + d  +" ]";
   }
 
-  public void disableTimer() {
-    timeoutTimer.removeAllNotifications();
-  }
+
+  
 }

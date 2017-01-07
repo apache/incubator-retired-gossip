@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -31,8 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
-import org.apache.gossip.event.GossipListener;
-import org.apache.gossip.event.GossipState;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.jupiter.api.Test;
 
@@ -46,31 +45,20 @@ public class ShutdownDeadtimeTest {
   @Test
   public void DeadNodesDoNotComeAliveAgain()
           throws InterruptedException, UnknownHostException, URISyntaxException {
-    GossipSettings settings = new GossipSettings(1000, 10000);
+    GossipSettings settings = new GossipSettings(1000, 10000, 1000, 1, 5.0);
     String cluster = UUID.randomUUID().toString();
-
-    log.info("Adding seed nodes");
     int seedNodes = 3;
     List<GossipMember> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes + 1; ++i) {
-      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30300 + i));
       startupMembers.add(new RemoteGossipMember(cluster, uri, i + ""));
     }
-
-    log.info("Adding clients");
-    final List<GossipService> clients = new ArrayList<>();
+    final List<GossipService> clients = Collections.synchronizedList(new ArrayList<GossipService>());
     final int clusterMembers = 5;
     for (int i = 1; i < clusterMembers + 1; ++i) {
-      final int j = i;
-      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30300 + i));
       GossipService gossipService = new GossipService(cluster, uri, i + "", startupMembers,
-              settings, new GossipListener() {
-                @Override
-                public void gossipEvent(GossipMember member, GossipState state) {
-                  System.out.println(System.currentTimeMillis() + " Member " + j + " reports "
-                          + member + " " + state);
-                }
-              });
+              settings, (a,b) -> {});
       clients.add(gossipService);
       gossipService.start();
     }
@@ -100,7 +88,7 @@ public class ShutdownDeadtimeTest {
         }
         return total;
       }
-    }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(16);
+    }).afterWaitingAtMost(40, TimeUnit.SECONDS).isEqualTo(16);
     clients.remove(randomClientId);
 
     TUnit.assertThat(new Callable<Integer>() {
@@ -111,17 +99,12 @@ public class ShutdownDeadtimeTest {
         }
         return total;
       }
-    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(4);
+    }).afterWaitingAtMost(30, TimeUnit.SECONDS).isEqualTo(4);
 
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + shutdownPort);
     // start client again
     GossipService gossipService = new GossipService(cluster, uri, shutdownId + "", startupMembers,
-            settings, new GossipListener() {
-              @Override
-              public void gossipEvent(GossipMember member, GossipState state) {
-                // System.out.println("revived " + member+" "+ state);
-              }
-            });
+            settings, (a,b) -> {});
     clients.add(gossipService);
     gossipService.start();
 
@@ -134,7 +117,7 @@ public class ShutdownDeadtimeTest {
         }
         return total;
       }
-    }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(20);
+    }).afterWaitingAtMost(60, TimeUnit.SECONDS).isEqualTo(20);
 
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();

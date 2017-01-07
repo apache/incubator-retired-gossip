@@ -17,10 +17,8 @@
  */
 package org.apache.gossip;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -161,28 +159,24 @@ public class StartupSettings {
    */
   public static StartupSettings fromJSONFile(File jsonFile) throws  
           FileNotFoundException, IOException, URISyntaxException {
-    // Read the file to a String.
-    StringBuffer buffer = new StringBuffer();
-    try (BufferedReader br = new BufferedReader(new FileReader(jsonFile)) ){
-      String line;
-      while ((line = br.readLine()) != null) {
-        buffer.append(line.trim());
-      }
-    }
     ObjectMapper om = new ObjectMapper();
     JsonNode root = om.readTree(jsonFile);
     JsonNode jsonObject = root.get(0);
     String uri = jsonObject.get("uri").textValue();
     String id = jsonObject.get("id").textValue();
+    //TODO constants as defaults?
     int gossipInterval = jsonObject.get("gossip_interval").intValue();
     int cleanupInterval = jsonObject.get("cleanup_interval").intValue();
+    int windowSize = jsonObject.get("window_size").intValue();
+    int minSamples = jsonObject.get("minimum_samples").intValue();
+    double convictThreshold = jsonObject.get("convict_threshold").asDouble();
     String cluster = jsonObject.get("cluster").textValue();
     if (cluster == null){
       throw new IllegalArgumentException("cluster was null. It is required");
     }
     URI uri2 = new URI(uri);
-    StartupSettings settings = new StartupSettings(id, uri2, new GossipSettings(gossipInterval,
-            cleanupInterval), cluster);
+    StartupSettings settings = new StartupSettings(id, uri2, 
+            new GossipSettings(gossipInterval, cleanupInterval, windowSize, minSamples, convictThreshold), cluster);
     String configMembersDetails = "Config-members [";
     JsonNode membersJSON = jsonObject.get("members");
     Iterator<JsonNode> it = membersJSON.iterator();
@@ -196,8 +190,6 @@ public class StartupSettings {
       configMembersDetails += ", ";
     }
     log.info(configMembersDetails + "]");
-
-    // Return the created settings object.
     return settings;
   }
 }

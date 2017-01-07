@@ -24,9 +24,12 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.gossip.LocalGossipMember;
@@ -56,6 +59,8 @@ public class ActiveGossipThread {
   private final Random random;
   private final GossipCore gossipCore;
   private ScheduledExecutorService scheduledExecutorService;
+  private final BlockingQueue<Runnable> workQueue;
+  private ThreadPoolExecutor threadService;
   private ObjectMapper MAPPER = new ObjectMapper();
 
   public ActiveGossipThread(GossipManager gossipManager, GossipCore gossipCore) {
@@ -63,14 +68,18 @@ public class ActiveGossipThread {
     random = new Random();
     this.gossipCore = gossipCore;
     this.scheduledExecutorService = Executors.newScheduledThreadPool(2);
+    workQueue = new ArrayBlockingQueue<Runnable>(1024);
+    threadService = new ThreadPoolExecutor(1, 30, 1, TimeUnit.SECONDS, workQueue, new ThreadPoolExecutor.DiscardOldestPolicy());
   }
  
   public void init() {
     scheduledExecutorService.scheduleAtFixedRate(
-            () -> sendMembershipList(gossipManager.getMyself(), gossipManager.getLiveMembers()), 0,
+            () -> { 
+              threadService.execute( () -> { sendToALiveMember(); });
+            }, 0,
             gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
     scheduledExecutorService.scheduleAtFixedRate(
-            () -> sendMembershipList(gossipManager.getMyself(), gossipManager.getDeadMembers()), 0,
+            () -> { this.sendToDeadMember(); }, 0,
             gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
     scheduledExecutorService.scheduleAtFixedRate(
             () -> sendPerNodeData(gossipManager.getMyself(), gossipManager.getLiveMembers()), 0,
@@ -155,26 +164,33 @@ public class ActiveGossipThread {
     }
   }
   
+  protected void sendToALiveMember(){
+    LocalGossipMember member = selectPartner(gossipManager.getLiveMembers());
+    sendMembershipList(gossipManager.getMyself(), member);
+  }
+  
+  protected void sendToDeadMember(){
+    LocalGossipMember member = selectPartner(gossipManager.getDeadMembers());
+    sendMembershipList(gossipManager.getMyself(), member);
+  }
   /**
    * Performs the sending of the membership list, after we have incremented our own heartbeat.
    */
-  protected void sendMembershipList(LocalGossipMember me, List<LocalGossipMember> memberList) {  
-    me.setHeartbeat(System.currentTimeMillis());
-    LocalGossipMember member = selectPartner(memberList);
+  protected void sendMembershipList(LocalGossipMember me, LocalGossipMember member) {  
+    me.setHeartbeat(System.nanoTime());
     if (member == null) {
       LOGGER.debug("Send sendMembershipList() is called without action");
       return;
     } else {
       LOGGER.debug("Send sendMembershipList() is called to " + member.toString());
     }
-    
     try (DatagramSocket socket = new DatagramSocket()) {
       socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
       UdpActiveGossipMessage message = new UdpActiveGossipMessage();
       message.setUriFrom(gossipManager.getMyself().getUri().toASCIIString());
       message.setUuid(UUID.randomUUID().toString());
       message.getMembers().add(convert(me));
-      for (LocalGossipMember other : memberList) {
+      for (LocalGossipMember other : gossipManager.getMembers().keySet()) {
         message.getMembers().add(convert(other));
       }
       byte[] json_bytes = MAPPER.writeValueAsString(message).getBytes();
@@ -184,7 +200,7 @@ public class ActiveGossipThread {
         if (r instanceof ActiveGossipOk){
           //maybe count metrics here
         } else {
-          LOGGER.warn("Message "+ message + " generated response "+ r);
+          LOGGER.debug("Message " + message + " generated response " + r);
         }
       } else {
         LOGGER.error("The length of the to be send message is too large ("
