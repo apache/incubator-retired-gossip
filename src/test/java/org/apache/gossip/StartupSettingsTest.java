@@ -19,8 +19,6 @@ package org.apache.gossip;
 
 import org.apache.log4j.Logger;
 
-import io.teknek.tunit.TUnit;
-
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -30,8 +28,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
