@@ -116,8 +116,8 @@ public abstract class GossipMember implements Comparable<GossipMember> {
     final int prime = 31;
     int result = 1;
     String address = getAddress();
-    result = prime * result + ((address == null) ? 0 : address.hashCode()) + clusterName == null ? 0
-            : clusterName.hashCode();
+    result = prime * result + ((address == null) ? 0 : address.hashCode()) + (clusterName == null ? 0
+            : clusterName.hashCode());
     return result;
   }
 
