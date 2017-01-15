@@ -18,7 +18,6 @@
 package org.apache.gossip.manager;
 
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.util.List;
 
 import java.util.Map.Entry;
@@ -116,8 +115,7 @@ public class ActiveGossipThread {
       sharedDataHistogram.update(System.currentTimeMillis() - startTime);
       return;
     }
-    try (DatagramSocket socket = new DatagramSocket()) {
-      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
+    try {
       for (Entry<String, SharedGossipDataMessage> innerEntry : this.gossipCore.getSharedData().entrySet()){
           UdpSharedGossipDataMessage message = new UdpSharedGossipDataMessage();
           message.setUuid(UUID.randomUUID().toString());
@@ -127,7 +125,6 @@ public class ActiveGossipThread {
           message.setNodeId(innerEntry.getValue().getNodeId());
           message.setTimestamp(innerEntry.getValue().getTimestamp());
           message.setPayload(innerEntry.getValue().getPayload());
-          message.setTimestamp(innerEntry.getValue().getTimestamp());
           byte[] json_bytes = MAPPER.writeValueAsString(message).getBytes();
           int packet_length = json_bytes.length;
           if (packet_length < GossipManager.MAX_PACKET_SIZE) {
@@ -152,8 +149,7 @@ public class ActiveGossipThread {
       sendPerNodeDataHistogram.update(System.currentTimeMillis() - startTime);
       return;
     }
-    try (DatagramSocket socket = new DatagramSocket()) {
-      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
+    try {
       for (Entry<String, ConcurrentHashMap<String, GossipDataMessage>> entry : gossipCore.getPerNodeData().entrySet()){
         for (Entry<String, GossipDataMessage> innerEntry : entry.getValue().entrySet()){
           UdpGossipDataMessage message = new UdpGossipDataMessage();
@@ -164,7 +160,6 @@ public class ActiveGossipThread {
           message.setNodeId(innerEntry.getValue().getNodeId());
           message.setTimestamp(innerEntry.getValue().getTimestamp());
           message.setPayload(innerEntry.getValue().getPayload());
-          message.setTimestamp(innerEntry.getValue().getTimestamp());
           byte[] json_bytes = MAPPER.writeValueAsString(message).getBytes();
           int packet_length = json_bytes.length;
           if (packet_length < GossipManager.MAX_PACKET_SIZE) {
@@ -190,12 +185,12 @@ public class ActiveGossipThread {
     LocalGossipMember member = selectPartner(gossipManager.getDeadMembers());
     sendMembershipList(gossipManager.getMyself(), member);
   }
+  
   /**
    * Performs the sending of the membership list, after we have incremented our own heartbeat.
    */
   protected void sendMembershipList(LocalGossipMember me, LocalGossipMember member) {
     long startTime = System.currentTimeMillis();
-
     me.setHeartbeat(System.nanoTime());
     if (member == null) {
       LOGGER.debug("Send sendMembershipList() is called without action");
@@ -204,8 +199,7 @@ public class ActiveGossipThread {
     } else {
       LOGGER.debug("Send sendMembershipList() is called to " + member.toString());
     }
-    try (DatagramSocket socket = new DatagramSocket()) {
-      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval());
+    try {
       UdpActiveGossipMessage message = new UdpActiveGossipMessage();
       message.setUriFrom(gossipManager.getMyself().getUri().toASCIIString());
       message.setUuid(UUID.randomUUID().toString());

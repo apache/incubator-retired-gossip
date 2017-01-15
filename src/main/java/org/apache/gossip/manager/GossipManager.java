@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
@@ -86,7 +87,7 @@ public abstract class GossipManager {
     clock = new SystemClock();
     dataReaper = new DataReaper(gossipCore, clock);
     me = new LocalGossipMember(cluster, uri, id, clock.nanoTime(),
-            +            settings.getWindowSize(), settings.getMinimumSamples());
+            settings.getWindowSize(), settings.getMinimumSamples());
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(me)) {
@@ -112,19 +113,15 @@ public abstract class GossipManager {
     return settings;
   }
 
-  // TODO: Use some java 8 goodness for these functions.
-  
   /**
    * @return a read only list of members found in the DOWN state.
    */
   public List<LocalGossipMember> getDeadMembers() {
-    List<LocalGossipMember> down = new ArrayList<>();
-    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
-      if (GossipState.DOWN.equals(entry.getValue())) {
-        down.add(entry.getKey());
-      }
-    }
-    return Collections.unmodifiableList(down);
+    return Collections.unmodifiableList(
+            members.entrySet()
+            .stream()
+            .filter(entry -> GossipState.DOWN.equals(entry.getValue()))
+            .map(Entry::getKey).collect(Collectors.toList()));
   }
 
   /**
@@ -132,13 +129,11 @@ public abstract class GossipManager {
    * @return a read only list of members found in the UP state
    */
   public List<LocalGossipMember> getLiveMembers() {
-    List<LocalGossipMember> up = new ArrayList<>();
-    for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
-      if (GossipState.UP.equals(entry.getValue())) {
-        up.add(entry.getKey());
-      }
-    }
-    return Collections.unmodifiableList(up);
+    return Collections.unmodifiableList(
+            members.entrySet()
+            .stream()
+            .filter(entry -> GossipState.UP.equals(entry.getValue()))
+            .map(Entry::getKey).collect(Collectors.toList()));
   }
 
   public LocalGossipMember getMyself() {

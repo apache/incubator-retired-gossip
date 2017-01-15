@@ -67,7 +67,6 @@ public class GossipCore {
   private final ConcurrentHashMap<String, SharedGossipDataMessage> sharedData;
   private final BlockingQueue<Runnable> workQueue;
   
-  
   public GossipCore(GossipManager manager){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
@@ -175,6 +174,11 @@ public class GossipCore {
     }
   }
   
+  /**
+   * Sends a blocking  message. Throws exception when tranmission fails 
+   * @param message
+   * @param uri
+   */
   private void sendInternal(Base message, URI uri){
     byte[] json_bytes;
     try {
@@ -186,6 +190,7 @@ public class GossipCore {
     if (packet_length < GossipManager.MAX_PACKET_SIZE) {
       byte[] buf = UdpUtil.createBuffer(packet_length, json_bytes);
       try (DatagramSocket socket = new DatagramSocket()) {
+        socket.setSoTimeout(gossipManager.getSettings().getGossipInterval() * 2);
         InetAddress dest = InetAddress.getByName(uri.getHost());
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, uri.getPort());
         socket.send(datagramPacket);
@@ -245,9 +250,14 @@ public class GossipCore {
         requests.remove(t.getUuid() + "/" + t.getUriFrom());
       }
     }
-    
   }
   
+  /**
+   * Sends a message across the network while blocking. Catches and ignores IOException in transmission. Used
+   * when the protocol for the message is not to wait for a response
+   * @param message the message to send
+   * @param u the uri to send it to
+   */
   public void sendOneWay(Base message, URI u){
     byte[] json_bytes;
     try {
@@ -259,13 +269,13 @@ public class GossipCore {
     if (packet_length < GossipManager.MAX_PACKET_SIZE) {
       byte[] buf = UdpUtil.createBuffer(packet_length, json_bytes);
       try (DatagramSocket socket = new DatagramSocket()) {
+        socket.setSoTimeout(gossipManager.getSettings().getGossipInterval() * 2);
         InetAddress dest = InetAddress.getByName(u.getHost());
         DatagramPacket datagramPacket = new DatagramPacket(buf, buf.length, dest, u.getPort());
         socket.send(datagramPacket);
       } catch (IOException ex) { }
     }
   }
-  
 
   /**
    * Merge lists from remote members and update heartbeats
@@ -280,36 +290,31 @@ public class GossipCore {
     if (LOGGER.isDebugEnabled()){
       debugState(senderMember, remoteList);
     }
-    // if the person sending to us is in the dead list consider them up
     for (LocalGossipMember i : gossipManager.getDeadMembers()) {
       if (i.getId().equals(senderMember.getId())) {
         LOGGER.debug(gossipManager.getMyself() + " contacted by dead member " + senderMember.getUri());
         i.recordHeartbeat(senderMember.getHeartbeat());
         i.setHeartbeat(senderMember.getHeartbeat());
-        //TODO set node to  UP here
-        
+        //TODO consider forcing an UP here
       }
     }
     for (GossipMember remoteMember : remoteList) {
       if (remoteMember.getId().equals(gossipManager.getMyself().getId())) {
         continue;
       }
-      LocalGossipMember m = new LocalGossipMember(remoteMember.getClusterName(), 
+      LocalGossipMember aNewMember = new LocalGossipMember(remoteMember.getClusterName(), 
       remoteMember.getUri(), 
       remoteMember.getId(), 
       remoteMember.getHeartbeat(), 
       gossipManager.getSettings().getWindowSize(),
       gossipManager.getSettings().getMinimumSamples());
-      m.recordHeartbeat(remoteMember.getHeartbeat());
-      
-      Object result = gossipManager.getMembers().putIfAbsent(m, GossipState.UP);
+      aNewMember.recordHeartbeat(remoteMember.getHeartbeat());
+      Object result = gossipManager.getMembers().putIfAbsent(aNewMember, GossipState.UP);
       if (result != null){
-        for (Entry<LocalGossipMember, GossipState> l : gossipManager.getMembers().entrySet()){
-          if (l.getKey().getId().equals(remoteMember.getId())){
-            //if (l.getKey().getHeartbeat() < remoteMember.getHeartbeat()){
-              l.getKey().recordHeartbeat(remoteMember.getHeartbeat());
-              l.getKey().setHeartbeat(remoteMember.getHeartbeat());
-            //}
+        for (Entry<LocalGossipMember, GossipState> localMember : gossipManager.getMembers().entrySet()){
+          if (localMember.getKey().getId().equals(remoteMember.getId())){
+            localMember.getKey().recordHeartbeat(remoteMember.getHeartbeat());
+            localMember.getKey().setHeartbeat(remoteMember.getHeartbeat());
           }
         }
       }
