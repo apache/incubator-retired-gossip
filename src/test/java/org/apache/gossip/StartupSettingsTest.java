@@ -17,6 +17,7 @@
  */
 package org.apache.gossip;
 
+import com.codahale.metrics.MetricRegistry;
 import org.apache.log4j.Logger;
 
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,6 @@ public class StartupSettingsTest {
   private static final Logger log = Logger.getLogger( StartupSettingsTest.class );
   private static final String CLUSTER = UUID.randomUUID().toString();
 
-  
   @Test
   public void testUsingSettingsFile() throws IOException, InterruptedException, URISyntaxException {
     File settingsFile = File.createTempFile("gossipTest",".json");
@@ -49,7 +49,7 @@ public class StartupSettingsTest {
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + 50000);
     final GossipService firstService = new GossipService(
             CLUSTER, uri, "1",
-      new ArrayList<GossipMember>(), new GossipSettings(), null);
+      new ArrayList<GossipMember>(), new GossipSettings(), null, new MetricRegistry());
     firstService.start();
     final GossipService serviceUnderTest = new GossipService(
             StartupSettings.fromJSONFile(settingsFile));

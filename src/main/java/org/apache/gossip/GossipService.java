@@ -17,10 +17,12 @@
  */
 package org.apache.gossip;
 
+import com.codahale.metrics.MetricRegistry;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.List;
 
+import com.codahale.metrics.JmxReporter;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.random.RandomGossipManager;
@@ -35,7 +37,8 @@ import org.apache.log4j.Logger;
 public class GossipService {
 
   public static final Logger LOGGER = Logger.getLogger(GossipService.class);
-
+  private final JmxReporter jmxReporter;
+  
   private final GossipManager gossipManager;
 
   /**
@@ -48,7 +51,7 @@ public class GossipService {
           UnknownHostException {
     this(startupSettings.getCluster(), startupSettings.getUri()
             , startupSettings.getId(), startupSettings.getGossipMembers(),
-            startupSettings.getGossipSettings(), null);
+            startupSettings.getGossipSettings(), null, new MetricRegistry());
   }
 
   /**
@@ -58,8 +61,10 @@ public class GossipService {
    * @throws UnknownHostException
    */
   public GossipService(String cluster, URI uri, String id,
-          List<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener)
+          List<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener, MetricRegistry registry)
           throws InterruptedException, UnknownHostException {
+    jmxReporter = JmxReporter.forRegistry(registry).build();
+    jmxReporter.start();
     gossipManager = RandomGossipManager.newBuilder()
         .withId(id)
         .cluster(cluster)
@@ -67,11 +72,11 @@ public class GossipService {
         .settings(settings)
         .gossipMembers(gossipMembers)
         .listener(listener)
+        .registry(registry)
         .build();
   }
 
   public void start() {
-    LOGGER.debug("Starting: " + getGossipManager().getMyself().getUri());
     gossipManager.init();
   }
 

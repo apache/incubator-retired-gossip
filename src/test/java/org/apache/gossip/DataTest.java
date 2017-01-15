@@ -17,6 +17,7 @@
  */
 package org.apache.gossip;
 
+import com.codahale.metrics.MetricRegistry;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
@@ -26,8 +27,6 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.gossip.event.GossipListener;
-import org.apache.gossip.event.GossipState;
 import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.SharedGossipDataMessage;
 import org.junit.Test;
@@ -52,11 +51,7 @@ public class DataTest {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
       GossipService gossipService = new GossipService(cluster, uri, i + "",
               startupMembers, settings,
-              new GossipListener(){
-        public void gossipEvent(GossipMember member, GossipState state) {
-          
-        }
-      });
+              (a,b) -> {}, new MetricRegistry());
       clients.add(gossipService);
       gossipService.start();
     }
