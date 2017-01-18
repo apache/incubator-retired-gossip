@@ -171,12 +171,14 @@ public class StartupSettings {
     int minSamples = jsonObject.get("minimum_samples").intValue();
     double convictThreshold = jsonObject.get("convict_threshold").asDouble();
     String cluster = jsonObject.get("cluster").textValue();
+    String distribution = jsonObject.get("distribution").textValue();
     if (cluster == null){
       throw new IllegalArgumentException("cluster was null. It is required");
     }
     URI uri2 = new URI(uri);
     StartupSettings settings = new StartupSettings(id, uri2, 
-            new GossipSettings(gossipInterval, cleanupInterval, windowSize, minSamples, convictThreshold), cluster);
+            new GossipSettings(gossipInterval, cleanupInterval, windowSize, 
+                    minSamples, convictThreshold, distribution), cluster);
     String configMembersDetails = "Config-members [";
     JsonNode membersJSON = jsonObject.get("members");
     Iterator<JsonNode> it = membersJSON.iterator();

@@ -69,6 +69,7 @@ public class StartupSettingsTest {
             "  \"minimum_samples\":5,\n" +
             "  \"cleanup_interval\":10000,\n" +
             "  \"convict_threshold\":2.6,\n" +
+            "  \"distribution\":\"exponential\",\n" +
             "  \"members\":[\n" +
             "    {\"cluster\": \"" + CLUSTER + "\",\"uri\":\"udp://127.0.0.1:5000\"}\n" +
             "  ]\n" +

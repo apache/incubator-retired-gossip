@@ -17,11 +17,9 @@
  */
 package org.apache.gossip.accrual;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ExponentialDistributionImpl;
+import org.apache.commons.math.distribution.NormalDistributionImpl;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 import org.apache.gossip.LocalGossipMember;
 import org.apache.log4j.Logger;
@@ -33,11 +31,13 @@ public class FailureDetector {
   private final long minimumSamples;
   private volatile long latestHeartbeatMs = -1;
   private final LocalGossipMember parent;
+  private final String distribution;
   
-  public FailureDetector(LocalGossipMember parent, long minimumSamples, int windowSize){
+  public FailureDetector(LocalGossipMember parent, long minimumSamples, int windowSize, String distribution){
     this.parent = parent;
     descriptiveStatistics = new DescriptiveStatistics(windowSize);
     this.minimumSamples = minimumSamples;
+    this.distribution = distribution;
   }
   
   /**
@@ -60,26 +60,24 @@ public class FailureDetector {
   public Double computePhiMeasure(long now)  {
     if (latestHeartbeatMs == -1 || descriptiveStatistics.getN() < minimumSamples) {
       LOGGER.debug(
-              String.format( "%s latests %s samples %s minumumSamples %s", parent.getId(), latestHeartbeatMs, descriptiveStatistics.getN(), minimumSamples));
+              String.format( "%s latests %s samples %s minumumSamples %s", parent.getId(), 
+                      latestHeartbeatMs, descriptiveStatistics.getN(), minimumSamples));
       return null;
     }
     synchronized (descriptiveStatistics) {
       long delta = now - latestHeartbeatMs;
       try {
-        //double probability = 1.0d - new NormalDistributionImpl(descriptiveStatistics.getMean(), descriptiveStatistics.getVariance()).cumulativeProbability(delta);
-        double probability = 1.0d - new ExponentialDistributionImpl(descriptiveStatistics.getMean()).cumulativeProbability(delta);
-        //LOGGER.warn (parent.getId() + " worked "+ -1.0d * Math.log10(probability));
+        double probability = 0.0;
+        if (distribution.equals("normal")){
+          double variance = descriptiveStatistics.getVariance();
+          probability = 1.0d - new NormalDistributionImpl(descriptiveStatistics.getMean(), 
+                  variance == 0 ? 0.1 : variance).cumulativeProbability(delta);
+        } else {
+          probability = 1.0d - new ExponentialDistributionImpl(descriptiveStatistics.getMean()).cumulativeProbability(delta);
+        }
         return -1.0d * Math.log10(probability);
       } catch (MathException | IllegalArgumentException e) {
-        //LOGGER.warn(parent.getId() + " Exception while computing phi", e);
-        //LOGGER.warn(descriptiveStatistics);
-        //LOGGER.warn(descriptiveStatistics.getMean());
-        List<Double> x = new ArrayList<>();
-        for (double z : descriptiveStatistics.getValues()){
-          x.add(z);
-        }
-        //LOGGER.warn(x);
-        //LOGGER.warn(parent.getId() + " " + descriptiveStatistics);
+        e.printStackTrace();
         throw new IllegalArgumentException(e);
       }
     }

@@ -40,9 +40,9 @@ public class LocalGossipMember extends GossipMember {
    *          The current heartbeat
    */
   public LocalGossipMember(String clusterName, URI uri, String id,
-          long heartbeat, int windowSize, int minSamples) {
-    super(clusterName, uri, id, heartbeat);
-    detector = new FailureDetector(this, minSamples, windowSize);
+          long heartbeat, int windowSize, int minSamples, String distribution) {
+    super(clusterName, uri, id, heartbeat );
+    detector = new FailureDetector(this, minSamples, windowSize, distribution);
   }
 
   public void recordHeartbeat(long now){
@@ -63,6 +63,4 @@ public class LocalGossipMember extends GossipMember {
             + clusterName + ", id=" + id + ", currentdetect=" + d  +" ]";
   }
 
-
-  
 }

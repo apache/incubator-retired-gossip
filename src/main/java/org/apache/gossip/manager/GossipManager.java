@@ -19,7 +19,6 @@ package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
@@ -87,13 +86,13 @@ public abstract class GossipManager {
     clock = new SystemClock();
     dataReaper = new DataReaper(gossipCore, clock);
     me = new LocalGossipMember(cluster, uri, id, clock.nanoTime(),
-            settings.getWindowSize(), settings.getMinimumSamples());
+            settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(me)) {
         LocalGossipMember member = new LocalGossipMember(startupMember.getClusterName(),
                 startupMember.getUri(), startupMember.getId(),
-                clock.nanoTime(), settings.getWindowSize(), settings.getMinimumSamples());
+                clock.nanoTime(), settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
         //TODO should members start in down state?
         members.put(member, GossipState.DOWN);
       }

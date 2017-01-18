@@ -31,9 +31,9 @@ public class GossipMemberTest {
   @Test
   public void testHashCodeFromGossip40() throws URISyntaxException {
     Assert.assertNotEquals(
-            new LocalGossipMember("mycluster", new URI("udp://4.4.4.4:1000"), "myid", 1, 10, 5)
+            new LocalGossipMember("mycluster", new URI("udp://4.4.4.4:1000"), "myid", 1, 10, 5, "exponential")
                     .hashCode(),
-            new LocalGossipMember("mycluster", new URI("udp://4.4.4.5:1005"), "yourid", 11, 11, 6)
+            new LocalGossipMember("mycluster", new URI("udp://4.4.4.5:1005"), "yourid", 11, 11, 6, "exponential")
                     .hashCode());
   }
 }

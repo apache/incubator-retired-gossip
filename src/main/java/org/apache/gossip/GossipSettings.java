@@ -20,7 +20,6 @@ package org.apache.gossip;
 /**
  * In this object the settings used by the GossipService are held.
  * 
- * @author harmenw
  */
 public class GossipSettings {
 
@@ -39,6 +38,9 @@ public class GossipSettings {
   /** the threshold for the detector */
   //private double convictThreshold = 2.606201185901408;
   private double convictThreshold = 4.5;
+  
+  private String distribution = "exponential";
+  
   /**
    * Construct GossipSettings with default settings.
    */
@@ -53,12 +55,14 @@ public class GossipSettings {
    * @param cleanupInterval
    *          The cleanup interval in ms.
    */
-  public GossipSettings(int gossipInterval, int cleanupInterval, int windowSize, int minimumSamples, double convictThreshold) {
+  public GossipSettings(int gossipInterval, int cleanupInterval, int windowSize, 
+          int minimumSamples, double convictThreshold, String distribution) {
     this.gossipInterval = gossipInterval;
     this.cleanupInterval = cleanupInterval;
     this.windowSize = windowSize;
     this.minimumSamples = minimumSamples;
     this.convictThreshold = convictThreshold;
+    this.distribution = distribution;
   }
 
   /**
@@ -126,6 +130,14 @@ public class GossipSettings {
 
   public void setGossipInterval(int gossipInterval) {
     this.gossipInterval = gossipInterval;
+  }
+
+  public String getDistribution() {
+    return distribution;
+  }
+
+  public void setDistribution(String distribution) {
+    this.distribution = distribution;
   }
   
 }

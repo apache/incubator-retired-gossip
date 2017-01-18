@@ -28,12 +28,24 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitPlatform.class)
 public class FailureDetectorTest {
+  
+  @Test
+  public void aNormalTest(){
+    int samples = 1;
+    int windowSize = 1000;
+    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), 
+            "", 0L, windowSize, samples, "normal");
+    member.recordHeartbeat(5);
+    member.recordHeartbeat(10);
+    Assert.assertEquals(new Double(0.3010299956639812), member.detect(10));
+  }
 
   @Test
   public void aTest(){
     int samples = 1;
     int windowSize = 1000;
-    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), "", 0L, windowSize, samples);
+    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), 
+            "", 0L, windowSize, samples, "exponential");
     member.recordHeartbeat(5);
     member.recordHeartbeat(10);
     Assert.assertEquals(new Double(0.4342944819032518), member.detect(10));
@@ -52,7 +64,8 @@ public class FailureDetectorTest {
   public void sameHeartbeatTest(){
     int samples = 1;
     int windowSize = 1000;
-    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), "", 0L, windowSize, samples);
+    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), 
+            "", 0L, windowSize, samples, "exponential");
     member.recordHeartbeat(5);
     member.recordHeartbeat(5);
     member.recordHeartbeat(5);

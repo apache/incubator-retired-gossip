@@ -91,7 +91,7 @@ public class RandomGossipManagerBuilderTest {
   public void useMemberListIfProvided() throws URISyntaxException {
     LocalGossipMember member = new LocalGossipMember(
             "aCluster", new URI("udp://localhost:2000"), "aGossipMember",
-            System.nanoTime(), 1000, 1);
+            System.nanoTime(), 1000, 1, "exponential");
     List<GossipMember> memberList = new ArrayList<>();
     memberList.add(member);
     RandomGossipManager gossipManager = RandomGossipManager.newBuilder()

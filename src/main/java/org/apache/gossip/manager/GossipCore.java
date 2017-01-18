@@ -307,7 +307,8 @@ public class GossipCore {
       remoteMember.getId(), 
       remoteMember.getHeartbeat(), 
       gossipManager.getSettings().getWindowSize(),
-      gossipManager.getSettings().getMinimumSamples());
+      gossipManager.getSettings().getMinimumSamples(),
+      gossipManager.getSettings().getDistribution());
       aNewMember.recordHeartbeat(remoteMember.getHeartbeat());
       Object result = gossipManager.getMembers().putIfAbsent(aNewMember, GossipState.UP);
       if (result != null){
