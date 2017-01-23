@@ -42,7 +42,8 @@ public class UdpActiveGossipMessage extends ActiveGossipMessage implements Track
 
   @Override
   public String toString() {
-    return "UdpActiveGossipMessage [uriFrom=" + uriFrom + ", uuid=" + uuid + "]";
+    return "UdpActiveGossipMessage [uriFrom=" + uriFrom + ", uuid=" + uuid + ", getMembers()="
+            + getMembers() + "]";
   }
-  
+
 }

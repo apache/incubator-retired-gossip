@@ -20,7 +20,9 @@ package org.apache.gossip;
 import com.codahale.metrics.MetricRegistry;
 import java.net.URI;
 import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.codahale.metrics.JmxReporter;
 import org.apache.gossip.event.GossipListener;
@@ -50,7 +52,7 @@ public class GossipService {
   public GossipService(StartupSettings startupSettings) throws InterruptedException,
           UnknownHostException {
     this(startupSettings.getCluster(), startupSettings.getUri()
-            , startupSettings.getId(), startupSettings.getGossipMembers(),
+            , startupSettings.getId(), new HashMap<String,String> (),startupSettings.getGossipMembers(),
             startupSettings.getGossipSettings(), null, new MetricRegistry());
   }
 
@@ -60,7 +62,7 @@ public class GossipService {
    * @throws InterruptedException
    * @throws UnknownHostException
    */
-  public GossipService(String cluster, URI uri, String id,
+  public GossipService(String cluster, URI uri, String id, Map<String,String> properties,
           List<GossipMember> gossipMembers, GossipSettings settings, GossipListener listener, MetricRegistry registry)
           throws InterruptedException, UnknownHostException {
     jmxReporter = JmxReporter.forRegistry(registry).build();
@@ -73,6 +75,7 @@ public class GossipService {
         .gossipMembers(gossipMembers)
         .listener(listener)
         .registry(registry)
+        .properties(properties)
         .build();
   }
 

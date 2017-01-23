@@ -17,6 +17,9 @@
  */
 package org.apache.gossip;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * In this object the settings used by the GossipService are held.
  * 
@@ -40,6 +43,10 @@ public class GossipSettings {
   private double convictThreshold = 4.5;
   
   private String distribution = "exponential";
+  
+  private String activeGossipClass = "org.apache.gossip.manager.SimpleActiveGossipper";
+  
+  private Map<String,String> activeGossipProperties = new HashMap<>();
   
   /**
    * Construct GossipSettings with default settings.
@@ -138,6 +145,22 @@ public class GossipSettings {
 
   public void setDistribution(String distribution) {
     this.distribution = distribution;
+  }
+
+  public String getActiveGossipClass() {
+    return activeGossipClass;
+  }
+
+  public void setActiveGossipClass(String activeGossipClass) {
+    this.activeGossipClass = activeGossipClass;
+  }
+
+  public Map<String, String> getActiveGossipProperties() {
+    return activeGossipProperties;
+  }
+
+  public void setActiveGossipProperties(Map<String, String> activeGossipProperties) {
+    this.activeGossipProperties = activeGossipProperties;
   }
   
 }

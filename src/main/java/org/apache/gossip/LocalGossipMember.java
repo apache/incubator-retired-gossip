@@ -18,6 +18,7 @@
 package org.apache.gossip;
 
 import java.net.URI;
+import java.util.Map;
 
 import org.apache.gossip.accrual.FailureDetector;
 
@@ -40,8 +41,8 @@ public class LocalGossipMember extends GossipMember {
    *          The current heartbeat
    */
   public LocalGossipMember(String clusterName, URI uri, String id,
-          long heartbeat, int windowSize, int minSamples, String distribution) {
-    super(clusterName, uri, id, heartbeat );
+          long heartbeat, Map<String,String> properties, int windowSize, int minSamples, String distribution) {
+    super(clusterName, uri, id, heartbeat, properties );
     detector = new FailureDetector(this, minSamples, windowSize, distribution);
   }
 

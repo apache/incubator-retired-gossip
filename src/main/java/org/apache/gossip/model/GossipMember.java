@@ -17,12 +17,15 @@
  */
 package org.apache.gossip.model;
 
+import java.util.Map;
+
 public class GossipMember {
 
   private String cluster;
   private String uri;
   private String id;
   private Long heartbeat;
+  private Map<String,String> properties;
   
   public GossipMember(){
     
@@ -65,6 +68,20 @@ public class GossipMember {
 
   public void setHeartbeat(Long heartbeat) {
     this.heartbeat = heartbeat;
+  }
+
+  public Map<String, String> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, String> properties) {
+    this.properties = properties;
+  }
+
+  @Override
+  public String toString() {
+    return "GossipMember [cluster=" + cluster + ", uri=" + uri + ", id=" + id + ", heartbeat="
+            + heartbeat + ", properties=" + properties + "]";
   }
   
 }

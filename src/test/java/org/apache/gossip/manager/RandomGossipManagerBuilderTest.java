@@ -21,19 +21,15 @@ import com.codahale.metrics.MetricRegistry;
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalGossipMember;
-import org.apache.gossip.event.GossipListener;
-import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.random.RandomGossipManager;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
-import javax.management.Notification;
-import javax.management.NotificationListener;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,18 +38,6 @@ import static org.junit.jupiter.api.Assertions.expectThrows;
 
 @RunWith(JUnitPlatform.class)
 public class RandomGossipManagerBuilderTest {
-
-  public static class TestGossipListener implements GossipListener {
-    @Override
-    public void gossipEvent(GossipMember member, GossipState state) {
-    }
-  }
-
-  public static class TestNotificationListener implements NotificationListener {
-    @Override
-    public void handleNotification(Notification notification, Object o) {
-    }
-  }
 
   @Test
   public void idShouldNotBeNull() {
@@ -91,7 +75,7 @@ public class RandomGossipManagerBuilderTest {
   public void useMemberListIfProvided() throws URISyntaxException {
     LocalGossipMember member = new LocalGossipMember(
             "aCluster", new URI("udp://localhost:2000"), "aGossipMember",
-            System.nanoTime(), 1000, 1, "exponential");
+            System.nanoTime(), new HashMap<String, String>(), 1000, 1, "exponential");
     List<GossipMember> memberList = new ArrayList<>();
     memberList.add(member);
     RandomGossipManager gossipManager = RandomGossipManager.newBuilder()

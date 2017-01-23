@@ -18,12 +18,13 @@
 package org.apache.gossip;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The object represents a gossip member with the properties as received from a remote gossip
  * member.
  * 
- * @author harmenw
  */
 public class RemoteGossipMember extends GossipMember {
 
@@ -35,12 +36,12 @@ public class RemoteGossipMember extends GossipMember {
    * @param heartbeat
    *          The current heartbeat
    */
-  public RemoteGossipMember(String clusterName, URI uri, String id, long heartbeat) {
-    super(clusterName, uri, id, heartbeat);
+  public RemoteGossipMember(String clusterName, URI uri, String id, long heartbeat, Map<String,String> properties) {
+    super(clusterName, uri, id, heartbeat, properties);
   }
 
   public RemoteGossipMember(String clusterName, URI uri, String id) {
-    super(clusterName, uri, id, System.currentTimeMillis());
+    super(clusterName, uri, id, System.nanoTime(), new HashMap<String,String>());
   }
 
 }

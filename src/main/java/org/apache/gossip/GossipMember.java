@@ -19,6 +19,7 @@ package org.apache.gossip;
 
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.Map;
 
 /**
  * A abstract class representing a gossip member.
@@ -40,6 +41,9 @@ public abstract class GossipMember implements Comparable<GossipMember> {
    */
   protected String id;
 
+  /* properties provided at startup time */
+  protected Map<String,String> properties;
+  
   /**
    * Constructor.
    *
@@ -52,11 +56,12 @@ public abstract class GossipMember implements Comparable<GossipMember> {
    * @param id
    *          An id that may be replaced after contact
    */
-  public GossipMember(String clusterName, URI uri, String id, long heartbeat) {
+  public GossipMember(String clusterName, URI uri, String id, long heartbeat, Map<String,String> properties) {
     this.clusterName = clusterName;
     this.id = id;
     this.heartbeat = heartbeat;
     this.uri = uri;
+    this.properties = properties;
   }
 
   /**
@@ -102,6 +107,14 @@ public abstract class GossipMember implements Comparable<GossipMember> {
 
   public void setId(String _id) {
     this.id = _id;
+  }
+
+  public Map<String, String> getProperties() {
+    return properties;
+  }
+
+  public void setProperties(Map<String, String> properties) {
+    this.properties = properties;
   }
 
   public String toString() {

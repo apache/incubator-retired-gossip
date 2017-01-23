@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.gossip.GossipMember;
@@ -74,14 +75,14 @@ public class GossipExample extends Thread {
         } catch (URISyntaxException e) {
           throw new RuntimeException(e);
         }
-        startupMembers.add(new RemoteGossipMember(cluster, u, "", 0 ));
+        startupMembers.add(new RemoteGossipMember(cluster, u, "", 0, new HashMap<String,String>()));
       }
 
       // Lets start the gossip clients.
       // Start the clients, waiting cleaning-interval + 1 second between them which will show the
       // dead list handling.
       for (GossipMember member : startupMembers) {
-        GossipService gossipService = new GossipService(cluster,  member.getUri(), "",
+        GossipService gossipService = new GossipService(cluster,  member.getUri(), "", new HashMap<String,String>(),
                 startupMembers, settings, null, new MetricRegistry());
         clients.add(gossipService);
         gossipService.start();

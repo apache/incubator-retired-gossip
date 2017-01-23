@@ -18,9 +18,13 @@
 package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +63,7 @@ public abstract class GossipManager {
 
   private final GossipListener listener;
 
-  private ActiveGossipThread activeGossipThread;
+  private AbstractActiveGossiper activeGossipThread;
 
   private PassiveGossipThread passiveGossipThread;
 
@@ -76,21 +80,22 @@ public abstract class GossipManager {
   private MetricRegistry registry;
 
   public GossipManager(String cluster,
-          URI uri, String id, GossipSettings settings,
+          URI uri, String id, Map<String,String> properties, GossipSettings settings,
           List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry) {
     
     this.settings = settings;
     gossipCore = new GossipCore(this, registry);
     clock = new SystemClock();
     dataReaper = new DataReaper(gossipCore, clock);
-    me = new LocalGossipMember(cluster, uri, id, clock.nanoTime(),
+    me = new LocalGossipMember(cluster, uri, id, clock.nanoTime(), properties,
             settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(me)) {
         LocalGossipMember member = new LocalGossipMember(startupMember.getClusterName(),
                 startupMember.getUri(), startupMember.getId(),
-                clock.nanoTime(), settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
+                clock.nanoTime(), startupMember.getProperties(), settings.getWindowSize(), 
+                settings.getMinimumSamples(), settings.getDistribution());
         //TODO should members start in down state?
         members.put(member, GossipState.DOWN);
       }
@@ -137,6 +142,14 @@ public abstract class GossipManager {
     return me;
   }
 
+  private AbstractActiveGossiper constructActiveGossiper(){
+    try {
+      Constructor<?> c = Class.forName(settings.getActiveGossipClass()).getConstructor(GossipManager.class, GossipCore.class, MetricRegistry.class);
+      return (AbstractActiveGossiper) c.newInstance(this, gossipCore, registry);
+    } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
   /**
    * Starts the client. Specifically, start the various cycles for this protocol. Start the gossip
    * thread and start the receiver thread.
@@ -144,7 +157,7 @@ public abstract class GossipManager {
   public void init() {
     passiveGossipThread = new OnlyProcessReceivedPassiveGossipThread(this, gossipCore);
     gossipThreadExecutor.execute(passiveGossipThread);
-    activeGossipThread = new ActiveGossipThread(this, this.gossipCore, registry);
+    activeGossipThread = constructActiveGossiper();
     activeGossipThread.init();
     dataReaper.init();
     scheduledServiced.scheduleAtFixedRate(() -> {

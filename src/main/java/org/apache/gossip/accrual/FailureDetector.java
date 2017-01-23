@@ -48,6 +48,9 @@ public class FailureDetector {
   public void recordHeartbeat(long now){
     if (now < latestHeartbeatMs)
       return;
+    if (now - latestHeartbeatMs == 0){
+      return;
+    }
     synchronized (descriptiveStatistics) {
       if (latestHeartbeatMs != -1){
         descriptiveStatistics.addValue(now - latestHeartbeatMs);
@@ -77,7 +80,11 @@ public class FailureDetector {
         }
         return -1.0d * Math.log10(probability);
       } catch (MathException | IllegalArgumentException e) {
-        e.printStackTrace();
+        StringBuilder sb = new StringBuilder();
+        for ( double d: descriptiveStatistics.getSortedValues()){
+          sb.append(d + " ");
+        }
+        LOGGER.debug(e.getMessage() +" "+ sb.toString() +" "+ descriptiveStatistics);
         throw new IllegalArgumentException(e);
       }
     }

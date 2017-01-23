@@ -23,8 +23,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 
@@ -164,6 +167,13 @@ public class StartupSettings {
     JsonNode jsonObject = root.get(0);
     String uri = jsonObject.get("uri").textValue();
     String id = jsonObject.get("id").textValue();
+    Map<String,String> properties = new HashMap<String,String>();
+    JsonNode n = jsonObject.get("properties");
+    Iterator<Entry<String, JsonNode>> l = n.fields();
+    while (l.hasNext()){
+      Entry<String, JsonNode> i = l.next();
+      properties.put(i.getKey(), i.getValue().asText());
+    }
     //TODO constants as defaults?
     int gossipInterval = jsonObject.get("gossip_interval").intValue();
     int cleanupInterval = jsonObject.get("cleanup_interval").intValue();
@@ -186,7 +196,7 @@ public class StartupSettings {
       JsonNode child = it.next();
       URI uri3 = new URI(child.get("uri").textValue());
       RemoteGossipMember member = new RemoteGossipMember(child.get("cluster").asText(),
-              uri3, "", 0);
+              uri3, "", 0, new HashMap<String,String>());
       settings.addGossipMember(member);
       configMembersDetails += member.getAddress();
       configMembersDetails += ", ";

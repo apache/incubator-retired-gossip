@@ -22,6 +22,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -50,7 +51,7 @@ public class DataTest {
     for (int i = 1; i < clusterMembers+1; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
       GossipService gossipService = new GossipService(cluster, uri, i + "",
-              startupMembers, settings,
+              new HashMap<String,String>(), startupMembers, settings,
               (a,b) -> {}, new MetricRegistry());
       clients.add(gossipService);
       gossipService.start();
@@ -65,29 +66,27 @@ public class DataTest {
       }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(2);
     clients.get(0).gossipPerNodeData(msg());
     clients.get(0).gossipSharedData(sharedMsg());
-    Thread.sleep(10000);
-    TUnit.assertThat(
-            new Callable<Object>() {
-              public Object call() throws Exception {
-                GossipDataMessage x = clients.get(1).findPerNodeData(1 + "", "a");
-                if (x == null)
-                  return "";
-                else
-                  return x.getPayload();
-              }
-            }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("b");
+
+    TUnit.assertThat(new Callable<Object>() {
+      public Object call() throws Exception {
+        GossipDataMessage x = clients.get(1).findPerNodeData(1 + "", "a");
+        if (x == null)
+          return "";
+        else
+          return x.getPayload();
+      }
+    }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("b");
     
     
-    TUnit.assertThat(
-            new Callable<Object>() {
-              public Object call() throws Exception {
-                SharedGossipDataMessage x = clients.get(1).findSharedData("a");
-                if (x == null)
-                  return "";
-                else
-                  return x.getPayload();
-              }
-            }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("c");
+    TUnit.assertThat(new Callable<Object>() {
+      public Object call() throws Exception {
+        SharedGossipDataMessage x = clients.get(1).findSharedData("a");
+        if (x == null)
+          return "";
+        else
+          return x.getPayload();
+      }
+    }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("c");
     
     
     for (int i = 0; i < clusterMembers; ++i) {

@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -58,7 +59,7 @@ public class TenNodeThreeSeedTest {
     final int clusterMembers = 5;
     for (int i = 1; i < clusterMembers+1; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (base + i));
-      GossipService gossipService = new GossipService(cluster, uri, i + "",
+      GossipService gossipService = new GossipService(cluster, uri, i + "", new HashMap<String,String>(),
               startupMembers, settings, (a,b) -> {}, new MetricRegistry());
       clients.add(gossipService);
       gossipService.start();

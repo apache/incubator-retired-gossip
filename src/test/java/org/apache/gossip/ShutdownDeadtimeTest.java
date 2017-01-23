@@ -25,6 +25,7 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -58,7 +59,7 @@ public class ShutdownDeadtimeTest {
     final int clusterMembers = 5;
     for (int i = 1; i < clusterMembers + 1; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30300 + i));
-      GossipService gossipService = new GossipService(cluster, uri, i + "", startupMembers,
+      GossipService gossipService = new GossipService(cluster, uri, i + "", new HashMap<String,String>(), startupMembers,
               settings, (a,b) -> {}, new MetricRegistry());
       clients.add(gossipService);
       gossipService.start();
@@ -100,11 +101,11 @@ public class ShutdownDeadtimeTest {
         }
         return total;
       }
-    }).afterWaitingAtMost(30, TimeUnit.SECONDS).isEqualTo(4);
+    }).afterWaitingAtMost(50, TimeUnit.SECONDS).isEqualTo(4);
 
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + shutdownPort);
     // start client again
-    GossipService gossipService = new GossipService(cluster, uri, shutdownId + "", startupMembers,
+    GossipService gossipService = new GossipService(cluster, uri, shutdownId + "", new HashMap<String,String>(), startupMembers,
             settings, (a,b) -> {}, new MetricRegistry());
     clients.add(gossipService);
     gossipService.start();

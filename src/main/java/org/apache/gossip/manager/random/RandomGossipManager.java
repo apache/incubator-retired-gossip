@@ -25,8 +25,9 @@ import org.apache.gossip.manager.GossipManager;
 
 import java.net.URI;
 import java.util.List;
-
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class RandomGossipManager extends GossipManager {
 
@@ -42,6 +43,7 @@ public class RandomGossipManager extends GossipManager {
     private List<GossipMember> gossipMembers;
     private GossipListener listener;
     private MetricRegistry registry;
+    private Map<String,String> properties;
 
     private ManagerBuilder() {}
 
@@ -53,6 +55,11 @@ public class RandomGossipManager extends GossipManager {
 
     public ManagerBuilder cluster(String cluster) {
       this.cluster = cluster;
+      return this;
+    }
+    
+    public ManagerBuilder properties(Map<String,String> properties) {
+      this.properties = properties;
       return this;
     }
 
@@ -75,6 +82,7 @@ public class RandomGossipManager extends GossipManager {
       this.listener = listener;
       return this;
     }
+    
     public ManagerBuilder registry(MetricRegistry registry) {
       this.registry = registry;
       return this;
@@ -91,18 +99,21 @@ public class RandomGossipManager extends GossipManager {
       checkArgument(settings != null, "You must specify gossip settings");
       checkArgument(uri != null, "You must specify a uri");
       checkArgument(registry != null, "You must specify a MetricRegistry");
+      if (properties == null){
+        properties = new HashMap<String,String>();
+      }
       if (listener == null){
         listener((a,b) -> {});
       }
       if (gossipMembers == null) {
         gossipMembers = new ArrayList<>();
       }
-      return new RandomGossipManager(cluster, uri, id, settings, gossipMembers, listener, registry);
+      return new RandomGossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry);
     }
   }
 
-  private RandomGossipManager(String cluster, URI uri, String id, GossipSettings settings, 
+  private RandomGossipManager(String cluster, URI uri, String id, Map<String,String> properties,  GossipSettings settings, 
           List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry) {
-    super(cluster, uri, id, settings, gossipMembers, listener, registry);
+    super(cluster, uri, id, properties, settings, gossipMembers, listener, registry);
   }
 }

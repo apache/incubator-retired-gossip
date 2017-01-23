@@ -165,7 +165,8 @@ public class GossipCore implements GossipCoreConstants {
                 activeGossipMessage.getMembers().get(i).getCluster(),
                 u,
                 activeGossipMessage.getMembers().get(i).getId(),
-                activeGossipMessage.getMembers().get(i).getHeartbeat());
+                activeGossipMessage.getMembers().get(i).getHeartbeat(),
+                activeGossipMessage.getMembers().get(i).getProperties());
         if (i == 0) {
           senderMember = member;
         } 
@@ -321,6 +322,7 @@ public class GossipCore implements GossipCoreConstants {
       remoteMember.getUri(), 
       remoteMember.getId(), 
       remoteMember.getHeartbeat(), 
+      remoteMember.getProperties(),
       gossipManager.getSettings().getWindowSize(),
       gossipManager.getSettings().getMinimumSamples(),
       gossipManager.getSettings().getDistribution());
@@ -331,6 +333,7 @@ public class GossipCore implements GossipCoreConstants {
           if (localMember.getKey().getId().equals(remoteMember.getId())){
             localMember.getKey().recordHeartbeat(remoteMember.getHeartbeat());
             localMember.getKey().setHeartbeat(remoteMember.getHeartbeat());
+            localMember.getKey().setProperties(remoteMember.getProperties());
           }
         }
       }

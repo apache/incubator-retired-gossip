@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
@@ -48,7 +49,7 @@ public class StartupSettingsTest {
     writeSettingsFile(settingsFile);
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + 50000);
     final GossipService firstService = new GossipService(
-            CLUSTER, uri, "1",
+            CLUSTER, uri, "1", new HashMap<String, String>(),
       new ArrayList<GossipMember>(), new GossipSettings(), null, new MetricRegistry());
     firstService.start();
     final GossipService serviceUnderTest = new GossipService(
@@ -70,6 +71,7 @@ public class StartupSettingsTest {
             "  \"cleanup_interval\":10000,\n" +
             "  \"convict_threshold\":2.6,\n" +
             "  \"distribution\":\"exponential\",\n" +
+            "  \"properties\":{},\n" +
             "  \"members\":[\n" +
             "    {\"cluster\": \"" + CLUSTER + "\",\"uri\":\"udp://127.0.0.1:5000\"}\n" +
             "  ]\n" +
@@ -77,7 +79,7 @@ public class StartupSettingsTest {
 
     log.info( "Using settings file with contents of:\n---\n" + settings + "\n---" );
     FileOutputStream output = new FileOutputStream(target);
-    output.write( settings.getBytes() );
+    output.write(settings.getBytes());
     output.close();
   }
 }
