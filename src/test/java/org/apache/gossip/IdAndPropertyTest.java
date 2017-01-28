@@ -25,7 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeUnit; 
 
 import org.apache.gossip.manager.DatacenterRackAwareActiveGossiper;
 import org.junit.jupiter.api.Test;
@@ -75,8 +75,7 @@ public class IdAndPropertyTest {
         value = gossipService2.getGossipManager().getLiveMembers().get(0).getProperties().get("a");
       } catch (RuntimeException e){ }
       return value;
-    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo("b");
-    
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo("b");    
     gossipService1.shutdown();
     gossipService2.shutdown();
     

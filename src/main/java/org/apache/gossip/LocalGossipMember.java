@@ -29,7 +29,7 @@ import org.apache.gossip.accrual.FailureDetector;
  */
 public class LocalGossipMember extends GossipMember {
   /** The failure detector for this member */
-  private transient final FailureDetector detector;
+  private transient FailureDetector detector;
 
   /**
    * 
@@ -46,6 +46,10 @@ public class LocalGossipMember extends GossipMember {
     detector = new FailureDetector(this, minSamples, windowSize, distribution);
   }
 
+  protected LocalGossipMember(){
+    
+  }
+  
   public void recordHeartbeat(long now){
     detector.recordHeartbeat(now);
   }

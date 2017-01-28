@@ -40,13 +40,21 @@ public class GossipSettings {
   
   /** the threshold for the detector */
   //private double convictThreshold = 2.606201185901408;
-  private double convictThreshold = 4.5;
+  private double convictThreshold = 2.606201185901408;
   
   private String distribution = "exponential";
   
   private String activeGossipClass = "org.apache.gossip.manager.SimpleActiveGossipper";
   
   private Map<String,String> activeGossipProperties = new HashMap<>();
+  
+  private String pathToRingState = "./";
+  
+  private boolean persistRingState = true;
+  
+  private String pathToDataState = "./";
+  
+  private boolean persistDataState = true;
   
   /**
    * Construct GossipSettings with default settings.
@@ -161,6 +169,38 @@ public class GossipSettings {
 
   public void setActiveGossipProperties(Map<String, String> activeGossipProperties) {
     this.activeGossipProperties = activeGossipProperties;
+  }
+
+  public String getPathToRingState() {
+    return pathToRingState;
+  }
+
+  public void setPathToRingState(String pathToRingState) {
+    this.pathToRingState = pathToRingState;
+  }
+
+  public boolean isPersistRingState() {
+    return persistRingState;
+  }
+
+  public void setPersistRingState(boolean persistRingState) {
+    this.persistRingState = persistRingState;
+  }
+
+  public String getPathToDataState() {
+    return pathToDataState;
+  }
+
+  public void setPathToDataState(String pathToDataState) {
+    this.pathToDataState = pathToDataState;
+  }
+
+  public boolean isPersistDataState() {
+    return persistDataState;
+  }
+
+  public void setPersistDataState(boolean persistDataState) {
+    this.persistDataState = persistDataState;
   }
   
 }

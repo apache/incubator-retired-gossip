@@ -28,11 +28,11 @@ import java.util.Map;
 public abstract class GossipMember implements Comparable<GossipMember> {
 
   
-  protected final URI uri;
+  protected URI uri;
 
   protected volatile long heartbeat;
 
-  protected final String clusterName;
+  protected String clusterName;
 
   /**
    * The purpose of the id field is to be able for nodes to identify themselves beyond their
@@ -64,6 +64,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
     this.properties = properties;
   }
 
+  protected GossipMember(){}
   /**
    * Get the name of the cluster the member belongs to.
    * 
@@ -78,7 +79,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
    * @return The member address in the form IP/host:port Similar to the toString in
    * {@link InetSocketAddress}
    */
-  public String getAddress() {
+  public String computeAddress() {
     return uri.getHost() + ":" + uri.getPort();
   }
 
@@ -118,7 +119,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
   }
 
   public String toString() {
-    return "Member [address=" + getAddress() + ", id=" + id + ", heartbeat=" + heartbeat + "]";
+    return "Member [address=" + computeAddress() + ", id=" + id + ", heartbeat=" + heartbeat + "]";
   }
 
   /**
@@ -128,7 +129,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    String address = getAddress();
+    String address = computeAddress();
     result = prime * result + ((address == null) ? 0 : address.hashCode()) + (clusterName == null ? 0
             : clusterName.hashCode());
     return result;
@@ -155,11 +156,11 @@ public abstract class GossipMember implements Comparable<GossipMember> {
       return false;
     }
     // The object is the same of they both have the same address (hostname and port).
-    return getAddress().equals(((LocalGossipMember) obj).getAddress())
+    return computeAddress().equals(((LocalGossipMember) obj).computeAddress())
             && getClusterName().equals(((LocalGossipMember) obj).getClusterName());
   }
 
   public int compareTo(GossipMember other) {
-    return this.getAddress().compareTo(other.getAddress());
+    return this.computeAddress().compareTo(other.computeAddress());
   }
 }

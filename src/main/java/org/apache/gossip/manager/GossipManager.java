@@ -54,35 +54,24 @@ public abstract class GossipManager {
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
 
   private final ConcurrentSkipListMap<LocalGossipMember, GossipState> members;
-
   private final LocalGossipMember me;
-
   private final GossipSettings settings;
-
   private final AtomicBoolean gossipServiceRunning;
-
   private final GossipListener listener;
-
   private AbstractActiveGossiper activeGossipThread;
-
   private PassiveGossipThread passiveGossipThread;
-
   private ExecutorService gossipThreadExecutor;
-  
   private final GossipCore gossipCore;
-  
   private final DataReaper dataReaper;
-  
   private final Clock clock;
-  
   private final ScheduledExecutorService scheduledServiced;
-
-  private MetricRegistry registry;
-
+  private final MetricRegistry registry;
+  private final RingStatePersister ringState;
+  private final UserDataPersister userDataState;
+  
   public GossipManager(String cluster,
           URI uri, String id, Map<String,String> properties, GossipSettings settings,
           List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry) {
-    
     this.settings = settings;
     gossipCore = new GossipCore(this, registry);
     clock = new SystemClock();
@@ -105,6 +94,10 @@ public abstract class GossipManager {
     this.listener = listener;
     this.scheduledServiced = Executors.newScheduledThreadPool(1);
     this.registry = registry;
+    this.ringState = new RingStatePersister(this);
+    this.userDataState = new UserDataPersister(this, this.gossipCore);
+    readSavedRingState();
+    readSavedDataState();
   }
 
   public ConcurrentSkipListMap<LocalGossipMember, GossipState> getMembers() {
@@ -150,6 +143,7 @@ public abstract class GossipManager {
       throw new RuntimeException(e);
     }
   }
+  
   /**
    * Starts the client. Specifically, start the various cycles for this protocol. Start the gossip
    * thread and start the receiver thread.
@@ -160,13 +154,14 @@ public abstract class GossipManager {
     activeGossipThread = constructActiveGossiper();
     activeGossipThread.init();
     dataReaper.init();
+    scheduledServiced.scheduleAtFixedRate(ringState, 60, 60, TimeUnit.SECONDS);
+    scheduledServiced.scheduleAtFixedRate(userDataState, 60, 60, TimeUnit.SECONDS);
     scheduledServiced.scheduleAtFixedRate(() -> {
       try {
         for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
           Double result = null;
           try {
             result = entry.getKey().detect(clock.nanoTime());
-            //System.out.println(entry.getKey() +" "+ result);
             if (result != null) {
               if (result > settings.getConvictThreshold() && entry.getValue() == GossipState.UP) {
                 members.put(entry.getKey(), GossipState.DOWN);
@@ -195,6 +190,27 @@ public abstract class GossipManager {
     LOGGER.debug("The GossipManager is started.");
   }
 
+  private void readSavedRingState() {
+    for (LocalGossipMember l : ringState.readFromDisk()){
+      LocalGossipMember member = new LocalGossipMember(l.getClusterName(),
+              l.getUri(), l.getId(),
+              clock.nanoTime(), l.getProperties(), settings.getWindowSize(), 
+              settings.getMinimumSamples(), settings.getDistribution());
+      members.putIfAbsent(member, GossipState.DOWN);
+    }
+  }
+  
+  private void readSavedDataState() {
+    for (Entry<String, ConcurrentHashMap<String, GossipDataMessage>> l : userDataState.readPerNodeFromDisk().entrySet()){
+      for (Entry<String, GossipDataMessage> j : l.getValue().entrySet()){
+        gossipCore.addPerNodeData(j.getValue());
+      }
+    }
+    for (Entry<String, SharedGossipDataMessage> l: userDataState.readSharedDataFromDisk().entrySet()){
+      gossipCore.addSharedData(l.getValue());
+    }
+  }
+
   /**
    * Shutdown the gossip service.
    */
@@ -217,6 +233,14 @@ public abstract class GossipManager {
     } catch (InterruptedException e) {
       LOGGER.error(e);
     }
+    gossipThreadExecutor.shutdownNow();
+    scheduledServiced.shutdown();
+    try {
+      scheduledServiced.awaitTermination(1, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      LOGGER.error(e);
+    }
+    scheduledServiced.shutdownNow();
   }
   
   public void gossipPerNodeData(GossipDataMessage message){
@@ -266,6 +290,13 @@ public abstract class GossipManager {
   public DataReaper getDataReaper() {
     return dataReaper;
   }
+
+  public RingStatePersister getRingState() {
+    return ringState;
+  }
             
+  public UserDataPersister getUserDataState() {
+    return userDataState;
+  }
   
 }

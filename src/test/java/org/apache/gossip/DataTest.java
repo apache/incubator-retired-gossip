@@ -39,6 +39,8 @@ public class DataTest {
   @Test
   public void dataTest() throws InterruptedException, UnknownHostException, URISyntaxException{
     GossipSettings settings = new GossipSettings();
+    settings.setPersistRingState(false);
+    settings.setPersistDataState(false);
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 1;
     List<GossipMember> startupMembers = new ArrayList<>();

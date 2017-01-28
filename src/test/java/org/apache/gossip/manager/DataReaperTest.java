@@ -39,6 +39,8 @@ public class DataReaperTest {
   @Test
   public void testReaperOneShot() {
     GossipSettings settings = new GossipSettings();
+    settings.setPersistRingState(false);
+    settings.setPersistDataState(false);
     GossipManager gm = RandomGossipManager.newBuilder().cluster("abc").settings(settings)
             .withId(myId).uri(URI.create("udp://localhost:6000")).registry(registry).build();
     gm.init();

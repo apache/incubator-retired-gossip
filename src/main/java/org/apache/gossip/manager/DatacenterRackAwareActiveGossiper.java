@@ -180,7 +180,8 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
   }
 
   private void sendToSameRackMember() {
-    sendMembershipList(gossipManager.getMyself(), selectPartner(sameRackNodes()));
+    LocalGossipMember i = selectPartner(sameRackNodes());
+    sendMembershipList(gossipManager.getMyself(), i);
   }
   
   private void sendToSameRackMemberPerNode() {

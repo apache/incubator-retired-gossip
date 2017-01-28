@@ -47,7 +47,9 @@ public class ShutdownDeadtimeTest {
   @Test
   public void DeadNodesDoNotComeAliveAgain()
           throws InterruptedException, UnknownHostException, URISyntaxException {
-    GossipSettings settings = new GossipSettings(1000, 10000, 1000, 1, 5.0, "exponential");
+    GossipSettings settings = new GossipSettings(1000, 10000, 1000, 1, 2.0, "exponential");
+    settings.setPersistRingState(false);
+    settings.setPersistDataState(false);
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 3;
     List<GossipMember> startupMembers = new ArrayList<>();

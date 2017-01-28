@@ -198,7 +198,7 @@ public class StartupSettings {
       RemoteGossipMember member = new RemoteGossipMember(child.get("cluster").asText(),
               uri3, "", 0, new HashMap<String,String>());
       settings.addGossipMember(member);
-      configMembersDetails += member.getAddress();
+      configMembersDetails += member.computeAddress();
       configMembersDetails += ", ";
     }
     log.info(configMembersDetails + "]");

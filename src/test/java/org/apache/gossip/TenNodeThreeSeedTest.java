@@ -48,6 +48,8 @@ public class TenNodeThreeSeedTest {
 
   public void abc(int base) throws InterruptedException, UnknownHostException, URISyntaxException{
     GossipSettings settings = new GossipSettings();
+    settings.setPersistRingState(false);
+    settings.setPersistDataState(false);
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 3;
     List<GossipMember> startupMembers = new ArrayList<>();
