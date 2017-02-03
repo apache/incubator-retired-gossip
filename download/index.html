@@ -86,7 +86,54 @@
 
 <h2 id="apache-gossip-incubating-downloads">Apache Gossip™ (incubating) Downloads</h2>
 
-<p>There are no official Apache releases for Gossip yet. You can download and build the latest code from <a href="https://github.com/apache/incubator-gossip.git">GitHub</a>.</p>
+<p>Apache Gossip™ (incubating) is released as a source artifact, and also through Maven.</p>
+
+<h2 id="source-releases">Source releases</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Release</th>
+      <th style="text-align: left">Date</th>
+      <th style="text-align: left">Commit</th>
+      <th style="text-align: left">Download</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">0.1.1-incubating</td>
+      <td style="text-align: left">29 Jan 2017</td>
+      <td style="text-align: left"><a href="https://github.com/apache/incubator-gossip/commit/6720f35">6720f35</a></td>
+      <td style="text-align: left"><a href="http://www.apache.org/dyn/closer.lua?filename=incubator/gossip/gossip-0.1.1-incubating/gossip-0.1.1-incubating-source-release.zip&amp;action=download">zip</a>  (<a href="https://www.apache.org/dist/incubator/gossip/gossip-0.1.1-incubating/gossip-0.1.1-incubating-source-release.zip.md5">md5</a> <a href="https://www.apache.org/dist/incubator/gossip/gossip-0.1.1-incubating/gossip-0.1.1-incubating-source-release.zip.asc">pgp</a>)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="verification">Verification</h3>
+
+<p>Choose a source distribution in either <em>tar</em> or <em>zip</em> format,
+and <a href="http://www.apache.org/dyn/closer.cgi#verify">verify</a>
+using the corresponding <em>pgp</em> signature (using the committer file in
+<a href="http://www.apache.org/dist/gossip/KEYS">KEYS</a>).
+If you cannot do that, the <em>md5</em> hash file may be used to check that the
+download has completed OK.</p>
+
+<p>For fast downloads, current source distributions are hosted on mirror servers;
+older source distributions are in the
+<a href="http://archive.apache.org/dist/incubator/gossip/">archive</a>.
+If a download from a mirror fails, retry, and the second download will likely
+succeed.</p>
+
+<p>For security, hash and signature files are always hosted at
+<a href="https://www.apache.org/dist">Apache</a>.</p>
+
+<h2 id="maven-central">Maven Central</h2>
+
+<figure class="highlight"><pre><code class="language-xml" data-lang="xml"><span class="nt">&lt;dependency&gt;</span>
+  <span class="nt">&lt;groupId&gt;</span>org.apache.gossip<span class="nt">&lt;/groupId&gt;</span>
+  <span class="nt">&lt;artifactId&gt;</span>gossip<span class="nt">&lt;/gossip&gt;</span>
+  <span class="nt">&lt;version&gt;</span>...<span class="nt">&lt;/version&gt;</span>
+<span class="nt">&lt;/dependency&gt;</span></code></pre></figure>
 
 
   </div>
@@ -95,19 +142,13 @@
 
       <hr>
       <footer>
-        <!-- <p>&copy; 2016 </p>-->
+        <!-- <p>&copy; 2017 </p>-->
         <footer class="site-footer">
     <div class="wrapper">
         <div class="footer-col-wrapper">
-            
-            Apache Gossip™ (incubating) is an effort undergoing <a href="https://incubator.apache.org/index.html">Incubation</a>
-            at The Apache Software Foundation (ASF), sponsored by the Incubator. Incubation is required of all newly
-            accepted projects until a further review indicates that the infrastructure, communications, and decision
-            making process have stabilized in a manner consistent with other successful ASF projects. While incubation
-            status is not necessarily a reflection of the completeness or stability of the code, it does indicate that
-            the project has yet to be fully endorsed by the ASF.
-            <hr>
-            
+            <!---->
+
+            <!---->
             <div style="text-align:center;">
                 
                 <div style="margin-top: 20px; margin-bottom: 20px;">
