@@ -44,6 +44,7 @@ import org.apache.gossip.model.Base;
 import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.Response;
 import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.ShutdownMessage;
 import org.apache.gossip.udp.Trackable;
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpActiveGossipOk;
@@ -71,6 +72,10 @@ public class GossipCore implements GossipCoreConstants {
   private final Meter messageSerdeException;
   private final Meter tranmissionException;
   private final Meter tranmissionSuccess;
+  
+  {
+    MAPPER.enableDefaultTyping();
+  }
   
   public GossipCore(GossipManager manager, MetricRegistry metrics){
     this.gossipManager = manager;
@@ -128,10 +133,11 @@ public class GossipCore implements GossipCoreConstants {
   public void shutdown(){
     service.shutdown();
     try {
-      service.awaitTermination(5, TimeUnit.SECONDS);
+      service.awaitTermination(1, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       LOGGER.warn(e);
     }
+    service.shutdownNow();
   }
   
   public void receive(Base base){
@@ -140,6 +146,16 @@ public class GossipCore implements GossipCoreConstants {
         Trackable t = (Trackable) base;
         requests.put(t.getUuid() + "/" + t.getUriFrom(), (Base) t);
       }
+    }
+    if (base instanceof ShutdownMessage){
+      ShutdownMessage s = (ShutdownMessage) base;
+      GossipDataMessage m = new GossipDataMessage();
+      m.setKey(ShutdownMessage.PER_NODE_KEY);
+      m.setNodeId(s.getNodeId());
+      m.setPayload(base);
+      m.setTimestamp(System.currentTimeMillis());
+      m.setExpireAt(System.currentTimeMillis() + 30L * 1000L);
+      addPerNodeData(m);
     }
     if (base instanceof GossipDataMessage) {
       UdpGossipDataMessage message = (UdpGossipDataMessage) base;

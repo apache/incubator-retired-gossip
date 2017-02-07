@@ -18,7 +18,6 @@
 package org.apache.gossip.manager;
 
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -39,7 +38,6 @@ public class SimpleActiveGossipper extends AbstractActiveGossiper {
   private ScheduledExecutorService scheduledExecutorService;
   private final BlockingQueue<Runnable> workQueue;
   private ThreadPoolExecutor threadService;
-  private final Random random;
   
   public SimpleActiveGossipper(GossipManager gossipManager, GossipCore gossipCore,
           MetricRegistry registry) {
@@ -48,7 +46,6 @@ public class SimpleActiveGossipper extends AbstractActiveGossiper {
     workQueue = new ArrayBlockingQueue<Runnable>(1024);
     threadService = new ThreadPoolExecutor(1, 30, 1, TimeUnit.SECONDS, workQueue,
             new ThreadPoolExecutor.DiscardOldestPolicy());
-    random = new Random();
   }
 
   @Override
@@ -71,13 +68,20 @@ public class SimpleActiveGossipper extends AbstractActiveGossiper {
                     selectPartner(gossipManager.getLiveMembers())),
             0, gossipManager.getSettings().getGossipInterval(), TimeUnit.MILLISECONDS);
   }
-
+  
   @Override
   public void shutdown() {
     super.shutdown();
     scheduledExecutorService.shutdown();
     try {
       scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      LOGGER.debug("Issue during shutdown", e);
+    }
+    sendShutdownMessage();
+    threadService.shutdown();
+    try {
+      threadService.awaitTermination(5, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       LOGGER.debug("Issue during shutdown", e);
     }
@@ -94,18 +98,13 @@ public class SimpleActiveGossipper extends AbstractActiveGossiper {
   }
   
   /**
-   * 
-   * @param memberList
-   *          The list of members which are stored in the local list of members.
-   * @return The chosen LocalGossipMember to gossip with.
+   * sends an optimistic shutdown message to several clusters nodes
    */
-  protected LocalGossipMember selectPartner(List<LocalGossipMember> memberList) {
-    //TODO this selection is racey what if the list size changes?
-    LocalGossipMember member = null;
-    if (memberList.size() > 0) {
-      int randomNeighborIndex = random.nextInt(memberList.size());
-      member = memberList.get(randomNeighborIndex);
+  protected void sendShutdownMessage(){
+    List<LocalGossipMember> l = gossipManager.getLiveMembers();
+    int sendTo = l.size() < 3 ? 1 : l.size() / 2;
+    for (int i = 0; i < sendTo; i++) {
+      threadService.execute(() -> sendShutdownMessage(gossipManager.getMyself(), selectPartner(l)));
     }
-    return member;
   }
 }

@@ -18,6 +18,8 @@
 package org.apache.gossip.manager;
 
 import java.util.Map.Entry;
+import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import com.codahale.metrics.Histogram;
@@ -28,6 +30,7 @@ import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.GossipMember;
 import org.apache.gossip.model.Response;
 import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.ShutdownMessage;
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpGossipDataMessage;
 import org.apache.gossip.udp.UdpSharedGossipDataMessage;
@@ -47,6 +50,7 @@ public abstract class AbstractActiveGossiper {
   private final Histogram sharedDataHistogram;
   private final Histogram sendPerNodeDataHistogram;
   private final Histogram sendMembershipHistorgram;
+  private final Random random;
 
   public AbstractActiveGossiper(GossipManager gossipManager, GossipCore gossipCore, MetricRegistry registry) {
     this.gossipManager = gossipManager;
@@ -54,6 +58,7 @@ public abstract class AbstractActiveGossiper {
     sharedDataHistogram = registry.histogram(name(AbstractActiveGossiper.class, "sharedDataHistogram-time"));
     sendPerNodeDataHistogram = registry.histogram(name(AbstractActiveGossiper.class, "sendPerNodeDataHistogram-time"));
     sendMembershipHistorgram = registry.histogram(name(AbstractActiveGossiper.class, "sendMembershipHistorgram-time"));
+    random = new Random();
   }
 
   public void init() {
@@ -64,6 +69,16 @@ public abstract class AbstractActiveGossiper {
 
   }
 
+  public final void sendShutdownMessage(LocalGossipMember me, LocalGossipMember target){
+    if (target == null){
+      return;
+    }
+    ShutdownMessage m = new ShutdownMessage();
+    m.setNodeId(me.getId());
+    m.setShutdownAtNanos(gossipManager.getClock().nanoTime());
+    gossipCore.sendOneWay(m, target.getUri());
+  }
+  
   public final void sendSharedData(LocalGossipMember me, LocalGossipMember member){
     if (member == null){
       return;
@@ -137,5 +152,20 @@ public abstract class AbstractActiveGossiper {
     gm.setId(member.getId());
     gm.setProperties(member.getProperties());
     return gm;
+  }
+  
+  /**
+   * 
+   * @param memberList
+   *          An immutable list
+   * @return The chosen LocalGossipMember to gossip with.
+   */
+  protected LocalGossipMember selectPartner(List<LocalGossipMember> memberList) {
+    LocalGossipMember member = null;
+    if (memberList.size() > 0) {
+      int randomNeighborIndex = random.nextInt(memberList.size());
+      member = memberList.get(randomNeighborIndex);
+    }
+    return member;
   }
 }

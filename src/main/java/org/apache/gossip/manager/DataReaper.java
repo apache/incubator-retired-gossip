@@ -77,7 +77,7 @@ public class DataReaper {
   public void close(){
     scheduledExecutor.shutdown();
     try {
-      scheduledExecutor.awaitTermination(5, TimeUnit.SECONDS);
+      scheduledExecutor.awaitTermination(1, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       
     }

@@ -18,7 +18,6 @@
 package org.apache.gossip.manager;
 
 import java.util.List;
-import java.util.Random;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -52,7 +51,6 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
   private ScheduledExecutorService scheduledExecutorService;
   private final BlockingQueue<Runnable> workQueue;
   private ThreadPoolExecutor threadService;
-  private final Random random;
   
   public DatacenterRackAwareActiveGossiper(GossipManager gossipManager, GossipCore gossipCore,
           MetricRegistry registry) {
@@ -61,7 +59,6 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
     workQueue = new ArrayBlockingQueue<Runnable>(1024);
     threadService = new ThreadPoolExecutor(1, 30, 1, TimeUnit.SECONDS, workQueue,
             new ThreadPoolExecutor.DiscardOldestPolicy());
-    random = new Random();
     try {
       sameRackGossipIntervalMs = Integer.parseInt(gossipManager.getSettings()
               .getActiveGossipProperties().get("sameRackGossipIntervalMs"));
@@ -216,19 +213,32 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
     sendSharedData(gossipManager.getMyself(), selectPartner(sameDatacenterDifferentRack()));
   }
   
-
   @Override
   public void shutdown() {
     super.shutdown();
-  }
-
-  protected LocalGossipMember selectPartner(List<LocalGossipMember> memberList) {
-    LocalGossipMember member = null;
-    if (memberList.size() > 0) {
-      int randomNeighborIndex = random.nextInt(memberList.size());
-      member = memberList.get(randomNeighborIndex);
+    scheduledExecutorService.shutdown();
+    try {
+      scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      LOGGER.debug("Issue during shutdown", e);
     }
-    return member;
+    sendShutdownMessage();
+    threadService.shutdown();
+    try {
+      threadService.awaitTermination(5, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      LOGGER.debug("Issue during shutdown", e);
+    }
   }
   
+  /**
+   * sends an optimistic shutdown message to several clusters nodes
+   */
+  protected void sendShutdownMessage(){
+    List<LocalGossipMember> l = gossipManager.getLiveMembers();
+    int sendTo = l.size() < 3 ? 1 : l.size() / 3;
+    for (int i = 0; i < sendTo; i++) {
+      threadService.execute(() -> sendShutdownMessage(gossipManager.getMyself(), selectPartner(l)));
+    }
+  }
 }

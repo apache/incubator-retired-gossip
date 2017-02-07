@@ -47,6 +47,7 @@ import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
 
 import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.ShutdownMessage;
 
 
 public abstract class GossipManager {
@@ -159,6 +160,9 @@ public abstract class GossipManager {
     scheduledServiced.scheduleAtFixedRate(() -> {
       try {
         for (Entry<LocalGossipMember, GossipState> entry : members.entrySet()) {
+          boolean userDown = processOptomisticShutdown(entry);
+          if (userDown)
+            continue;
           Double result = null;
           try {
             result = entry.getKey().detect(clock.nanoTime());
@@ -190,6 +194,30 @@ public abstract class GossipManager {
     LOGGER.debug("The GossipManager is started.");
   }
 
+  /**
+   * If we have a special key the per-node data that means that the node has sent us 
+   * a pre-emptive shutdown message. We process this so node is seen down sooner
+   * @param l member to consider
+   * @return true if node forced down
+   */
+  public boolean processOptomisticShutdown(Entry<LocalGossipMember, GossipState> l){
+    GossipDataMessage m = findPerNodeGossipData(l.getKey().getId(), ShutdownMessage.PER_NODE_KEY);
+    if (m == null){
+      return false;
+    }
+    ShutdownMessage s = (ShutdownMessage) m.getPayload();
+    if (s.getShutdownAtNanos() > l.getKey().getHeartbeat()){
+      if (l.getValue() == GossipState.UP){
+        members.put(l.getKey(), GossipState.DOWN);
+        listener.gossipEvent(l.getKey(), GossipState.DOWN);
+      } else {
+        members.put(l.getKey(), GossipState.DOWN);
+      }
+      return true;
+    }
+    return false;
+  }
+  
   private void readSavedRingState() {
     for (LocalGossipMember l : ringState.readFromDisk()){
       LocalGossipMember member = new LocalGossipMember(l.getClusterName(),
@@ -226,7 +254,7 @@ public abstract class GossipManager {
       activeGossipThread.shutdown();
     }
     try {
-      boolean result = gossipThreadExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+      boolean result = gossipThreadExecutor.awaitTermination(10, TimeUnit.MILLISECONDS);
       if (!result) {
         LOGGER.error("executor shutdown timed out");
       }
@@ -297,6 +325,10 @@ public abstract class GossipManager {
             
   public UserDataPersister getUserDataState() {
     return userDataState;
+  }
+
+  public Clock getClock() {
+    return clock;
   }
   
 }

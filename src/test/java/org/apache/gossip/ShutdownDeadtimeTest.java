@@ -47,7 +47,7 @@ public class ShutdownDeadtimeTest {
   @Test
   public void DeadNodesDoNotComeAliveAgain()
           throws InterruptedException, UnknownHostException, URISyntaxException {
-    GossipSettings settings = new GossipSettings(1000, 10000, 1000, 1, 2.0, "exponential");
+    GossipSettings settings = new GossipSettings(100, 10000, 1000, 1, 2.0, "exponential");
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
     String cluster = UUID.randomUUID().toString();
@@ -75,7 +75,6 @@ public class ShutdownDeadtimeTest {
         return total;
       }
     }).afterWaitingAtMost(40, TimeUnit.SECONDS).isEqualTo(20);
-
     // shutdown one client and verify that one client is lost.
     Random r = new Random();
     int randomClientId = r.nextInt(clusterMembers);
@@ -124,7 +123,12 @@ public class ShutdownDeadtimeTest {
     }).afterWaitingAtMost(60, TimeUnit.SECONDS).isEqualTo(20);
 
     for (int i = 0; i < clusterMembers; ++i) {
-      clients.get(i).shutdown();
+      final int j = i;
+      new Thread() {
+        public void run(){
+          clients.get(j).shutdown();
+        }
+      }.start();
     }
   }
 }

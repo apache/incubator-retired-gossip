@@ -47,9 +47,13 @@ abstract public class PassiveGossipThread implements Runnable {
 
   private final String cluster;
   
-  private final ObjectMapper MAPPER = new ObjectMapper();
+  private final static ObjectMapper MAPPER = new ObjectMapper();
   
   private final GossipCore gossipCore;
+  
+  {
+    MAPPER.enableDefaultTyping();
+  }
 
   public PassiveGossipThread(GossipManager gossipManager, GossipCore gossipCore) {
     this.gossipCore = gossipCore;
