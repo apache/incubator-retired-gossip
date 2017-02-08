@@ -32,14 +32,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class UserDataPersister implements Runnable {
   
   private static final Logger LOGGER = Logger.getLogger(UserDataPersister.class);
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   private final GossipManager parent;
   private final GossipCore gossipCore; 
   
   UserDataPersister(GossipManager parent, GossipCore gossipCore){
     this.parent = parent;
     this.gossipCore = gossipCore;
-    MAPPER.enableDefaultTyping();
   }
   
   File computeSharedTarget(){
@@ -58,7 +56,7 @@ public class UserDataPersister implements Runnable {
       return new ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>>();
     }
     try (FileInputStream fos = new FileInputStream(computePerNodeTarget())){
-      return MAPPER.readValue(fos, ConcurrentHashMap.class);
+      return parent.getObjectMapper().readValue(fos, ConcurrentHashMap.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }
@@ -70,7 +68,7 @@ public class UserDataPersister implements Runnable {
       return;
     }
     try (FileOutputStream fos = new FileOutputStream(computePerNodeTarget())){
-      MAPPER.writeValue(fos, gossipCore.getPerNodeData());
+      parent.getObjectMapper().writeValue(fos, gossipCore.getPerNodeData());
     } catch (IOException e) {
       LOGGER.warn(e);
     }
@@ -81,7 +79,7 @@ public class UserDataPersister implements Runnable {
       return;
     }
     try (FileOutputStream fos = new FileOutputStream(computeSharedTarget())){
-      MAPPER.writeValue(fos, gossipCore.getSharedData());
+      parent.getObjectMapper().writeValue(fos, gossipCore.getSharedData());
     } catch (IOException e) {
       LOGGER.warn(e);
     }
@@ -93,7 +91,7 @@ public class UserDataPersister implements Runnable {
       return new ConcurrentHashMap<String, SharedGossipDataMessage>();
     }
     try (FileInputStream fos = new FileInputStream(computeSharedTarget())){
-      return MAPPER.readValue(fos, ConcurrentHashMap.class);
+      return parent.getObjectMapper().readValue(fos, ConcurrentHashMap.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }

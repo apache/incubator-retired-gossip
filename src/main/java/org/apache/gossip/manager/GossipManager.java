@@ -18,6 +18,7 @@
 package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -69,10 +70,11 @@ public abstract class GossipManager {
   private final MetricRegistry registry;
   private final RingStatePersister ringState;
   private final UserDataPersister userDataState;
+  private final ObjectMapper objectMapper;
   
   public GossipManager(String cluster,
           URI uri, String id, Map<String,String> properties, GossipSettings settings,
-          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry) {
+          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry, ObjectMapper objectMapper) {
     this.settings = settings;
     gossipCore = new GossipCore(this, registry);
     clock = new SystemClock();
@@ -97,6 +99,7 @@ public abstract class GossipManager {
     this.registry = registry;
     this.ringState = new RingStatePersister(this);
     this.userDataState = new UserDataPersister(this, this.gossipCore);
+    this.objectMapper = objectMapper;
     readSavedRingState();
     readSavedDataState();
   }
@@ -329,6 +332,10 @@ public abstract class GossipManager {
 
   public Clock getClock() {
     return clock;
+  }
+
+  public ObjectMapper getObjectMapper() {
+    return objectMapper;
   }
   
 }

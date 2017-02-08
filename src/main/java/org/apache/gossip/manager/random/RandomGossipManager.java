@@ -18,6 +18,8 @@
 package org.apache.gossip.manager.random;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.event.GossipListener;
@@ -44,6 +46,7 @@ public class RandomGossipManager extends GossipManager {
     private GossipListener listener;
     private MetricRegistry registry;
     private Map<String,String> properties;
+    private ObjectMapper objectMapper;
 
     private ManagerBuilder() {}
 
@@ -93,6 +96,11 @@ public class RandomGossipManager extends GossipManager {
       return this;
     }
     
+    public ManagerBuilder mapper(ObjectMapper objectMapper){
+      this.objectMapper = objectMapper;
+      return this;
+    }
+    
     public RandomGossipManager build() {
       checkArgument(id != null, "You must specify an id");
       checkArgument(cluster != null, "You must specify a cluster name");
@@ -108,12 +116,16 @@ public class RandomGossipManager extends GossipManager {
       if (gossipMembers == null) {
         gossipMembers = new ArrayList<>();
       }
-      return new RandomGossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry);
+      if (objectMapper == null) {
+        objectMapper = new ObjectMapper();
+        objectMapper.enableDefaultTyping();
+      }
+      return new RandomGossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper);
     }
   }
 
   private RandomGossipManager(String cluster, URI uri, String id, Map<String,String> properties,  GossipSettings settings, 
-          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry) {
-    super(cluster, uri, id, properties, settings, gossipMembers, listener, registry);
+          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry, ObjectMapper objectMapper) {
+    super(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper);
   }
 }

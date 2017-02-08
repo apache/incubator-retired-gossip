@@ -29,15 +29,9 @@ import java.util.NavigableSet;
 import org.apache.gossip.LocalGossipMember;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class RingStatePersister implements Runnable {
 
   private static final Logger LOGGER = Logger.getLogger(RingStatePersister.class);
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final TypeReference<ArrayList<LocalGossipMember>> REF 
-    = new TypeReference<ArrayList<LocalGossipMember>>() { };
   private GossipManager parent;
   
   public RingStatePersister(GossipManager parent){
@@ -60,18 +54,19 @@ public class RingStatePersister implements Runnable {
     }
     NavigableSet<LocalGossipMember> i = parent.getMembers().keySet();
     try (FileOutputStream fos = new FileOutputStream(computeTarget())){
-      MAPPER.writeValue(fos, i);
+      parent.getObjectMapper().writeValue(fos, i);
     } catch (IOException e) {
       LOGGER.debug(e);
     }
   }
 
+  @SuppressWarnings("unchecked")
   List<LocalGossipMember> readFromDisk(){
     if (!parent.getSettings().isPersistRingState()){
       return Collections.emptyList();
     }
     try (FileInputStream fos = new FileInputStream(computeTarget())){
-      return MAPPER.readValue(fos, REF);
+      return parent.getObjectMapper().readValue(fos, ArrayList.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }

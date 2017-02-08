@@ -56,13 +56,10 @@ import org.apache.log4j.Logger;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 
 public class GossipCore implements GossipCoreConstants {
   
   public static final Logger LOGGER = Logger.getLogger(GossipCore.class);
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   private final GossipManager gossipManager;
   private ConcurrentHashMap<String, Base> requests;
   private ThreadPoolExecutor service;
@@ -72,11 +69,7 @@ public class GossipCore implements GossipCoreConstants {
   private final Meter messageSerdeException;
   private final Meter tranmissionException;
   private final Meter tranmissionSuccess;
-  
-  {
-    MAPPER.enableDefaultTyping();
-  }
-  
+    
   public GossipCore(GossipManager manager, MetricRegistry metrics){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
@@ -214,7 +207,7 @@ public class GossipCore implements GossipCoreConstants {
   private void sendInternal(Base message, URI uri){
     byte[] json_bytes;
     try {
-      json_bytes = MAPPER.writeValueAsString(message).getBytes();
+      json_bytes = gossipManager.getObjectMapper().writeValueAsString(message).getBytes();
     } catch (IOException e) {
       messageSerdeException.mark();
       throw new RuntimeException(e);
@@ -292,7 +285,7 @@ public class GossipCore implements GossipCoreConstants {
   public void sendOneWay(Base message, URI u){
     byte[] json_bytes;
     try {
-      json_bytes = MAPPER.writeValueAsBytes(message);
+      json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(message);
     } catch (IOException e) {
       messageSerdeException.mark();
       throw new RuntimeException(e);

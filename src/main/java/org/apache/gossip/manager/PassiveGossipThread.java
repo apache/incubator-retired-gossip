@@ -28,13 +28,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.gossip.model.Base;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 /**
- * [The passive thread: reply to incoming gossip request.] This class handles the passive cycle,
- * where this client has received an incoming message. For now, this message is always the
- * membership list, but if you choose to gossip additional information, you will need some logic to
- * determine the incoming message.
+ * This class handles the passive cycle,
+ * where this client has received an incoming message. 
  */
 abstract public class PassiveGossipThread implements Runnable {
 
@@ -42,21 +38,16 @@ abstract public class PassiveGossipThread implements Runnable {
 
   /** The socket used for the passive thread of the gossip service. */
   private final DatagramSocket server;
-
   private final AtomicBoolean keepRunning;
-
-  private final String cluster;
-  
-  private final static ObjectMapper MAPPER = new ObjectMapper();
-  
   private final GossipCore gossipCore;
-  
-  {
-    MAPPER.enableDefaultTyping();
-  }
+  private final GossipManager gossipManager;
 
   public PassiveGossipThread(GossipManager gossipManager, GossipCore gossipCore) {
+    this.gossipManager = gossipManager;
     this.gossipCore = gossipCore;
+    if (gossipManager.getMyself().getClusterName() == null){
+      throw new IllegalArgumentException("Cluster was null");
+    }
     try {
       SocketAddress socketAddress = new InetSocketAddress(gossipManager.getMyself().getUri().getHost(),
               gossipManager.getMyself().getUri().getPort());
@@ -64,10 +55,6 @@ abstract public class PassiveGossipThread implements Runnable {
       LOGGER.debug("Gossip service successfully initialized on port "
               + gossipManager.getMyself().getUri().getPort());
       LOGGER.debug("I am " + gossipManager.getMyself());
-      cluster = gossipManager.getMyself().getClusterName();
-      if (cluster == null){
-        throw new IllegalArgumentException("cluster was null");
-      }
     } catch (SocketException ex) {
       LOGGER.warn(ex);
       throw new RuntimeException(ex);
@@ -84,7 +71,7 @@ abstract public class PassiveGossipThread implements Runnable {
         server.receive(p);
         debug(p.getData());
         try {
-          Base activeGossipMessage = MAPPER.readValue(p.getData(), Base.class);
+          Base activeGossipMessage = gossipManager.getObjectMapper().readValue(p.getData(), Base.class);
           gossipCore.receive(activeGossipMessage);
         } catch (RuntimeException ex) {//TODO trap json exception
           LOGGER.error("Unable to process message", ex);
