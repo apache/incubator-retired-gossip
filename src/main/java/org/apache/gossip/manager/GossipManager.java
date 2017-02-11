@@ -76,11 +76,11 @@ public abstract class GossipManager {
           URI uri, String id, Map<String,String> properties, GossipSettings settings,
           List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry, ObjectMapper objectMapper) {
     this.settings = settings;
-    gossipCore = new GossipCore(this, registry);
-    clock = new SystemClock();
-    dataReaper = new DataReaper(gossipCore, clock);
+    clock = new SystemClock();    
     me = new LocalGossipMember(cluster, uri, id, clock.nanoTime(), properties,
             settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
+    gossipCore = new GossipCore(this, registry);
+    dataReaper = new DataReaper(gossipCore, clock);
     members = new ConcurrentSkipListMap<>();
     for (GossipMember startupMember : gossipMembers) {
       if (!startupMember.equals(me)) {
@@ -336,6 +336,10 @@ public abstract class GossipManager {
 
   public ObjectMapper getObjectMapper() {
     return objectMapper;
+  }
+
+  public MetricRegistry getRegistry() {
+    return registry;
   }
   
 }

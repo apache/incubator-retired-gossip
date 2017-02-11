@@ -56,6 +56,11 @@ public class GossipSettings {
   
   private boolean persistDataState = true;
   
+  private String pathToKeyStore = "./keys";
+  
+  private boolean signMessages = false;
+  
+  
   /**
    * Construct GossipSettings with default settings.
    */
@@ -201,6 +206,22 @@ public class GossipSettings {
 
   public void setPersistDataState(boolean persistDataState) {
     this.persistDataState = persistDataState;
+  }
+
+  public String getPathToKeyStore() {
+    return pathToKeyStore;
+  }
+
+  public void setPathToKeyStore(String pathToKeyStore) {
+    this.pathToKeyStore = pathToKeyStore;
+  }
+
+  public boolean isSignMessages() {
+    return signMessages;
+  }
+
+  public void setSignMessages(boolean signMessages) {
+    this.signMessages = signMessages;
   }
   
 }

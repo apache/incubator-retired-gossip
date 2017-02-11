@@ -79,7 +79,6 @@ public class DataTest {
       }
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("b");
     
-    
     TUnit.assertThat(new Callable<Object>() {
       public Object call() throws Exception {
         SharedGossipDataMessage x = clients.get(1).findSharedData("a");

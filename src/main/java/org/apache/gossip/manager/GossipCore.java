@@ -17,12 +17,23 @@
  */
 package org.apache.gossip.manager;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -45,6 +56,7 @@ import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.Response;
 import org.apache.gossip.model.SharedGossipDataMessage;
 import org.apache.gossip.model.ShutdownMessage;
+import org.apache.gossip.model.SignedPayload;
 import org.apache.gossip.udp.Trackable;
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpActiveGossipOk;
@@ -66,6 +78,8 @@ public class GossipCore implements GossipCoreConstants {
   private final ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> perNodeData;
   private final ConcurrentHashMap<String, SharedGossipDataMessage> sharedData;
   private final BlockingQueue<Runnable> workQueue;
+  private final PKCS8EncodedKeySpec privKeySpec;
+  private final PrivateKey privKey;
   private final Meter messageSerdeException;
   private final Meter tranmissionException;
   private final Meter tranmissionSuccess;
@@ -86,6 +100,41 @@ public class GossipCore implements GossipCoreConstants {
     messageSerdeException = metrics.meter(MESSAGE_SERDE_EXCEPTION);
     tranmissionException = metrics.meter(MESSAGE_TRANSMISSION_EXCEPTION);
     tranmissionSuccess = metrics.meter(MESSAGE_TRANSMISSION_SUCCESS);
+    if (manager.getSettings().isSignMessages()){
+      File privateKey = new File(manager.getSettings().getPathToKeyStore(), manager.getMyself().getId());
+      File publicKey = new File(manager.getSettings().getPathToKeyStore(), manager.getMyself().getId() + ".pub");
+      if (!privateKey.exists()){
+        throw new IllegalArgumentException("private key not found " + privateKey);
+      }
+      if (!publicKey.exists()){
+        throw new IllegalArgumentException("public key not found " + publicKey);
+      }
+      try (FileInputStream keyfis = new FileInputStream(privateKey)) {
+        byte[] encKey = new byte[keyfis.available()];
+        keyfis.read(encKey);
+        keyfis.close();
+        privKeySpec = new PKCS8EncodedKeySpec(encKey);
+        KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+        privKey = keyFactory.generatePrivate(privKeySpec);
+      } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
+        throw new RuntimeException("failed hard", e);
+      }
+    } else {
+      privKeySpec = null;
+      privKey = null;
+    }
+  }
+  
+  private byte [] sign(byte [] bytes){
+    Signature dsa;
+    try {
+      dsa = Signature.getInstance("SHA1withDSA", "SUN");
+      dsa.initSign(privKey);
+      dsa.update(bytes);
+      return dsa.sign();
+    } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException | SignatureException e) {
+      throw new RuntimeException(e);
+    } 
   }
   
   public void addSharedData(SharedGossipDataMessage message){
@@ -207,7 +256,14 @@ public class GossipCore implements GossipCoreConstants {
   private void sendInternal(Base message, URI uri){
     byte[] json_bytes;
     try {
-      json_bytes = gossipManager.getObjectMapper().writeValueAsString(message).getBytes();
+      if (privKey == null){
+        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(message);
+      } else {
+        SignedPayload p = new SignedPayload();
+        p.setData(gossipManager.getObjectMapper().writeValueAsString(message).getBytes());
+        p.setSignature(sign(p.getData()));
+        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(p);
+      }
     } catch (IOException e) {
       messageSerdeException.mark();
       throw new RuntimeException(e);
@@ -285,7 +341,14 @@ public class GossipCore implements GossipCoreConstants {
   public void sendOneWay(Base message, URI u){
     byte[] json_bytes;
     try {
-      json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(message);
+      if (privKey == null){
+        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(message);
+      } else {
+        SignedPayload p = new SignedPayload();
+        p.setData(gossipManager.getObjectMapper().writeValueAsString(message).getBytes());
+        p.setSignature(sign(p.getData()));
+        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(p);
+      }
     } catch (IOException e) {
       messageSerdeException.mark();
       throw new RuntimeException(e);
