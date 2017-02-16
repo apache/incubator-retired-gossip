@@ -21,11 +21,17 @@ import com.codahale.metrics.MetricRegistry;
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.manager.handlers.DefaultMessageInvoker;
+import org.apache.gossip.manager.handlers.MessageInvoker;
+import org.apache.gossip.manager.handlers.ResponseHandler;
+import org.apache.gossip.manager.handlers.SimpleMessageInvoker;
 import org.apache.gossip.manager.random.RandomGossipManager;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
+import javax.xml.ws.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -69,6 +75,31 @@ public class RandomGossipManagerBuilderTest {
         .settings(new GossipSettings())
         .gossipMembers(null).registry(new MetricRegistry()).build();
     assertNotNull(gossipManager.getLiveMembers());
+  }
+
+  @Test
+  public void createDefaultMessageInvokerIfNull() throws URISyntaxException {
+    RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
+        .withId("id")
+        .cluster("aCluster")
+        .uri(new URI("udp://localhost:2000"))
+        .settings(new GossipSettings())
+        .messageInvoker(null).registry(new MetricRegistry()).build();
+    assertNotNull(gossipManager.getMessageInvoker());
+    Assert.assertEquals(gossipManager.getMessageInvoker().getClass(), new DefaultMessageInvoker().getClass());
+  }
+
+  @Test
+  public void testMessageInvokerKeeping() throws URISyntaxException {
+    MessageInvoker mi = new SimpleMessageInvoker(Response.class, new ResponseHandler());
+    RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
+        .withId("id")
+        .cluster("aCluster")
+        .uri(new URI("udp://localhost:2000"))
+        .settings(new GossipSettings())
+        .messageInvoker(mi).registry(new MetricRegistry()).build();
+    assertNotNull(gossipManager.getMessageInvoker());
+    Assert.assertEquals(gossipManager.getMessageInvoker(), mi);
   }
 
   @Test

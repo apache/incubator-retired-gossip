@@ -17,6 +17,17 @@
  */
 package org.apache.gossip.manager;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import org.apache.gossip.GossipMember;
+import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.event.GossipState;
+import org.apache.gossip.model.*;
+import org.apache.gossip.udp.Trackable;
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,53 +35,15 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.security.SignatureException;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import org.apache.gossip.GossipMember;
-import org.apache.gossip.LocalGossipMember;
-import org.apache.gossip.RemoteGossipMember;
-import org.apache.gossip.event.GossipState;
-import org.apache.gossip.model.ActiveGossipMessage;
-import org.apache.gossip.model.Base;
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.Response;
-import org.apache.gossip.model.SharedGossipDataMessage;
-import org.apache.gossip.model.ShutdownMessage;
-import org.apache.gossip.model.SignedPayload;
-import org.apache.gossip.udp.Trackable;
-import org.apache.gossip.udp.UdpActiveGossipMessage;
-import org.apache.gossip.udp.UdpActiveGossipOk;
-import org.apache.gossip.udp.UdpGossipDataMessage;
-import org.apache.gossip.udp.UdpNotAMemberFault;
-import org.apache.gossip.udp.UdpSharedGossipDataMessage;
-import org.apache.log4j.Logger;
-
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
+import java.util.concurrent.*;
 
 public class GossipCore implements GossipCoreConstants {
-  
+
   public static final Logger LOGGER = Logger.getLogger(GossipCore.class);
   private final GossipManager gossipManager;
   private ConcurrentHashMap<String, Base> requests;
@@ -83,7 +56,7 @@ public class GossipCore implements GossipCoreConstants {
   private final Meter messageSerdeException;
   private final Meter tranmissionException;
   private final Meter tranmissionSuccess;
-    
+
   public GossipCore(GossipManager manager, MetricRegistry metrics){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
@@ -100,6 +73,7 @@ public class GossipCore implements GossipCoreConstants {
     messageSerdeException = metrics.meter(MESSAGE_SERDE_EXCEPTION);
     tranmissionException = metrics.meter(MESSAGE_TRANSMISSION_EXCEPTION);
     tranmissionSuccess = metrics.meter(MESSAGE_TRANSMISSION_SUCCESS);
+
     if (manager.getSettings().isSignMessages()){
       File privateKey = new File(manager.getSettings().getPathToKeyStore(), manager.getMyself().getId());
       File publicKey = new File(manager.getSettings().getPathToKeyStore(), manager.getMyself().getId() + ".pub");
@@ -124,7 +98,7 @@ public class GossipCore implements GossipCoreConstants {
       privKey = null;
     }
   }
-  
+
   private byte [] sign(byte [] bytes){
     Signature dsa;
     try {
@@ -136,7 +110,7 @@ public class GossipCore implements GossipCoreConstants {
       throw new RuntimeException(e);
     } 
   }
-  
+
   public void addSharedData(SharedGossipDataMessage message){
      SharedGossipDataMessage previous = sharedData.get(message.getKey());
      if (previous == null){
@@ -163,11 +137,11 @@ public class GossipCore implements GossipCoreConstants {
       }
     }
   }
-  
+
   public ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> getPerNodeData(){
     return perNodeData;
   }
-  
+
   public ConcurrentHashMap<String, SharedGossipDataMessage> getSharedData() {
     return sharedData;
   }
@@ -181,74 +155,15 @@ public class GossipCore implements GossipCoreConstants {
     }
     service.shutdownNow();
   }
-  
-  public void receive(Base base){
-    if (base instanceof Response){
-      if (base instanceof Trackable){
-        Trackable t = (Trackable) base;
-        requests.put(t.getUuid() + "/" + t.getUriFrom(), (Base) t);
-      }
-    }
-    if (base instanceof ShutdownMessage){
-      ShutdownMessage s = (ShutdownMessage) base;
-      GossipDataMessage m = new GossipDataMessage();
-      m.setKey(ShutdownMessage.PER_NODE_KEY);
-      m.setNodeId(s.getNodeId());
-      m.setPayload(base);
-      m.setTimestamp(System.currentTimeMillis());
-      m.setExpireAt(System.currentTimeMillis() + 30L * 1000L);
-      addPerNodeData(m);
-    }
-    if (base instanceof GossipDataMessage) {
-      UdpGossipDataMessage message = (UdpGossipDataMessage) base;
-      addPerNodeData(message);
-    }
-    if (base instanceof SharedGossipDataMessage){
-      UdpSharedGossipDataMessage message = (UdpSharedGossipDataMessage) base;
-      addSharedData(message);
-    }
-    if (base instanceof ActiveGossipMessage){
-      List<GossipMember> remoteGossipMembers = new ArrayList<>();
-      RemoteGossipMember senderMember = null;
-      UdpActiveGossipMessage activeGossipMessage = (UdpActiveGossipMessage) base;
-      for (int i = 0; i < activeGossipMessage.getMembers().size(); i++) {
-        URI u = null;
-        try {
-          u = new URI(activeGossipMessage.getMembers().get(i).getUri());
-        } catch (URISyntaxException e) {
-          LOGGER.debug("Gossip message with faulty URI", e);
-          continue;
-        }
-        RemoteGossipMember member = new RemoteGossipMember(
-                activeGossipMessage.getMembers().get(i).getCluster(),
-                u,
-                activeGossipMessage.getMembers().get(i).getId(),
-                activeGossipMessage.getMembers().get(i).getHeartbeat(),
-                activeGossipMessage.getMembers().get(i).getProperties());
-        if (i == 0) {
-          senderMember = member;
-        } 
-        if (!(member.getClusterName().equals(gossipManager.getMyself().getClusterName()))){
-          UdpNotAMemberFault f = new UdpNotAMemberFault();
-          f.setException("Not a member of this cluster " + i);
-          f.setUriFrom(activeGossipMessage.getUriFrom());
-          f.setUuid(activeGossipMessage.getUuid());
-          LOGGER.warn(f);
-          sendOneWay(f, member.getUri());
-          continue;
-        }
-        remoteGossipMembers.add(member);
-      }
-      UdpActiveGossipOk o = new UdpActiveGossipOk();
-      o.setUriFrom(activeGossipMessage.getUriFrom());
-      o.setUuid(activeGossipMessage.getUuid());
-      sendOneWay(o, senderMember.getUri());
-      mergeLists(gossipManager, senderMember, remoteGossipMembers);
+
+  public void receive(Base base) {
+    if (!gossipManager.getMessageInvoker().invoke(this, gossipManager, base)) {
+      LOGGER.warn("received message can not be handled");
     }
   }
-  
+
   /**
-   * Sends a blocking message.  
+   * Sends a blocking message.
    * @param message
    * @param uri
    * @throws RuntimeException if data can not be serialized or in transmission error
@@ -277,15 +192,15 @@ public class GossipCore implements GossipCoreConstants {
     } catch (IOException e) {
       tranmissionException.mark();
       throw new RuntimeException(e);
-    } 
+    }
   }
-  
+
   public Response send(Base message, URI uri){
     if (LOGGER.isDebugEnabled()){
-      LOGGER.debug("Sending " + message);  
+      LOGGER.debug("Sending " + message);
       LOGGER.debug("Current request queue " + requests);
     }
-    
+
     final Trackable t;
     if (message instanceof Trackable){
       t = (Trackable) message;
@@ -307,12 +222,12 @@ public class GossipCore implements GossipCoreConstants {
           try {
             Thread.sleep(0, 555555);
           } catch (InterruptedException e) {
-            
+
           }
         }
       }
     });
-    
+
     try {
       //TODO this needs to be a setting base on attempts/second
       return response.get(1, TimeUnit.SECONDS);
@@ -324,14 +239,14 @@ public class GossipCore implements GossipCoreConstants {
     } catch (TimeoutException e) {
       boolean cancelled = response.cancel(true);
       LOGGER.debug(String.format("Threadpool timeout attempting to contact %s, cancelled ? %b", uri.toString(), cancelled));
-      return null; 
+      return null;
     } finally {
       if (t != null){
         requests.remove(t.getUuid() + "/" + t.getUriFrom());
       }
     }
   }
-  
+
   /**
    * Sends a message across the network while blocking. Catches and ignores IOException in transmission. Used
    * when the protocol for the message is not to wait for a response
@@ -359,21 +274,25 @@ public class GossipCore implements GossipCoreConstants {
       DatagramPacket datagramPacket = new DatagramPacket(json_bytes, json_bytes.length, dest, u.getPort());
       socket.send(datagramPacket);
       tranmissionSuccess.mark();
-    } catch (IOException ex) { 
+    } catch (IOException ex) {
       tranmissionException.mark();
       LOGGER.debug("Send one way failed", ex);
     }
   }
 
+  public void addRequest(String k, Base v) {
+    requests.put(k, v);
+  }
+
   /**
    * Merge lists from remote members and update heartbeats
-   * 
+   *
    * @param gossipManager
    * @param senderMember
    * @param remoteList
-   * 
+   *
    */
-  protected void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
+  public void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
           List<GossipMember> remoteList) {
     if (LOGGER.isDebugEnabled()){
       debugState(senderMember, remoteList);
@@ -390,10 +309,10 @@ public class GossipCore implements GossipCoreConstants {
       if (remoteMember.getId().equals(gossipManager.getMyself().getId())) {
         continue;
       }
-      LocalGossipMember aNewMember = new LocalGossipMember(remoteMember.getClusterName(), 
-      remoteMember.getUri(), 
-      remoteMember.getId(), 
-      remoteMember.getHeartbeat(), 
+      LocalGossipMember aNewMember = new LocalGossipMember(remoteMember.getClusterName(),
+      remoteMember.getUri(),
+      remoteMember.getId(),
+      remoteMember.getHeartbeat(),
       remoteMember.getProperties(),
       gossipManager.getSettings().getWindowSize(),
       gossipManager.getSettings().getMinimumSamples(),
@@ -414,11 +333,11 @@ public class GossipCore implements GossipCoreConstants {
       debugState(senderMember, remoteList);
     }
   }
-  
+
   private void debugState(RemoteGossipMember senderMember,
           List<GossipMember> remoteList){
     LOGGER.warn(
-          "-----------------------\n" + 
+          "-----------------------\n" +
           "Me " + gossipManager.getMyself() + "\n" +
           "Sender " + senderMember + "\n" +
           "RemoteList " + remoteList + "\n" +
@@ -426,5 +345,4 @@ public class GossipCore implements GossipCoreConstants {
           "Dead " + gossipManager.getDeadMembers()+ "\n" +
           "=======================");
   }
- 
 }

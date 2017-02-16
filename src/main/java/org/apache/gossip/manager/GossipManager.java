@@ -19,6 +19,17 @@ package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.gossip.GossipMember;
+import org.apache.gossip.GossipSettings;
+import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.event.GossipListener;
+import org.apache.gossip.event.GossipState;
+import org.apache.gossip.manager.handlers.MessageInvoker;
+import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
+import org.apache.gossip.model.GossipDataMessage;
+import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.ShutdownMessage;
+import org.apache.log4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -28,27 +39,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-
-import org.apache.log4j.Logger;
-
-import org.apache.gossip.GossipMember;
-import org.apache.gossip.GossipSettings;
-import org.apache.gossip.LocalGossipMember;
-import org.apache.gossip.event.GossipListener;
-import org.apache.gossip.event.GossipState;
-import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
-
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.SharedGossipDataMessage;
-import org.apache.gossip.model.ShutdownMessage;
 
 
 public abstract class GossipManager {
@@ -71,11 +64,15 @@ public abstract class GossipManager {
   private final RingStatePersister ringState;
   private final UserDataPersister userDataState;
   private final ObjectMapper objectMapper;
-  
+
+  private final MessageInvoker messageInvoker;
+
   public GossipManager(String cluster,
-          URI uri, String id, Map<String,String> properties, GossipSettings settings,
-          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry, ObjectMapper objectMapper) {
+                       URI uri, String id, Map<String, String> properties, GossipSettings settings,
+                       List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry,
+                       ObjectMapper objectMapper, MessageInvoker messageInvoker) {
     this.settings = settings;
+    this.messageInvoker = messageInvoker;
     clock = new SystemClock();    
     me = new LocalGossipMember(cluster, uri, id, clock.nanoTime(), properties,
             settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
@@ -102,6 +99,10 @@ public abstract class GossipManager {
     this.objectMapper = objectMapper;
     readSavedRingState();
     readSavedDataState();
+  }
+
+  public MessageInvoker getMessageInvoker() {
+    return messageInvoker;
   }
 
   public ConcurrentSkipListMap<LocalGossipMember, GossipState> getMembers() {

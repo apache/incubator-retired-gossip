@@ -19,17 +19,18 @@ package org.apache.gossip.manager.random;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.handlers.DefaultMessageInvoker;
+import org.apache.gossip.manager.handlers.MessageInvoker;
 
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RandomGossipManager extends GossipManager {
 
@@ -47,6 +48,7 @@ public class RandomGossipManager extends GossipManager {
     private MetricRegistry registry;
     private Map<String,String> properties;
     private ObjectMapper objectMapper;
+    private MessageInvoker messageInvoker;
 
     private ManagerBuilder() {}
 
@@ -100,7 +102,12 @@ public class RandomGossipManager extends GossipManager {
       this.objectMapper = objectMapper;
       return this;
     }
-    
+
+    public ManagerBuilder messageInvoker(MessageInvoker messageInvoker) {
+      this.messageInvoker = messageInvoker;
+      return this;
+    }
+
     public RandomGossipManager build() {
       checkArgument(id != null, "You must specify an id");
       checkArgument(cluster != null, "You must specify a cluster name");
@@ -120,12 +127,15 @@ public class RandomGossipManager extends GossipManager {
         objectMapper = new ObjectMapper();
         objectMapper.enableDefaultTyping();
       }
-      return new RandomGossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper);
+      if (messageInvoker == null) {
+        messageInvoker = new DefaultMessageInvoker();
+      }
+      return new RandomGossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageInvoker);
     }
   }
 
   private RandomGossipManager(String cluster, URI uri, String id, Map<String,String> properties,  GossipSettings settings, 
-          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry, ObjectMapper objectMapper) {
-    super(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper);
+          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry, ObjectMapper objectMapper, MessageInvoker messageInvoker) {
+    super(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageInvoker);
   }
 }
