@@ -27,8 +27,6 @@ import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.SharedGossipDataMessage;
 import org.apache.log4j.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class UserDataPersister implements Runnable {
   
   private static final Logger LOGGER = Logger.getLogger(UserDataPersister.class);

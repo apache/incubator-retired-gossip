@@ -20,8 +20,6 @@ package org.apache.gossip.manager.handlers;
 import org.apache.gossip.manager.GossipCore;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.model.Base;
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.ShutdownMessage;
 import org.apache.gossip.udp.Trackable;
 
 public class ResponseHandler implements MessageHandler {

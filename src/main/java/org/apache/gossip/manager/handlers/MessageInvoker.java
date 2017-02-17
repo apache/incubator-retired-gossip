@@ -22,5 +22,12 @@ import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.model.Base;
 
 public interface MessageInvoker {
+  /**
+   * 
+   * @param gossipCore
+   * @param gossipManager
+   * @param base
+   * @return true if the invoker processed the message type
+   */
   boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base);
 }

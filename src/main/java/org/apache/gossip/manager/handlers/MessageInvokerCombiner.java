@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MessageInvokerCombiner implements MessageInvoker {
-  private List<MessageInvoker> invokers;
+  private final List<MessageInvoker> invokers = new CopyOnWriteArrayList<>();
 
   public MessageInvokerCombiner() {
   }
@@ -43,15 +43,12 @@ public class MessageInvokerCombiner implements MessageInvoker {
   }
 
   public void clear() {
-    invokers = null;
+    invokers.clear();
   }
 
   public void add(MessageInvoker mi) {
     if (mi == null) {
       throw new NullPointerException();
-    }
-    if (invokers == null) {
-      invokers = new CopyOnWriteArrayList<>();
     }
     invokers.add(mi);
   }
