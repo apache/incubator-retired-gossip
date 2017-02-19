@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.crdt.Crdt;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.handlers.MessageInvoker;
@@ -291,6 +292,31 @@ public abstract class GossipManager {
     gossipCore.addSharedData(message);
   }
   
+
+  @SuppressWarnings("rawtypes")
+  public Crdt findCrdt(String key){
+    SharedGossipDataMessage l = gossipCore.getSharedData().get(key);
+    if (l == null){
+      return null;
+    }
+    if (l.getExpireAt() < clock.currentTimeMillis()){
+      return null;
+    } else {
+      return (Crdt) l.getPayload();
+    }
+  }
+  
+  @SuppressWarnings("rawtypes")
+  public Crdt merge(SharedGossipDataMessage message){
+    Objects.nonNull(message.getKey());
+    Objects.nonNull(message.getTimestamp());
+    Objects.nonNull(message.getPayload());
+    message.setNodeId(me.getId());
+    if (! (message.getPayload() instanceof Crdt)){
+      throw new IllegalArgumentException("Not a subclass of CRDT " + message.getPayload());
+    }
+    return gossipCore.merge(message);
+  }
   public GossipDataMessage findPerNodeGossipData(String nodeId, String key){
     ConcurrentHashMap<String, GossipDataMessage> j = gossipCore.getPerNodeData().get(nodeId);
     if (j == null){

@@ -131,4 +131,5 @@ public class GossipService {
   public SharedGossipDataMessage findSharedData(String key){
     return getGossipManager().findSharedGossipData(key);
   }
+  
 }

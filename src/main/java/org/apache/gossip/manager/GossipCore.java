@@ -23,6 +23,7 @@ import com.codahale.metrics.MetricRegistry;
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.LocalGossipMember;
 import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.crdt.Crdt;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.model.*;
 import org.apache.gossip.udp.Trackable;
@@ -111,15 +112,27 @@ public class GossipCore implements GossipCoreConstants {
     } 
   }
 
-  public void addSharedData(SharedGossipDataMessage message){
-     SharedGossipDataMessage previous = sharedData.get(message.getKey());
-     if (previous == null){
-       sharedData.putIfAbsent(message.getKey(), message);
-     } else {
-       if (previous.getTimestamp() < message.getTimestamp()){
-         sharedData.replace(message.getKey(), previous, message);
-       }
-     }
+  @SuppressWarnings({ "unchecked", "rawtypes" })
+  public void addSharedData(SharedGossipDataMessage message) {
+    SharedGossipDataMessage previous = sharedData.get(message.getKey());
+    if (previous == null) {
+      sharedData.putIfAbsent(message.getKey(), message);
+    } else {
+      if (message.getPayload() instanceof Crdt){
+        SharedGossipDataMessage m = sharedData.get(message.getKey());
+        SharedGossipDataMessage merged = new SharedGossipDataMessage();
+        merged.setExpireAt(message.getExpireAt());
+        merged.setKey(m.getKey());
+        merged.setNodeId(message.getNodeId());
+        merged.setTimestamp(message.getTimestamp());
+        merged.setPayload( ((Crdt) message.getPayload()).merge((Crdt)m.getPayload()));
+        sharedData.put(m.getKey(), merged);
+      } else {
+        if (previous.getTimestamp() < message.getTimestamp()) {
+          sharedData.replace(message.getKey(), previous, message);
+        }
+      }
+    }
   }
 
   public void addPerNodeData(GossipDataMessage message){
@@ -344,5 +357,26 @@ public class GossipCore implements GossipCoreConstants {
           "Live " + gossipManager.getLiveMembers()+ "\n" +
           "Dead " + gossipManager.getDeadMembers()+ "\n" +
           "=======================");
+  }
+
+  @SuppressWarnings("rawtypes")
+  public Crdt merge(SharedGossipDataMessage message) {
+    for (;;){
+      SharedGossipDataMessage ret = sharedData.putIfAbsent(message.getKey(), message);
+      if (ret == null){
+        return (Crdt) message.getPayload();
+      }
+      SharedGossipDataMessage copy = new SharedGossipDataMessage();
+      copy.setExpireAt(message.getExpireAt());
+      copy.setKey(message.getKey());
+      copy.setNodeId(message.getNodeId());
+      @SuppressWarnings("unchecked")
+      Crdt merged = ((Crdt) ret.getPayload()).merge((Crdt) message.getPayload());
+      message.setPayload(merged);
+      boolean replaced = sharedData.replace(message.getKey(), ret, copy);
+      if (replaced){
+        return merged;
+      }
+    }
   }
 }

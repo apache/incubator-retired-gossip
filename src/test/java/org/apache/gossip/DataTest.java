@@ -22,12 +22,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.gossip.crdt.GrowOnlySet;
 import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.SharedGossipDataMessage;
 import org.junit.Test;
@@ -58,41 +59,58 @@ public class DataTest {
       clients.add(gossipService);
       gossipService.start();
     }
-    TUnit.assertThat(new Callable<Integer> (){
-      public Integer call() throws Exception {
-        int total = 0;
-        for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).getGossipManager().getLiveMembers().size();
-        }
-        return total;
-      }}).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(2);
+    TUnit.assertThat(() -> {
+      int total = 0;
+      for (int i = 0; i < clusterMembers; ++i) {
+        total += clients.get(i).getGossipManager().getLiveMembers().size();
+      }
+      return total;
+    }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(2);
     clients.get(0).gossipPerNodeData(msg());
     clients.get(0).gossipSharedData(sharedMsg());
 
-    TUnit.assertThat(new Callable<Object>() {
-      public Object call() throws Exception {
-        GossipDataMessage x = clients.get(1).findPerNodeData(1 + "", "a");
-        if (x == null)
-          return "";
-        else
-          return x.getPayload();
-      }
+    TUnit.assertThat(()-> {      
+      GossipDataMessage x = clients.get(1).findPerNodeData(1 + "", "a");
+      if (x == null)
+        return "";
+      else
+        return x.getPayload();
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("b");
     
-    TUnit.assertThat(new Callable<Object>() {
-      public Object call() throws Exception {
-        SharedGossipDataMessage x = clients.get(1).findSharedData("a");
-        if (x == null)
-          return "";
-        else
-          return x.getPayload();
-      }
+    TUnit.assertThat(() ->  {    
+      SharedGossipDataMessage x = clients.get(1).findSharedData("a");
+      if (x == null)
+        return "";
+      else
+        return x.getPayload();
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("c");
     
+    givenDifferentDatumsInSet(clients);
+    assertThatListIsMerged(clients);
     
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();
     }
+  }
+  
+  private void givenDifferentDatumsInSet(final List<GossipService> clients){
+    clients.get(0).getGossipManager().merge(CrdtMessage("1"));
+    clients.get(1).getGossipManager().merge(CrdtMessage("2"));
+  }
+  
+  private void assertThatListIsMerged(final List<GossipService> clients){
+    TUnit.assertThat(() ->  {
+      return clients.get(0).getGossipManager().findCrdt("cr");
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).equals(new GrowOnlySet<String>(Arrays.asList("1","2")));
+  }
+  
+  private SharedGossipDataMessage CrdtMessage(String item){
+    SharedGossipDataMessage d = new SharedGossipDataMessage();
+    d.setKey("cr");
+    d.setPayload(new GrowOnlySet<String>( Arrays.asList(item)));
+    d.setExpireAt(Long.MAX_VALUE);
+    d.setTimestamp(System.currentTimeMillis());
+    return d;  
   }
   
   private GossipDataMessage msg(){
