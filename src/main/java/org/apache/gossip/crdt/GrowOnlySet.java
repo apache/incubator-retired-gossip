@@ -66,72 +66,58 @@ public class GrowOnlySet<ElementType> implements CrdtSet<ElementType, Set<Elemen
     return new GrowOnlySet<>(hidden);
   }
 
-  @Override
   public int size() {
     return hidden.size();
   }
 
-  @Override
   public boolean isEmpty() {
     return hidden.isEmpty();
   }
 
-  @Override
   public boolean contains(Object o) {
     return hidden.contains(o);
   }
 
-  @Override
   public Iterator<ElementType> iterator() {
     Set<ElementType> copy = new HashSet<>();
     copy.addAll(hidden);
     return copy.iterator();
   }
 
-  @Override
   public Object[] toArray() {
     return hidden.toArray();
   }
 
-  @Override
   public <T> T[] toArray(T[] a) {
     return hidden.toArray(a);
   }
 
-  @Override
   public boolean add(ElementType e) {
     throw new UnsupportedOperationException();
   }
 
-  @Override
   public boolean remove(Object o) {
     throw new UnsupportedOperationException();
   }
 
-  @Override
   public boolean containsAll(Collection<?> c) {
     return hidden.containsAll(c);
   }
 
-  @Override
   public boolean addAll(Collection<? extends ElementType> c) {
     throw new UnsupportedOperationException();
   }
 
-  @Override
   public boolean retainAll(Collection<?> c) {
     throw new UnsupportedOperationException();
   }
 
-  @Override
   public boolean removeAll(Collection<?> c) {
     throw new UnsupportedOperationException();
   }
 
-  @Override
   public void clear() {
     throw new UnsupportedOperationException();
-    
   }
 
   @Override
@@ -165,4 +151,7 @@ public class GrowOnlySet<ElementType> implements CrdtSet<ElementType, Set<Elemen
     return true;
   }
 
+  Set<ElementType> getElements(){
+    return hidden;
+  }
 }

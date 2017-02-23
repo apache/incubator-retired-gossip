@@ -18,9 +18,11 @@
 package org.apache.gossip.manager.random;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.GossipMember;
 import org.apache.gossip.GossipSettings;
+import org.apache.gossip.crdt.CrdtModule;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.handlers.DefaultMessageInvoker;
@@ -126,6 +128,8 @@ public class RandomGossipManager extends GossipManager {
       if (objectMapper == null) {
         objectMapper = new ObjectMapper();
         objectMapper.enableDefaultTyping();
+        objectMapper.registerModule(new CrdtModule());
+        objectMapper.configure(Feature.WRITE_NUMBERS_AS_STRINGS, false);
       }
       if (messageInvoker == null) {
         messageInvoker = new DefaultMessageInvoker();

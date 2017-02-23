@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.gossip.crdt.GrowOnlySet;
+import org.apache.gossip.crdt.OrSet;
 import org.apache.gossip.model.GossipDataMessage;
 import org.apache.gossip.model.SharedGossipDataMessage;
 import org.junit.Test;
@@ -36,6 +37,8 @@ import org.junit.Test;
 import io.teknek.tunit.TUnit;
 
 public class DataTest {
+  
+  private String orSetKey = "cror";
   
   @Test
   public void dataTest() throws InterruptedException, UnknownHostException, URISyntaxException{
@@ -88,11 +91,62 @@ public class DataTest {
     givenDifferentDatumsInSet(clients);
     assertThatListIsMerged(clients);
     
+    givenOrs(clients);
+    assertThatOrSetIsMerged(clients);
+    dropIt(clients);
+    assertThatOrSetDelIsMerged(clients);
+    
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();
     }
   }
   
+  private void givenOrs(List<GossipService> clients) {
+    {
+      SharedGossipDataMessage d = new SharedGossipDataMessage();
+      d.setKey(orSetKey);
+      d.setPayload(new OrSet<String>("1", "2"));
+      d.setExpireAt(Long.MAX_VALUE);
+      d.setTimestamp(System.currentTimeMillis());
+      clients.get(0).getGossipManager().merge(d);
+    }
+    {
+      SharedGossipDataMessage d = new SharedGossipDataMessage();
+      d.setKey(orSetKey);
+      d.setPayload(new OrSet<String>("3", "4"));
+      d.setExpireAt(Long.MAX_VALUE);
+      d.setTimestamp(System.currentTimeMillis());
+      clients.get(1).getGossipManager().merge(d);
+    }
+  }
+  
+  private void dropIt(List<GossipService> clients) {
+    @SuppressWarnings("unchecked")
+    OrSet<String> o = (OrSet<String>) clients.get(0).getGossipManager().findCrdt(orSetKey);
+    OrSet<String> o2 = new OrSet<String>(o, new OrSet.Builder<String>().remove("3"));
+    SharedGossipDataMessage d = new SharedGossipDataMessage();
+    d.setKey(orSetKey);
+    d.setPayload(o2);
+    d.setExpireAt(Long.MAX_VALUE);
+    d.setTimestamp(System.currentTimeMillis());
+    clients.get(0).getGossipManager().merge(d);
+  }
+  
+  private void assertThatOrSetIsMerged(final List<GossipService> clients){
+    TUnit.assertThat(() ->  {
+      return clients.get(0).getGossipManager().findCrdt(orSetKey).value();
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new OrSet<String>("1", "2", "3", "4").value());
+    TUnit.assertThat(() ->  {
+      return clients.get(1).getGossipManager().findCrdt(orSetKey).value();
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new OrSet<String>("1", "2", "3", "4").value());
+  }
+  
+  private void assertThatOrSetDelIsMerged(final List<GossipService> clients){
+    TUnit.assertThat(() ->  {
+      return clients.get(0).getGossipManager().findCrdt(orSetKey);
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).equals(new OrSet<String>("1", "2", "4"));
+  }
+
   private void givenDifferentDatumsInSet(final List<GossipService> clients){
     clients.get(0).getGossipManager().merge(CrdtMessage("1"));
     clients.get(1).getGossipManager().merge(CrdtMessage("2"));
@@ -101,7 +155,7 @@ public class DataTest {
   private void assertThatListIsMerged(final List<GossipService> clients){
     TUnit.assertThat(() ->  {
       return clients.get(0).getGossipManager().findCrdt("cr");
-    }).afterWaitingAtMost(10, TimeUnit.SECONDS).equals(new GrowOnlySet<String>(Arrays.asList("1","2")));
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new GrowOnlySet<String>(Arrays.asList("1","2")));
   }
   
   private SharedGossipDataMessage CrdtMessage(String item){

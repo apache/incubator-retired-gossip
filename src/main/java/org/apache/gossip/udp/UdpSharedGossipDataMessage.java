@@ -42,7 +42,9 @@ public class UdpSharedGossipDataMessage extends SharedGossipDataMessage implemen
 
   @Override
   public String toString() {
-    return "UdpSharedGossipDataMessage [uriFrom=" + uriFrom + ", uuid=" + uuid + "]";
+    return "UdpSharedGossipDataMessage [uriFrom=" + uriFrom + ", uuid=" + uuid + ", getNodeId()="
+            + getNodeId() + ", getKey()=" + getKey() + ", getPayload()=" + getPayload()
+            + ", getTimestamp()=" + getTimestamp() + ", getExpireAt()=" + getExpireAt() + "]";
   }
 
 }
