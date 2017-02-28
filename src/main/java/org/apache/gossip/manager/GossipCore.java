@@ -114,28 +114,36 @@ public class GossipCore implements GossipCoreConstants {
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
   public void addSharedData(SharedGossipDataMessage message) {
-    SharedGossipDataMessage previous = sharedData.get(message.getKey());
-    if (previous == null) {
-      sharedData.putIfAbsent(message.getKey(), message);
-    } else {
+    while (true){
+      SharedGossipDataMessage previous = sharedData.putIfAbsent(message.getKey(), message);
+      if (previous == null){
+        return;
+      }
       if (message.getPayload() instanceof Crdt){
-        SharedGossipDataMessage curretnt = sharedData.get(message.getKey());
         SharedGossipDataMessage merged = new SharedGossipDataMessage();
         merged.setExpireAt(message.getExpireAt());
-        merged.setKey(curretnt.getKey());
+        merged.setKey(message.getKey());
         merged.setNodeId(message.getNodeId());
         merged.setTimestamp(message.getTimestamp());
-        Crdt mergedCrdt = ((Crdt) message.getPayload()).merge((Crdt)curretnt.getPayload());
-        merged.setPayload( mergedCrdt );
-        sharedData.put(curretnt.getKey(), merged);
+        Crdt mergedCrdt = ((Crdt) previous.getPayload()).merge((Crdt) message.getPayload());
+        merged.setPayload(mergedCrdt);
+        boolean replaced = sharedData.replace(message.getKey(), previous, merged);
+        if (replaced){
+          return;
+        }
       } else {
-        if (previous.getTimestamp() < message.getTimestamp()) {
-          sharedData.replace(message.getKey(), previous, message);
+        if (previous.getTimestamp() < message.getTimestamp()){
+          boolean result = sharedData.replace(message.getKey(), previous, message);
+          if (result){
+            return;
+          }
+        } else {
+          return;
         }
       }
     }
   }
-
+  
   public void addPerNodeData(GossipDataMessage message){
     ConcurrentHashMap<String,GossipDataMessage> nodeMap = new ConcurrentHashMap<>();
     nodeMap.put(message.getKey(), message);
@@ -363,8 +371,8 @@ public class GossipCore implements GossipCoreConstants {
   @SuppressWarnings("rawtypes")
   public Crdt merge(SharedGossipDataMessage message) {
     for (;;){
-      SharedGossipDataMessage ret = sharedData.putIfAbsent(message.getKey(), message);
-      if (ret == null){
+      SharedGossipDataMessage previous = sharedData.putIfAbsent(message.getKey(), message);
+      if (previous == null){
         return (Crdt) message.getPayload();
       }
       SharedGossipDataMessage copy = new SharedGossipDataMessage();
@@ -373,9 +381,9 @@ public class GossipCore implements GossipCoreConstants {
       copy.setNodeId(message.getNodeId());
       copy.setTimestamp(message.getTimestamp());
       @SuppressWarnings("unchecked")
-      Crdt merged = ((Crdt) ret.getPayload()).merge((Crdt) message.getPayload());
+      Crdt merged = ((Crdt) previous.getPayload()).merge((Crdt) message.getPayload());
       copy.setPayload(merged);
-      boolean replaced = sharedData.replace(message.getKey(), ret, copy);
+      boolean replaced = sharedData.replace(message.getKey(), previous, copy);
       if (replaced){
         return merged;
       }

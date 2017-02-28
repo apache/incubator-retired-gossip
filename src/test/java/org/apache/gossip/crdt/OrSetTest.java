@@ -102,4 +102,15 @@ public class OrSetTest {
     Assert.assertEquals(back, i);
   }
   
+  @Test
+  public void mergeTestSame() {
+    OrSet<Integer> i = new OrSet<>(19);
+    OrSet<Integer> j = new OrSet<>(19);
+    OrSet<Integer> k = i.merge(j);
+    Assert.assertEquals(2, k.getElements().get(19).size());
+    OrSet<Integer> y = new OrSet<>(k, new OrSet.Builder<Integer>().remove(19));
+    Assert.assertEquals(2, y.getTombstones().get(19).size());
+    Assert.assertEquals(2, y.getElements().get(19).size());
+    Assert.assertEquals(new OrSet<Integer>().value(), y.value());
+  }
 }

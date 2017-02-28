@@ -317,6 +317,7 @@ public abstract class GossipManager {
     }
     return gossipCore.merge(message);
   }
+  
   public GossipDataMessage findPerNodeGossipData(String nodeId, String key){
     ConcurrentHashMap<String, GossipDataMessage> j = gossipCore.getPerNodeData().get(nodeId);
     if (j == null){

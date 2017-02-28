@@ -17,16 +17,9 @@
  */
 package org.apache.gossip.crdt;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.UUID;
+import java.util.function.BiConsumer;
 
 import org.apache.gossip.crdt.OrSet.Builder.Operation;
 
@@ -86,11 +79,34 @@ public class OrSet<E>  implements Crdt<Set<E>, OrSet<E>> {
     val = computeValue();
   }
 
+  static Set<UUID> mergeSets(Set<UUID> a, Set<UUID> b) {
+    if ((a == null || a.isEmpty()) && (b == null || b.isEmpty())) {
+      return null;
+    }
+    Set<UUID> res = new HashSet<>(a);
+    res.addAll(b);
+    return res;
+  }
+
+  private void internalSetMerge(Map<E, Set<UUID>> map, E key, Set<UUID> value) {
+    if (value == null) {
+      return;
+    }
+    map.merge(key, value, OrSet::mergeSets);
+  }
+
   public OrSet(OrSet<E> left, OrSet<E> right){
-    elements.putAll(left.elements);
-    elements.putAll(right.elements);
-    tombstones.putAll(left.tombstones);
-    tombstones.putAll(right.tombstones);
+    BiConsumer<Map<E, Set<UUID>>, Map<E, Set<UUID>>> internalMerge = (items, other) -> {
+      for (Entry<E, Set<UUID>> l : other.entrySet()){
+        internalSetMerge(items, l.getKey(), l.getValue());
+      }
+    };
+
+    internalMerge.accept(elements, left.elements);
+    internalMerge.accept(elements, right.elements);
+    internalMerge.accept(tombstones, left.tombstones);
+    internalMerge.accept(tombstones, right.tombstones);
+
     val = computeValue();
   }
   
@@ -103,29 +119,14 @@ public class OrSet<E>  implements Crdt<Set<E>, OrSet<E>> {
     return new OrSet<E>(this, other);
   }
   
-  private void internalAdd(E element){
-    Set<UUID> l = elements.get(element);
-    if (l == null){
-      Set<UUID> d = new HashSet<UUID>();
-      d.add(UUID.randomUUID());
-      elements.put(element, d);
-    } else {
-      l.add(UUID.randomUUID());
-    }
+  private void internalAdd(E element) {
+    Set<UUID> toMerge = new HashSet<>();
+    toMerge.add(UUID.randomUUID());
+    internalSetMerge(elements, element, toMerge);
   }
   
   private void internalRemove(E element){
-    Set<UUID> elementIds = elements.get(element);
-    if (elementIds == null){
-      //deleting elements not in the list
-      return;
-    }
-    Set<UUID> current = tombstones.get(element);
-    if (current != null){
-      current.addAll(elementIds);
-    } else {
-      tombstones.put(element, elementIds);
-    }
+    internalSetMerge(tombstones, element, elements.get(element));
   }
 
   /*
@@ -134,18 +135,10 @@ public class OrSet<E>  implements Crdt<Set<E>, OrSet<E>> {
   private Set<E> computeValue(){
     Set<E> values = new HashSet<>();
     for (Entry<E, Set<UUID>> entry: elements.entrySet()){
-      if (entry.getValue() == null || entry.getValue().size() == 0){
-        continue;
-      }
       Set<UUID> deleteIds = tombstones.get(entry.getKey());
-      if (deleteIds == null){
+      // if not all tokens for current element are in tombstones
+      if (deleteIds == null || !deleteIds.containsAll(entry.getValue())) {
         values.add(entry.getKey());
-      } else {
-        if (!deleteIds.containsAll(entry.getValue())){
-          values.add(entry.getKey());
-        } else {
-          //if all the entry uuid is deleted the entry is deleted
-        }
       }
     }
     return values;
