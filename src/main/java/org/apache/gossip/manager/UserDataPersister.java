@@ -23,8 +23,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.model.SharedDataMessage;
 import org.apache.log4j.Logger;
 
 public class UserDataPersister implements Runnable {
@@ -49,16 +49,16 @@ public class UserDataPersister implements Runnable {
   }
   
   @SuppressWarnings("unchecked")
-  ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> readPerNodeFromDisk(){
+  ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> readPerNodeFromDisk(){
     if (!parent.getSettings().isPersistDataState()){
-      return new ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>>();
+      return new ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>>();
     }
     try (FileInputStream fos = new FileInputStream(computePerNodeTarget())){
       return parent.getObjectMapper().readValue(fos, ConcurrentHashMap.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }
-    return new ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>>();
+    return new ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>>();
   }
   
   void writePerNodeToDisk(){
@@ -84,16 +84,16 @@ public class UserDataPersister implements Runnable {
   }
 
   @SuppressWarnings("unchecked")
-  ConcurrentHashMap<String, SharedGossipDataMessage> readSharedDataFromDisk(){
+  ConcurrentHashMap<String, SharedDataMessage> readSharedDataFromDisk(){
     if (!parent.getSettings().isPersistRingState()){
-      return new ConcurrentHashMap<String, SharedGossipDataMessage>();
+      return new ConcurrentHashMap<String, SharedDataMessage>();
     }
     try (FileInputStream fos = new FileInputStream(computeSharedTarget())){
       return parent.getObjectMapper().readValue(fos, ConcurrentHashMap.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }
-    return new ConcurrentHashMap<String, SharedGossipDataMessage>();
+    return new ConcurrentHashMap<String, SharedDataMessage>();
   }
   
   /**

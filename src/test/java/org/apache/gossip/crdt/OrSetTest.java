@@ -21,17 +21,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import org.apache.gossip.GossipService;
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.codahale.metrics.MetricRegistry;
 
 public class OrSetTest {
 
@@ -91,14 +88,16 @@ public class OrSetTest {
   
   @Test
   public void serialTest() throws InterruptedException, URISyntaxException, IOException {
-    GossipService gossipService2 = new GossipService("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)), "1", new HashMap<>(),
-            Arrays.asList(new RemoteGossipMember("a",
-                    new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)), "0")),
-            new GossipSettings(), (a, b) -> { }, new MetricRegistry());
+    GossipManager gossipService2 = GossipManagerBuilder.newBuilder()
+            .cluster("a")
+            .uri(new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)))
+            .id("1")
+            .gossipSettings(new GossipSettings())
+            .build();
     OrSet<Integer> i = new OrSet<Integer>(new OrSet.Builder<Integer>().add(1).remove(1));
-    String s = gossipService2.getGossipManager().getObjectMapper().writeValueAsString(i);
+    String s = gossipService2.getObjectMapper().writeValueAsString(i);
     @SuppressWarnings("unchecked")
-    OrSet<Integer> back = gossipService2.getGossipManager().getObjectMapper().readValue(s, OrSet.class);
+    OrSet<Integer> back = gossipService2.getObjectMapper().readValue(s, OrSet.class);
     Assert.assertEquals(back, i);
   }
   

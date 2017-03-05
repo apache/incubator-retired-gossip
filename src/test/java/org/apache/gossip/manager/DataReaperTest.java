@@ -21,9 +21,8 @@ import com.codahale.metrics.MetricRegistry;
 import java.net.URI;
 
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.manager.random.RandomGossipManager;
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.model.SharedDataMessage;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,8 +40,8 @@ public class DataReaperTest {
     GossipSettings settings = new GossipSettings();
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
-    GossipManager gm = RandomGossipManager.newBuilder().cluster("abc").settings(settings)
-            .withId(myId).uri(URI.create("udp://localhost:6000")).registry(registry).build();
+    GossipManager gm = GossipManagerBuilder.newBuilder().cluster("abc").gossipSettings(settings)
+            .id(myId).uri(URI.create("udp://localhost:6000")).registry(registry).build();
     gm.init();
     gm.gossipPerNodeData(perNodeDatum(key, value));
     gm.gossipSharedData(sharedDatum(key, value));
@@ -65,8 +64,8 @@ public class DataReaperTest {
     TUnit.assertThat(() -> gm.findSharedGossipData(key)).equals(null);
   }
   
-  private GossipDataMessage perNodeDatum(String key, String value) {
-    GossipDataMessage m = new GossipDataMessage();
+  private PerNodeDataMessage perNodeDatum(String key, String value) {
+    PerNodeDataMessage m = new PerNodeDataMessage();
     m.setExpireAt(System.currentTimeMillis() + 5L);
     m.setKey(key);
     m.setPayload(value);
@@ -74,8 +73,8 @@ public class DataReaperTest {
     return m;
   }
   
-  private SharedGossipDataMessage sharedDatum(String key, String value) {
-    SharedGossipDataMessage m = new SharedGossipDataMessage();
+  private SharedDataMessage sharedDatum(String key, String value) {
+    SharedDataMessage m = new SharedDataMessage();
     m.setExpireAt(System.currentTimeMillis() + 5L);
     m.setKey(key);
     m.setPayload(value);
@@ -89,11 +88,11 @@ public class DataReaperTest {
     String key = "key";
     String value = "a";
     GossipSettings settings = new GossipSettings();
-    GossipManager gm = RandomGossipManager.newBuilder().cluster("abc").settings(settings)
-            .withId(myId).uri(URI.create("udp://localhost:7000")).registry(registry).build();
+    GossipManager gm = GossipManagerBuilder.newBuilder().cluster("abc").gossipSettings(settings)
+            .id(myId).uri(URI.create("udp://localhost:7000")).registry(registry).build();
     gm.init();
-    GossipDataMessage before = perNodeDatum(key, value);
-    GossipDataMessage after = perNodeDatum(key, "b");
+    PerNodeDataMessage before = perNodeDatum(key, value);
+    PerNodeDataMessage after = perNodeDatum(key, "b");
     after.setTimestamp(after.getTimestamp() - 1);
     gm.gossipPerNodeData(before);
     Assert.assertEquals(value, gm.findPerNodeGossipData(myId, key).getPayload());

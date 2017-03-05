@@ -17,7 +17,8 @@
  */
 package org.apache.gossip;
 
-import com.codahale.metrics.MetricRegistry;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.log4j.Logger;
 
 import org.junit.jupiter.api.Test;
@@ -27,8 +28,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.UUID;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
@@ -39,7 +38,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JUnitPlatform.class)
 public class StartupSettingsTest {
-  private static final Logger log = Logger.getLogger( StartupSettingsTest.class );
+  private static final Logger log = Logger.getLogger(StartupSettingsTest.class);
   private static final String CLUSTER = UUID.randomUUID().toString();
 
   @Test
@@ -48,15 +47,17 @@ public class StartupSettingsTest {
     settingsFile.deleteOnExit();
     writeSettingsFile(settingsFile);
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + 50000);
-    final GossipService firstService = new GossipService(
-            CLUSTER, uri, "1", new HashMap<String, String>(),
-      new ArrayList<GossipMember>(), new GossipSettings(), null, new MetricRegistry());
-    firstService.start();
-    final GossipService serviceUnderTest = new GossipService(
-            StartupSettings.fromJSONFile(settingsFile));
-    serviceUnderTest.start();
+    GossipManager firstService = GossipManagerBuilder.newBuilder()
+            .cluster(CLUSTER)
+            .uri(uri)
+            .id("1")
+            .gossipSettings(new GossipSettings()).build();
+    firstService.init();
+    GossipManager manager = GossipManagerBuilder.newBuilder()
+            .startupSettings(StartupSettings.fromJSONFile(settingsFile)).build();
+    manager.init();
     firstService.shutdown();
-    serviceUnderTest.shutdown();
+    manager.shutdown();
   }
 
   private void writeSettingsFile( File target ) throws IOException {

@@ -22,14 +22,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.HashMap;
-import org.apache.gossip.GossipService;
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.RemoteMember;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.codahale.metrics.MetricRegistry;
 
 public class RingPersistenceTest {
 
@@ -43,21 +39,26 @@ public class RingPersistenceTest {
   }
   
   private File aGossiperPersists(GossipSettings settings) throws UnknownHostException, InterruptedException, URISyntaxException {
-    GossipService gossipService = new GossipService("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)), "1", new HashMap<String, String>(),
-            Arrays.asList(
-                    new RemoteGossipMember("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)), "0"),
-                    new RemoteGossipMember("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 2)), "2")
-                    ),
-            settings, (a, b) -> { }, new MetricRegistry());
-    gossipService.getGossipManager().getRingState().writeToDisk();
-    return gossipService.getGossipManager().getRingState().computeTarget();
+    GossipManager gossipService = GossipManagerBuilder.newBuilder()
+            .cluster("a")
+            .uri(new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)))
+            .id("1")
+            .gossipSettings(settings)
+            .gossipMembers(
+                    Arrays.asList(
+                            new RemoteMember("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)), "0"),
+                            new RemoteMember("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 2)), "2"))).build();
+    gossipService.getRingState().writeToDisk();
+    return gossipService.getRingState().computeTarget();
   }
   
-  private void aNewInstanceGetsRingInfo(GossipSettings settings) throws UnknownHostException, InterruptedException, URISyntaxException{
-    GossipService gossipService2 = new GossipService("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)), "1", new HashMap<String, String>(),
-            Arrays.asList(),
-            settings, (a, b) -> { }, new MetricRegistry());
-    Assert.assertEquals(2, gossipService2.getGossipManager().getMembers().size());
+  private void aNewInstanceGetsRingInfo(GossipSettings settings) throws UnknownHostException, InterruptedException, URISyntaxException {
+    GossipManager gossipService2 = GossipManagerBuilder.newBuilder()
+            .cluster("a")
+            .uri(new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)))
+            .id("1")
+            .gossipSettings(settings).build();
+    Assert.assertEquals(2, gossipService2.getMembers().size());
   }
   
 }

@@ -53,7 +53,7 @@ public class StartupSettings {
   private final GossipSettings gossipSettings;
 
   /** The list with gossip members to start with. */
-  private final List<GossipMember> gossipMembers;
+  private final List<Member> gossipMembers;
 
   /**
    * Constructor.
@@ -135,7 +135,7 @@ public class StartupSettings {
    * @param member
    *          The member to add.
    */
-  public void addGossipMember(GossipMember member) {
+  public void addGossipMember(Member member) {
     gossipMembers.add(member);
   }
 
@@ -144,7 +144,7 @@ public class StartupSettings {
    * 
    * @return The gossip members.
    */
-  public List<GossipMember> getGossipMembers() {
+  public List<Member> getGossipMembers() {
     return gossipMembers;
   }
 
@@ -195,7 +195,7 @@ public class StartupSettings {
     while (it.hasNext()){
       JsonNode child = it.next();
       URI uri3 = new URI(child.get("uri").textValue());
-      RemoteGossipMember member = new RemoteGossipMember(child.get("cluster").asText(),
+      RemoteMember member = new RemoteMember(child.get("cluster").asText(),
               uri3, "", 0, new HashMap<String,String>());
       settings.addGossipMember(member);
       configMembersDetails += member.computeAddress();

@@ -17,20 +17,17 @@
  */
 package org.apache.gossip.examples;
 
-import com.codahale.metrics.MetricRegistry;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.HashMap;
-
-import org.apache.gossip.GossipService;
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.RemoteMember;
 import org.apache.gossip.crdt.OrSet;
-import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
+import org.apache.gossip.model.SharedDataMessage;
 
 public class StandAloneNodeCrdtOrSet {
   public static void main (String [] args) throws InterruptedException, IOException{
@@ -38,17 +35,22 @@ public class StandAloneNodeCrdtOrSet {
     s.setWindowSize(10);
     s.setConvictThreshold(1.0);
     s.setGossipInterval(10);
-    GossipService gossipService = new GossipService("mycluster",  URI.create(args[0]), args[1], new HashMap<String, String>(),
-            Arrays.asList( new RemoteGossipMember("mycluster", URI.create(args[2]), args[3])), s, (a,b) -> {}, new MetricRegistry());
-    gossipService.start();
+    GossipManager gossipService = GossipManagerBuilder.newBuilder()
+            .cluster("mycluster")
+            .uri(URI.create(args[0]))
+            .id(args[1])
+            .gossipMembers(Arrays.asList( new RemoteMember("mycluster", URI.create(args[2]), args[3])))
+            .gossipSettings(s)
+            .build();
+    gossipService.init();
     
     new Thread(() -> {
       while (true){
-      System.out.println("Live: " + gossipService.getGossipManager().getLiveMembers());
-      System.out.println("Dead: " + gossipService.getGossipManager().getDeadMembers());
-      System.out.println("---------- " + (gossipService.getGossipManager().findCrdt("abc") == null ? "": 
-          gossipService.getGossipManager().findCrdt("abc").value()));
-      System.out.println("********** " + gossipService.getGossipManager().findCrdt("abc"));
+      System.out.println("Live: " + gossipService.getLiveMembers());
+      System.out.println("Dead: " + gossipService.getDeadMembers());
+      System.out.println("---------- " + (gossipService.findCrdt("abc") == null ? "": 
+          gossipService.findCrdt("abc").value()));
+      System.out.println("********** " + gossipService.findCrdt("abc"));
       try {
         Thread.sleep(2000);
       } catch (Exception e) {}
@@ -70,22 +72,23 @@ public class StandAloneNodeCrdtOrSet {
     }
   }
   
-  private static void removeData(String val, GossipService gossipService){
-    OrSet<String> s = (OrSet<String>) gossipService.getGossipManager().findCrdt("abc");
-    SharedGossipDataMessage m = new SharedGossipDataMessage();
+  private static void removeData(String val, GossipManager gossipService){
+    @SuppressWarnings("unchecked")
+    OrSet<String> s = (OrSet<String>) gossipService.findCrdt("abc");
+    SharedDataMessage m = new SharedDataMessage();
     m.setExpireAt(Long.MAX_VALUE);
     m.setKey("abc");
     m.setPayload(new OrSet<String>(s , new OrSet.Builder<String>().remove(val)));
     m.setTimestamp(System.currentTimeMillis());
-    gossipService.getGossipManager().merge(m);
+    gossipService.merge(m);
   }
   
-  private static void addData(String val, GossipService gossipService){
-    SharedGossipDataMessage m = new SharedGossipDataMessage();
+  private static void addData(String val, GossipManager gossipService){
+    SharedDataMessage m = new SharedDataMessage();
     m.setExpireAt(Long.MAX_VALUE);
     m.setKey("abc");
     m.setPayload(new OrSet<String>(val));
     m.setTimestamp(System.currentTimeMillis());
-    gossipService.getGossipManager().merge(m);
+    gossipService.merge(m);
   }
 }

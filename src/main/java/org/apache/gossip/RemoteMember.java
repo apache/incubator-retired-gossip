@@ -15,17 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.manager.handlers;
+package org.apache.gossip;
 
-import org.apache.gossip.manager.GossipCore;
-import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.model.Base;
-import org.apache.gossip.udp.UdpSharedGossipDataMessage;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
-public class SharedGossipDataMessageHandler implements MessageHandler{
-  @Override
-  public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
-    UdpSharedGossipDataMessage message = (UdpSharedGossipDataMessage) base;
-    gossipCore.addSharedData(message);
+/**
+ * The object represents a gossip member with the properties as received from a remote gossip
+ * member.
+ * 
+ */
+public class RemoteMember extends Member {
+
+  /**
+   * Constructor.
+   * 
+   * @param uri
+   *          A URI object containing IP/hostname and port
+   * @param heartbeat
+   *          The current heartbeat
+   */
+  public RemoteMember(String clusterName, URI uri, String id, long heartbeat, Map<String,String> properties) {
+    super(clusterName, uri, id, heartbeat, properties);
   }
+
+  public RemoteMember(String clusterName, URI uri, String id) {
+    super(clusterName, uri, id, System.nanoTime(), new HashMap<String,String>());
+  }
+
 }

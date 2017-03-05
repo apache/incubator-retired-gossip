@@ -19,7 +19,7 @@ package org.apache.gossip.model;
 
 import java.util.Map;
 
-public class GossipMember {
+public class Member {
 
   private String cluster;
   private String uri;
@@ -27,11 +27,11 @@ public class GossipMember {
   private Long heartbeat;
   private Map<String,String> properties;
   
-  public GossipMember(){
+  public Member(){
     
   }
   
-  public GossipMember(String cluster, String uri, String id, Long heartbeat){
+  public Member(String cluster, String uri, String id, Long heartbeat){
     this.cluster = cluster;
     this.uri = uri;
     this.id = id;
@@ -80,7 +80,7 @@ public class GossipMember {
 
   @Override
   public String toString() {
-    return "GossipMember [cluster=" + cluster + ", uri=" + uri + ", id=" + id + ", heartbeat="
+    return "Member [cluster=" + cluster + ", uri=" + uri + ", id=" + id + ", heartbeat="
             + heartbeat + ", properties=" + properties + "]";
   }
   

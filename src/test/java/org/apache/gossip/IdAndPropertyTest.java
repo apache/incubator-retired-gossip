@@ -28,43 +28,54 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit; 
 
 import org.apache.gossip.manager.DatacenterRackAwareActiveGossiper;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
 
-import com.codahale.metrics.MetricRegistry;
-
 import io.teknek.tunit.TUnit;
 
 @RunWith(JUnitPlatform.class)
-public class IdAndPropertyTest {
+public class IdAndPropertyTest extends AbstractIntegrationBase {
 
   @Test
-  public void testDatacenterRackGossiper() throws URISyntaxException, UnknownHostException, InterruptedException{
+  public void testDatacenterRackGossiper() throws URISyntaxException, UnknownHostException, InterruptedException {
     GossipSettings settings = new GossipSettings();
     settings.setActiveGossipClass(DatacenterRackAwareActiveGossiper.class.getName());
-    List<GossipMember> startupMembers = new ArrayList<>();
+    List<Member> startupMembers = new ArrayList<>();
     Map<String, String> x = new HashMap<>();
     x.put("a", "b");
     x.put("datacenter", "dc1");
     x.put("rack", "rack1");
-    GossipService gossipService1 = new GossipService("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)), "0", x, startupMembers, settings,
-            (a, b) -> {}, new MetricRegistry());
-    gossipService1.start();
+    GossipManager gossipService1 = GossipManagerBuilder.newBuilder()
+            .cluster("a")
+            .uri(new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)))
+            .id("0")
+            .properties(x)
+            .gossipMembers(startupMembers)
+            .gossipSettings(settings).build();
+    gossipService1.init();
+    register(gossipService1);
     
     Map<String, String> y = new HashMap<>();
     y.put("a", "c");
     y.put("datacenter", "dc2");
     y.put("rack", "rack2");
-    GossipService gossipService2 = new GossipService("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)), "1", y,
-            Arrays.asList(new RemoteGossipMember("a",
-                    new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)), "0")),
-            settings, (a, b) -> { }, new MetricRegistry());
-    gossipService2.start();
+    GossipManager gossipService2 = GossipManagerBuilder.newBuilder().cluster("a")
+            .uri( new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)))
+            .id("1")
+            .properties(y)
+            .gossipMembers(Arrays.asList(new RemoteMember("a",
+                    new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)), "0")))
+            .gossipSettings(settings).build();
+    gossipService2.init();
+    register(gossipService2);
+    
     TUnit.assertThat(() -> { 
       String value = ""; 
       try {
-        value = gossipService1.getGossipManager().getLiveMembers().get(0).getProperties().get("a");
+        value = gossipService1.getLiveMembers().get(0).getProperties().get("a");
       } catch (RuntimeException e){ }
       return value;
     }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo("c");
@@ -72,12 +83,9 @@ public class IdAndPropertyTest {
     TUnit.assertThat(() -> { 
       String value = ""; 
       try {
-        value = gossipService2.getGossipManager().getLiveMembers().get(0).getProperties().get("a");
+        value = gossipService2.getLiveMembers().get(0).getProperties().get("a");
       } catch (RuntimeException e){ }
       return value;
-    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo("b");    
-    gossipService1.shutdown();
-    gossipService2.shutdown();
-    
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo("b");        
   }
 }

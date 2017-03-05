@@ -17,15 +17,13 @@
  */
 package org.apache.gossip.examples;
 
-import com.codahale.metrics.MetricRegistry;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.HashMap;
-
-import org.apache.gossip.GossipService;
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.RemoteMember;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
 
 public class StandAloneNode {
   public static void main (String [] args) throws UnknownHostException, InterruptedException{
@@ -33,12 +31,17 @@ public class StandAloneNode {
     s.setWindowSize(10);
     s.setConvictThreshold(1.0);
     s.setGossipInterval(10);
-    GossipService gossipService = new GossipService("mycluster",  URI.create(args[0]), args[1], new HashMap<String, String>(),
-            Arrays.asList( new RemoteGossipMember("mycluster", URI.create(args[2]), args[3])), s, (a,b) -> {}, new MetricRegistry());
-    gossipService.start();
+    GossipManager gossipService = GossipManagerBuilder.newBuilder()
+            .cluster("mycluster")
+            .uri(URI.create(args[0]))
+            .id(args[1])
+            .gossipMembers(Arrays.asList( new RemoteMember("mycluster", URI.create(args[2]), args[3])))
+            .gossipSettings(s)
+            .build();
+    gossipService.init();
     while (true){
-      System.out.println( "Live: " + gossipService.getGossipManager().getLiveMembers());
-      System.out.println( "Dead: " + gossipService.getGossipManager().getDeadMembers());
+      System.out.println("Live: " + gossipService.getLiveMembers());
+      System.out.println("Dead: " + gossipService.getDeadMembers());
       Thread.sleep(2000);
     }
   }

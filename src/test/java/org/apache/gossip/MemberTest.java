@@ -18,30 +18,23 @@
 package org.apache.gossip;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
-import java.util.Map;
 
-/**
- * The object represents a gossip member with the properties as received from a remote gossip
- * member.
- * 
- */
-public class RemoteGossipMember extends GossipMember {
+import org.junit.Assert;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
-  /**
-   * Constructor.
-   * 
-   * @param uri
-   *          A URI object containing IP/hostname and port
-   * @param heartbeat
-   *          The current heartbeat
-   */
-  public RemoteGossipMember(String clusterName, URI uri, String id, long heartbeat, Map<String,String> properties) {
-    super(clusterName, uri, id, heartbeat, properties);
+@RunWith(JUnitPlatform.class)
+public class MemberTest {
+
+  @Test
+  public void testHashCodeFromGossip40() throws URISyntaxException {
+    Assert.assertNotEquals(
+            new LocalMember("mycluster", new URI("udp://4.4.4.4:1000"), "myid", 1, new HashMap<String,String>(), 10, 5, "exponential")
+                    .hashCode(),
+            new LocalMember("mycluster", new URI("udp://4.4.4.5:1005"), "yourid", 11, new HashMap<String,String>(), 11, 6, "exponential")
+                    .hashCode());
   }
-
-  public RemoteGossipMember(String clusterName, URI uri, String id) {
-    super(clusterName, uri, id, System.nanoTime(), new HashMap<String,String>());
-  }
-
 }

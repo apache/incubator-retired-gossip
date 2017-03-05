@@ -21,7 +21,7 @@ import org.apache.commons.math.MathException;
 import org.apache.commons.math.distribution.ExponentialDistributionImpl;
 import org.apache.commons.math.distribution.NormalDistributionImpl;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
-import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.LocalMember;
 import org.apache.log4j.Logger;
 
 public class FailureDetector {
@@ -30,10 +30,10 @@ public class FailureDetector {
   private final DescriptiveStatistics descriptiveStatistics;
   private final long minimumSamples;
   private volatile long latestHeartbeatMs = -1;
-  private final LocalGossipMember parent;
+  private final LocalMember parent;
   private final String distribution;
   
-  public FailureDetector(LocalGossipMember parent, long minimumSamples, int windowSize, String distribution){
+  public FailureDetector(LocalMember parent, long minimumSamples, int windowSize, String distribution){
     this.parent = parent;
     descriptiveStatistics = new DescriptiveStatistics(windowSize);
     this.minimumSamples = minimumSamples;

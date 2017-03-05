@@ -25,33 +25,36 @@ import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.manager.PassiveGossipConstants;
 import org.apache.gossip.secure.KeyTool;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
-
 import io.teknek.tunit.TUnit;
 
-public class SignedMessageTest {
+public class SignedMessageTest extends AbstractIntegrationBase {
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test(expected = IllegalArgumentException.class)
   public void ifSignMustHaveKeys()
           throws URISyntaxException, UnknownHostException, InterruptedException {
     String cluster = UUID.randomUUID().toString();
     GossipSettings settings = gossiperThatSigns();
-    List<GossipMember> startupMembers = new ArrayList<>();
+    List<Member> startupMembers = new ArrayList<>();
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30000 + 1));
-    GossipService gossipService = new GossipService(cluster, uri, 1 + "",
-            new HashMap<String, String>(), startupMembers, settings, (a, b) -> { }, 
-            new MetricRegistry());
-    gossipService.start();
+    GossipManager gossipService = GossipManagerBuilder.newBuilder()
+            .cluster(cluster)
+            .uri(uri)
+            .id(1 + "")
+            .gossipMembers(startupMembers)
+            .gossipSettings(settings)
+            .build();
+    gossipService.init();
   }
   
   private GossipSettings gossiperThatSigns(){
@@ -63,48 +66,52 @@ public class SignedMessageTest {
   }
   
   @Test
-  public void dataTest() throws InterruptedException, URISyntaxException, NoSuchAlgorithmException, NoSuchProviderException, IOException{
+  public void dataTest() throws InterruptedException, URISyntaxException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
     String keys = "./keys";
     GossipSettings settings = gossiperThatSigns();
     setup(keys);
     String cluster = UUID.randomUUID().toString();
-    List<GossipMember> startupMembers = new ArrayList<>();
+    List<Member> startupMembers = new ArrayList<>();
     for (int i = 1; i < 2; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30000 + i));
-      startupMembers.add(new RemoteGossipMember(cluster, uri, i + ""));
+      startupMembers.add(new RemoteMember(cluster, uri, i + ""));
     }
-    final List<GossipService> clients = new ArrayList<>();
+    final List<GossipManager> clients = new ArrayList<>();
     for (int i = 1; i < 3; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30000 + i));
-      GossipService gossipService = new GossipService(cluster, uri, i + "",
-              new HashMap<String,String>(), startupMembers, settings,
-              (a,b) -> {}, new MetricRegistry());
+      GossipManager gossipService = GossipManagerBuilder.newBuilder()
+              .cluster(cluster)
+              .uri(uri)
+              .id(i + "")
+              .gossipMembers(startupMembers)
+              .gossipSettings(settings)
+              .build();
+      gossipService.init();
       clients.add(gossipService);
-      gossipService.start();
     }
     assertTwoAlive(clients);
     assertOnlySignedMessages(clients);
     cleanup(keys, clients);
   }
   
-  private void assertTwoAlive(List<GossipService> clients){
+  private void assertTwoAlive(List<GossipManager> clients){
     TUnit.assertThat(() -> {
       int total = 0;
       for (int i = 0; i < clients.size(); ++i) {
-        total += clients.get(i).getGossipManager().getLiveMembers().size();
+        total += clients.get(i).getLiveMembers().size();
       }
       return total;
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(2);
   }
   
-  private void assertOnlySignedMessages(List<GossipService> clients){
-    Assert.assertEquals(0, clients.get(0).getGossipManager().getRegistry()
+  private void assertOnlySignedMessages(List<GossipManager> clients){
+    Assert.assertEquals(0, clients.get(0).getRegistry()
             .meter(PassiveGossipConstants.UNSIGNED_MESSAGE).getCount());
-    Assert.assertTrue(clients.get(0).getGossipManager().getRegistry()
+    Assert.assertTrue(clients.get(0).getRegistry()
             .meter(PassiveGossipConstants.SIGNED_MESSAGE).getCount() > 0);
   }
   
-  private void cleanup(String keys, List<GossipService> clients){
+  private void cleanup(String keys, List<GossipManager> clients){
     new File(keys, "1").delete();
     new File(keys, "2").delete();
     new File(keys).delete();

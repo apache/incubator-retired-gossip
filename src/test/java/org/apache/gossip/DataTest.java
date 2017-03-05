@@ -17,26 +17,26 @@
  */
 package org.apache.gossip;
 
-import com.codahale.metrics.MetricRegistry;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.gossip.crdt.GrowOnlySet;
 import org.apache.gossip.crdt.OrSet;
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
+import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.model.SharedDataMessage;
 import org.junit.Test;
 
 import io.teknek.tunit.TUnit;
 
-public class DataTest {
+public class DataTest extends AbstractIntegrationBase {
   
   private String orSetKey = "cror";
   
@@ -47,25 +47,25 @@ public class DataTest {
     settings.setPersistDataState(false);
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 1;
-    List<GossipMember> startupMembers = new ArrayList<>();
+    List<Member> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes+1; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
-      startupMembers.add(new RemoteGossipMember(cluster, uri, i + ""));
+      startupMembers.add(new RemoteMember(cluster, uri, i + ""));
     }
-    final List<GossipService> clients = new ArrayList<>();
+    final List<GossipManager> clients = new ArrayList<>();
     final int clusterMembers = 2;
-    for (int i = 1; i < clusterMembers+1; ++i) {
+    for (int i = 1; i < clusterMembers + 1; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
-      GossipService gossipService = new GossipService(cluster, uri, i + "",
-              new HashMap<String,String>(), startupMembers, settings,
-              (a,b) -> {}, new MetricRegistry());
+      GossipManager gossipService = GossipManagerBuilder.newBuilder().cluster(cluster).uri(uri)
+              .id(i + "").gossipMembers(startupMembers).gossipSettings(settings).build();
       clients.add(gossipService);
-      gossipService.start();
+      gossipService.init();
+      register(gossipService);
     }
     TUnit.assertThat(() -> {
       int total = 0;
       for (int i = 0; i < clusterMembers; ++i) {
-        total += clients.get(i).getGossipManager().getLiveMembers().size();
+        total += clients.get(i).getLiveMembers().size();
       }
       return total;
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo(2);
@@ -73,7 +73,7 @@ public class DataTest {
     clients.get(0).gossipSharedData(sharedMsg());
 
     TUnit.assertThat(()-> {      
-      GossipDataMessage x = clients.get(1).findPerNodeData(1 + "", "a");
+      PerNodeDataMessage x = clients.get(1).findPerNodeGossipData(1 + "", "a");
       if (x == null)
         return "";
       else
@@ -81,7 +81,7 @@ public class DataTest {
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("b");
     
     TUnit.assertThat(() ->  {    
-      SharedGossipDataMessage x = clients.get(1).findSharedData("a");
+      SharedDataMessage x = clients.get(1).findSharedGossipData("a");
       if (x == null)
         return "";
       else
@@ -95,71 +95,67 @@ public class DataTest {
     assertThatOrSetIsMerged(clients);
     dropIt(clients);
     assertThatOrSetDelIsMerged(clients);
-    
-    for (int i = 0; i < clusterMembers; ++i) {
-      clients.get(i).shutdown();
-    }
   }
   
-  private void givenOrs(List<GossipService> clients) {
+  private void givenOrs(List<GossipManager> clients) {
     {
-      SharedGossipDataMessage d = new SharedGossipDataMessage();
+      SharedDataMessage d = new SharedDataMessage();
       d.setKey(orSetKey);
       d.setPayload(new OrSet<String>("1", "2"));
       d.setExpireAt(Long.MAX_VALUE);
       d.setTimestamp(System.currentTimeMillis());
-      clients.get(0).getGossipManager().merge(d);
+      clients.get(0).merge(d);
     }
     {
-      SharedGossipDataMessage d = new SharedGossipDataMessage();
+      SharedDataMessage d = new SharedDataMessage();
       d.setKey(orSetKey);
       d.setPayload(new OrSet<String>("3", "4"));
       d.setExpireAt(Long.MAX_VALUE);
       d.setTimestamp(System.currentTimeMillis());
-      clients.get(1).getGossipManager().merge(d);
+      clients.get(1).merge(d);
     }
   }
   
-  private void dropIt(List<GossipService> clients) {
+  private void dropIt(List<GossipManager> clients) {
     @SuppressWarnings("unchecked")
-    OrSet<String> o = (OrSet<String>) clients.get(0).getGossipManager().findCrdt(orSetKey);
+    OrSet<String> o = (OrSet<String>) clients.get(0).findCrdt(orSetKey);
     OrSet<String> o2 = new OrSet<String>(o, new OrSet.Builder<String>().remove("3"));
-    SharedGossipDataMessage d = new SharedGossipDataMessage();
+    SharedDataMessage d = new SharedDataMessage();
     d.setKey(orSetKey);
     d.setPayload(o2);
     d.setExpireAt(Long.MAX_VALUE);
     d.setTimestamp(System.currentTimeMillis());
-    clients.get(0).getGossipManager().merge(d);
+    clients.get(0).merge(d);
   }
   
-  private void assertThatOrSetIsMerged(final List<GossipService> clients){
+  private void assertThatOrSetIsMerged(final List<GossipManager> clients){
     TUnit.assertThat(() ->  {
-      return clients.get(0).getGossipManager().findCrdt(orSetKey).value();
+      return clients.get(0).findCrdt(orSetKey).value();
     }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new OrSet<String>("1", "2", "3", "4").value());
     TUnit.assertThat(() ->  {
-      return clients.get(1).getGossipManager().findCrdt(orSetKey).value();
+      return clients.get(1).findCrdt(orSetKey).value();
     }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new OrSet<String>("1", "2", "3", "4").value());
   }
   
-  private void assertThatOrSetDelIsMerged(final List<GossipService> clients){
+  private void assertThatOrSetDelIsMerged(final List<GossipManager> clients){
     TUnit.assertThat(() ->  {
-      return clients.get(0).getGossipManager().findCrdt(orSetKey);
+      return clients.get(0).findCrdt(orSetKey);
     }).afterWaitingAtMost(10, TimeUnit.SECONDS).equals(new OrSet<String>("1", "2", "4"));
   }
 
-  private void givenDifferentDatumsInSet(final List<GossipService> clients){
-    clients.get(0).getGossipManager().merge(CrdtMessage("1"));
-    clients.get(1).getGossipManager().merge(CrdtMessage("2"));
+  private void givenDifferentDatumsInSet(final List<GossipManager> clients){
+    clients.get(0).merge(CrdtMessage("1"));
+    clients.get(1).merge(CrdtMessage("2"));
   }
   
-  private void assertThatListIsMerged(final List<GossipService> clients){
+  private void assertThatListIsMerged(final List<GossipManager> clients){
     TUnit.assertThat(() ->  {
-      return clients.get(0).getGossipManager().findCrdt("cr");
+      return clients.get(0).findCrdt("cr");
     }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new GrowOnlySet<String>(Arrays.asList("1","2")));
   }
   
-  private SharedGossipDataMessage CrdtMessage(String item){
-    SharedGossipDataMessage d = new SharedGossipDataMessage();
+  private SharedDataMessage CrdtMessage(String item){
+    SharedDataMessage d = new SharedDataMessage();
     d.setKey("cr");
     d.setPayload(new GrowOnlySet<String>( Arrays.asList(item)));
     d.setExpireAt(Long.MAX_VALUE);
@@ -167,8 +163,8 @@ public class DataTest {
     return d;  
   }
   
-  private GossipDataMessage msg(){
-    GossipDataMessage g = new GossipDataMessage();
+  private PerNodeDataMessage msg(){
+    PerNodeDataMessage g = new PerNodeDataMessage();
     g.setExpireAt(Long.MAX_VALUE);
     g.setKey("a");
     g.setPayload("b");
@@ -176,8 +172,8 @@ public class DataTest {
     return g;
   }
   
-  private SharedGossipDataMessage sharedMsg(){
-    SharedGossipDataMessage g = new SharedGossipDataMessage();
+  private SharedDataMessage sharedMsg(){
+    SharedDataMessage g = new SharedDataMessage();
     g.setExpireAt(Long.MAX_VALUE);
     g.setKey("a");
     g.setPayload("c");

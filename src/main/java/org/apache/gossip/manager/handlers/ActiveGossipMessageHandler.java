@@ -17,8 +17,8 @@
  */
 package org.apache.gossip.manager.handlers;
 
-import org.apache.gossip.GossipMember;
-import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.Member;
+import org.apache.gossip.RemoteMember;
 import org.apache.gossip.manager.GossipCore;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.model.Base;
@@ -34,8 +34,8 @@ import java.util.List;
 public class ActiveGossipMessageHandler implements MessageHandler {
   @Override
   public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
-    List<GossipMember> remoteGossipMembers = new ArrayList<>();
-    RemoteGossipMember senderMember = null;
+    List<Member> remoteGossipMembers = new ArrayList<>();
+    RemoteMember senderMember = null;
     UdpActiveGossipMessage activeGossipMessage = (UdpActiveGossipMessage) base;
     for (int i = 0; i < activeGossipMessage.getMembers().size(); i++) {
       URI u;
@@ -45,7 +45,7 @@ public class ActiveGossipMessageHandler implements MessageHandler {
         GossipCore.LOGGER.debug("Gossip message with faulty URI", e);
         continue;
       }
-      RemoteGossipMember member = new RemoteGossipMember(
+      RemoteMember member = new RemoteMember(
               activeGossipMessage.getMembers().get(i).getCluster(),
               u,
               activeGossipMessage.getMembers().get(i).getId(),

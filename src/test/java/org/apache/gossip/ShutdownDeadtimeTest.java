@@ -17,7 +17,6 @@
  */
 package org.apache.gossip;
 
-import com.codahale.metrics.MetricRegistry;
 import io.teknek.tunit.TUnit;
 
 import java.net.URI;
@@ -25,13 +24,14 @@ import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.log4j.Logger;
 
 import org.junit.platform.runner.JUnitPlatform;
@@ -52,25 +52,31 @@ public class ShutdownDeadtimeTest {
     settings.setPersistDataState(false);
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 3;
-    List<GossipMember> startupMembers = new ArrayList<>();
+    List<Member> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes + 1; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30300 + i));
-      startupMembers.add(new RemoteGossipMember(cluster, uri, i + ""));
+      startupMembers.add(new RemoteMember(cluster, uri, i + ""));
     }
-    final List<GossipService> clients = Collections.synchronizedList(new ArrayList<GossipService>());
+    final List<GossipManager> clients = Collections.synchronizedList(new ArrayList<GossipManager>());
     final int clusterMembers = 5;
     for (int i = 1; i < clusterMembers + 1; ++i) {
       URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30300 + i));
-      GossipService gossipService = new GossipService(cluster, uri, i + "", new HashMap<String,String>(), startupMembers,
-              settings, (a,b) -> {}, new MetricRegistry());
+      GossipManager gossipService = GossipManagerBuilder.newBuilder()
+              .cluster(cluster)
+              .uri(uri)
+              .id(i + "")
+              .gossipMembers(startupMembers)
+              .gossipSettings(settings)
+              .build();
       clients.add(gossipService);
-      gossipService.start();
+      gossipService.init();
+      
     }
     TUnit.assertThat(new Callable<Integer>() {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).getGossipManager().getLiveMembers().size();
+          total += clients.get(i).getLiveMembers().size();
         }
         return total;
       }
@@ -79,15 +85,15 @@ public class ShutdownDeadtimeTest {
     Random r = new Random();
     int randomClientId = r.nextInt(clusterMembers);
     log.info("shutting down " + randomClientId);
-    final int shutdownPort = clients.get(randomClientId).getGossipManager().getMyself().getUri()
+    final int shutdownPort = clients.get(randomClientId).getMyself().getUri()
             .getPort();
-    final String shutdownId = clients.get(randomClientId).getGossipManager().getMyself().getId();
+    final String shutdownId = clients.get(randomClientId).getMyself().getId();
     clients.get(randomClientId).shutdown();
     TUnit.assertThat(new Callable<Integer>() {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).getGossipManager().getLiveMembers().size();
+          total += clients.get(i).getLiveMembers().size();
         }
         return total;
       }
@@ -98,7 +104,7 @@ public class ShutdownDeadtimeTest {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers - 1; ++i) {
-          total += clients.get(i).getGossipManager().getDeadMembers().size();
+          total += clients.get(i).getDeadMembers().size();
         }
         return total;
       }
@@ -106,17 +112,22 @@ public class ShutdownDeadtimeTest {
 
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + shutdownPort);
     // start client again
-    GossipService gossipService = new GossipService(cluster, uri, shutdownId + "", new HashMap<String,String>(), startupMembers,
-            settings, (a,b) -> {}, new MetricRegistry());
+    GossipManager gossipService = GossipManagerBuilder.newBuilder()
+            .gossipSettings(settings)
+            .cluster(cluster)
+            .uri(uri)
+            .id(shutdownId+"")
+            .gossipMembers(startupMembers)
+            .build();
     clients.add(gossipService);
-    gossipService.start();
+    gossipService.init();
 
     // verify that the client is alive again for every node
     TUnit.assertThat(new Callable<Integer>() {
       public Integer call() throws Exception {
         int total = 0;
         for (int i = 0; i < clusterMembers; ++i) {
-          total += clients.get(i).getGossipManager().getLiveMembers().size();
+          total += clients.get(i).getLiveMembers().size();
         }
         return total;
       }

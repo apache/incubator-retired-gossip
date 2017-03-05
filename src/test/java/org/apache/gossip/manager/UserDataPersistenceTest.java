@@ -21,64 +21,65 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.gossip.GossipService;
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.model.SharedDataMessage;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.codahale.metrics.MetricRegistry;
-
 public class UserDataPersistenceTest {
 
+  String nodeId = "1";
+  
+  private GossipManager sameService() throws URISyntaxException {  
+    GossipSettings settings = new GossipSettings();
+    return GossipManagerBuilder.newBuilder()
+            .cluster("a")
+            .uri(new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)))
+            .id(nodeId)
+            .gossipSettings(settings).build();
+  }
+  
   @Test
   public void givenThatRingIsPersisted() throws UnknownHostException, InterruptedException, URISyntaxException {
-    String nodeId = "1";
-    GossipSettings settings = new GossipSettings();
+    
     { //Create a gossip service and force it to persist its user data
-      GossipService gossipService = new GossipService("a",
-              new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)), nodeId, new HashMap<String, String>(),
-              Arrays.asList(), settings, (a, b) -> { }, new MetricRegistry());
-      gossipService.start();
+      GossipManager gossipService = sameService();
+      gossipService.init();
       gossipService.gossipPerNodeData(getToothpick());
       gossipService.gossipSharedData(getAnotherToothpick());
-      gossipService.getGossipManager().getUserDataState().writePerNodeToDisk();
-      gossipService.getGossipManager().getUserDataState().writeSharedToDisk();
+      gossipService.getUserDataState().writePerNodeToDisk();
+      gossipService.getUserDataState().writeSharedToDisk();
       { //read the raw data and confirm
-        ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> l = gossipService.getGossipManager().getUserDataState().readPerNodeFromDisk();
+        ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> l = gossipService.getUserDataState().readPerNodeFromDisk();
         Assert.assertEquals("red", ((AToothpick) l.get(nodeId).get("a").getPayload()).getColor());
       }
       {
-        ConcurrentHashMap<String, SharedGossipDataMessage> l = 
-                gossipService.getGossipManager().getUserDataState().readSharedDataFromDisk();
+        ConcurrentHashMap<String, SharedDataMessage> l = 
+                gossipService.getUserDataState().readSharedDataFromDisk();
         Assert.assertEquals("blue", ((AToothpick) l.get("a").getPayload()).getColor());
       }
       gossipService.shutdown();
     }
     { //recreate the service and see that the data is read back in
-      GossipService gossipService = new GossipService("a",
-              new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)), nodeId, new HashMap<String, String>(),
-              Arrays.asList(), settings, (a, b) -> { }, new MetricRegistry());
-      gossipService.start();
-      Assert.assertEquals("red", ((AToothpick) gossipService.findPerNodeData(nodeId, "a").getPayload()).getColor());
-      Assert.assertEquals("blue", ((AToothpick) gossipService.findSharedData("a").getPayload()).getColor());
-      File f = gossipService.getGossipManager().getUserDataState().computeSharedTarget();
-      File g = gossipService.getGossipManager().getUserDataState().computePerNodeTarget();
+      GossipManager gossipService = sameService();
+      gossipService.init();
+      Assert.assertEquals("red", ((AToothpick) gossipService.findPerNodeGossipData(nodeId, "a").getPayload()).getColor());
+      Assert.assertEquals("blue", ((AToothpick) gossipService.findSharedGossipData("a").getPayload()).getColor());
+      File f = gossipService.getUserDataState().computeSharedTarget();
+      File g = gossipService.getUserDataState().computePerNodeTarget();
       gossipService.shutdown();
       f.delete();
       g.delete();
     }
   }
   
-  public GossipDataMessage getToothpick(){
+  public PerNodeDataMessage getToothpick(){
     AToothpick a = new AToothpick();
     a.setColor("red");
-    GossipDataMessage d = new GossipDataMessage();
+    PerNodeDataMessage d = new PerNodeDataMessage();
     d.setExpireAt(Long.MAX_VALUE);
     d.setKey("a");
     d.setPayload(a);
@@ -86,10 +87,10 @@ public class UserDataPersistenceTest {
     return d;
   }
   
-  public SharedGossipDataMessage getAnotherToothpick(){
+  public SharedDataMessage getAnotherToothpick(){
     AToothpick a = new AToothpick();
     a.setColor("blue");
-    SharedGossipDataMessage d = new SharedGossipDataMessage();
+    SharedDataMessage d = new SharedDataMessage();
     d.setExpireAt(Long.MAX_VALUE);
     d.setKey("a");
     d.setPayload(a);

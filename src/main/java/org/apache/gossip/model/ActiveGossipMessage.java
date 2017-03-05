@@ -22,17 +22,17 @@ import java.util.List;
 
 public class ActiveGossipMessage extends Base {
 
-  private List<GossipMember> members = new ArrayList<>();
+  private List<Member> members = new ArrayList<>();
   
   public ActiveGossipMessage(){
     
   }
 
-  public List<GossipMember> getMembers() {
+  public List<Member> getMembers() {
     return members;
   }
 
-  public void setMembers(List<GossipMember> members) {
+  public void setMembers(List<Member> members) {
     this.members = members;
   }
   
