@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.gossip.crdt.GrowOnlyCounter;
 import org.apache.gossip.crdt.GrowOnlySet;
 import org.apache.gossip.crdt.OrSet;
 import org.apache.gossip.model.GossipDataMessage;
@@ -39,6 +40,7 @@ import io.teknek.tunit.TUnit;
 public class DataTest {
   
   private String orSetKey = "cror";
+  private String gCounterKey = "crdtgc";
   
   @Test
   public void dataTest() throws InterruptedException, UnknownHostException, URISyntaxException{
@@ -72,7 +74,7 @@ public class DataTest {
     clients.get(0).gossipPerNodeData(msg());
     clients.get(0).gossipSharedData(sharedMsg());
 
-    TUnit.assertThat(()-> {      
+    TUnit.assertThat(()-> {
       GossipDataMessage x = clients.get(1).findPerNodeData(1 + "", "a");
       if (x == null)
         return "";
@@ -80,7 +82,7 @@ public class DataTest {
         return x.getPayload();
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("b");
     
-    TUnit.assertThat(() ->  {    
+    TUnit.assertThat(() ->  {
       SharedGossipDataMessage x = clients.get(1).findSharedData("a");
       if (x == null)
         return "";
@@ -96,11 +98,49 @@ public class DataTest {
     dropIt(clients);
     assertThatOrSetDelIsMerged(clients);
     
+    // test g counter
+    givenDifferentIncrement(clients);
+    assertThatCountIsUpdated(clients, 3);
+    givenIncreaseOther(clients);
+    assertThatCountIsUpdated(clients, 7);
+
     for (int i = 0; i < clusterMembers; ++i) {
       clients.get(i).shutdown();
     }
   }
   
+  private void givenDifferentIncrement(final List<GossipService> clients) {
+    {
+      SharedGossipDataMessage d = new SharedGossipDataMessage();
+      d.setKey(gCounterKey);
+      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(0).getGossipManager()).increment(1)));
+      d.setExpireAt(Long.MAX_VALUE);
+      d.setTimestamp(System.currentTimeMillis());
+      clients.get(0).getGossipManager().merge(d);
+    }
+    {
+      SharedGossipDataMessage d = new SharedGossipDataMessage();
+      d.setKey(gCounterKey);
+      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(1).getGossipManager()).increment(2)));
+      d.setExpireAt(Long.MAX_VALUE);
+      d.setTimestamp(System.currentTimeMillis());
+      clients.get(1).getGossipManager().merge(d);
+    }
+  }
+
+  private void givenIncreaseOther(final List<GossipService> clients) {
+    GrowOnlyCounter gc = (GrowOnlyCounter) clients.get(1).getGossipManager().findCrdt(gCounterKey);
+    GrowOnlyCounter gc2 = new GrowOnlyCounter(gc,
+            new GrowOnlyCounter.Builder(clients.get(1).getGossipManager()).increment(4));
+
+    SharedGossipDataMessage d = new SharedGossipDataMessage();
+    d.setKey(gCounterKey);
+    d.setPayload(gc2);
+    d.setExpireAt(Long.MAX_VALUE);
+    d.setTimestamp(System.currentTimeMillis());
+    clients.get(1).getGossipManager().merge(d);
+  }
+
   private void givenOrs(List<GossipService> clients) {
     {
       SharedGossipDataMessage d = new SharedGossipDataMessage();
@@ -152,6 +192,13 @@ public class DataTest {
     clients.get(1).getGossipManager().merge(CrdtMessage("2"));
   }
   
+  private void assertThatCountIsUpdated(final List<GossipService> clients, int finalCount) {
+    TUnit.assertThat(() -> {
+      return clients.get(0).getGossipManager().findCrdt(gCounterKey);
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new GrowOnlyCounter(
+            new GrowOnlyCounter.Builder(clients.get(0).getGossipManager()).increment(finalCount)));
+  }
+
   private void assertThatListIsMerged(final List<GossipService> clients){
     TUnit.assertThat(() ->  {
       return clients.get(0).getGossipManager().findCrdt("cr");
@@ -164,7 +211,7 @@ public class DataTest {
     d.setPayload(new GrowOnlySet<String>( Arrays.asList(item)));
     d.setExpireAt(Long.MAX_VALUE);
     d.setTimestamp(System.currentTimeMillis());
-    return d;  
+    return d;
   }
   
   private GossipDataMessage msg(){
