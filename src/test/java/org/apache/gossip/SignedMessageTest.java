@@ -26,6 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -56,7 +57,7 @@ public class SignedMessageTest extends AbstractIntegrationBase {
             .build();
     gossipService.init();
   }
-  
+
   private GossipSettings gossiperThatSigns(){
     GossipSettings settings = new GossipSettings();
     settings.setPersistRingState(false);
@@ -65,10 +66,16 @@ public class SignedMessageTest extends AbstractIntegrationBase {
     return settings;
   }
   
+  private GossipSettings gossiperThatSigns(String keysDir){
+    GossipSettings settings = gossiperThatSigns();
+    settings.setPathToKeyStore(Objects.requireNonNull(keysDir));
+    return settings;
+  }
+  
   @Test
   public void dataTest() throws InterruptedException, URISyntaxException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
-    String keys = "./keys";
-    GossipSettings settings = gossiperThatSigns();
+    final String keys = System.getProperty("java.io.tmpdir") + "/keys";
+    GossipSettings settings = gossiperThatSigns(keys);
     setup(keys);
     String cluster = UUID.randomUUID().toString();
     List<Member> startupMembers = new ArrayList<>();
