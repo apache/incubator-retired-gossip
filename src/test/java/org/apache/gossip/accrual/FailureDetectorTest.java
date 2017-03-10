@@ -19,7 +19,7 @@ package org.apache.gossip.accrual;
 
 import java.net.URI;
 
-import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.LocalMember;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ public class FailureDetectorTest {
   public void aNormalTest(){
     int samples = 1;
     int windowSize = 1000;
-    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), 
+    LocalMember member = new LocalMember("", URI.create("udp://127.0.0.1:1000"), 
             "", 0L, null, windowSize, samples, "normal");
     member.recordHeartbeat(5);
     member.recordHeartbeat(10);
@@ -44,7 +44,7 @@ public class FailureDetectorTest {
   public void aTest(){
     int samples = 1;
     int windowSize = 1000;
-    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), 
+    LocalMember member = new LocalMember("", URI.create("udp://127.0.0.1:1000"), 
             "", 0L, null, windowSize, samples, "exponential");
     member.recordHeartbeat(5);
     member.recordHeartbeat(10);
@@ -64,7 +64,7 @@ public class FailureDetectorTest {
   public void sameHeartbeatTest(){
     int samples = 1;
     int windowSize = 1000;
-    LocalGossipMember member = new LocalGossipMember("", URI.create("udp://127.0.0.1:1000"), 
+    LocalMember member = new LocalMember("", URI.create("udp://127.0.0.1:1000"), 
             "", 0L, null, windowSize, samples, "exponential");
     member.recordHeartbeat(5);
     member.recordHeartbeat(5);

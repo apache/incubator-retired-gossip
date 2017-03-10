@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 
-import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.LocalMember;
 import org.apache.log4j.Logger;
 
 public class RingStatePersister implements Runnable {
@@ -52,7 +52,7 @@ public class RingStatePersister implements Runnable {
     if (!parent.getSettings().isPersistRingState()){
       return;
     }
-    NavigableSet<LocalGossipMember> i = parent.getMembers().keySet();
+    NavigableSet<LocalMember> i = parent.getMembers().keySet();
     try (FileOutputStream fos = new FileOutputStream(computeTarget())){
       parent.getObjectMapper().writeValue(fos, i);
     } catch (IOException e) {
@@ -61,7 +61,7 @@ public class RingStatePersister implements Runnable {
   }
 
   @SuppressWarnings("unchecked")
-  List<LocalGossipMember> readFromDisk(){
+  List<LocalMember> readFromDisk(){
     if (!parent.getSettings().isPersistRingState()){
       return Collections.emptyList();
     }

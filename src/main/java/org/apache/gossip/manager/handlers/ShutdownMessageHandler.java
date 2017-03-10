@@ -20,14 +20,14 @@ package org.apache.gossip.manager.handlers;
 import org.apache.gossip.manager.GossipCore;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.model.Base;
-import org.apache.gossip.model.GossipDataMessage;
+import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.ShutdownMessage;
 
 public class ShutdownMessageHandler implements MessageHandler {
   @Override
   public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
     ShutdownMessage s = (ShutdownMessage) base;
-    GossipDataMessage m = new GossipDataMessage();
+    PerNodeDataMessage m = new PerNodeDataMessage();
     m.setKey(ShutdownMessage.PER_NODE_KEY);
     m.setNodeId(s.getNodeId());
     m.setPayload(base);

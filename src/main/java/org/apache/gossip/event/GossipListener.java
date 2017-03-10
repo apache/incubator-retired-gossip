@@ -17,8 +17,8 @@
  */
 package org.apache.gossip.event;
 
-import org.apache.gossip.GossipMember;
+import org.apache.gossip.Member;
 
 public interface GossipListener {
-  void gossipEvent(GossipMember member, GossipState state);
+  void gossipEvent(Member member, GossipState state);
 }

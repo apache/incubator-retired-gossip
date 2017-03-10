@@ -19,9 +19,9 @@ package org.apache.gossip.model;
 
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpActiveGossipOk;
-import org.apache.gossip.udp.UdpGossipDataMessage;
+import org.apache.gossip.udp.UdpPerNodeDataMessage;
 import org.apache.gossip.udp.UdpNotAMemberFault;
-import org.apache.gossip.udp.UdpSharedGossipDataMessage;
+import org.apache.gossip.udp.UdpSharedDataMessage;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -39,10 +39,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
         @Type(value = UdpActiveGossipOk.class, name = "UdpActiveGossipOk"),
         @Type(value = UdpActiveGossipMessage.class, name = "UdpActiveGossipMessage"),
         @Type(value = UdpNotAMemberFault.class, name = "UdpNotAMemberFault"),
-        @Type(value = GossipDataMessage.class, name = "GossipDataMessage"),
-        @Type(value = UdpGossipDataMessage.class, name = "UdpGossipDataMessage"),
-        @Type(value = SharedGossipDataMessage.class, name = "SharedGossipDataMessage"),
-        @Type(value = UdpSharedGossipDataMessage.class, name = "UdpSharedGossipDataMessage")
+        @Type(value = PerNodeDataMessage.class, name = "PerNodeDataMessage"),
+        @Type(value = UdpPerNodeDataMessage.class, name = "UdpPerNodeDataMessage"),
+        @Type(value = SharedDataMessage.class, name = "SharedDataMessage"),
+        @Type(value = UdpSharedDataMessage.class, name = "UdpSharedDataMessage")
         })
 public class Base {
 

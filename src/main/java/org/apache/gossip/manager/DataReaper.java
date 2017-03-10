@@ -23,8 +23,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.gossip.model.GossipDataMessage;
-import org.apache.gossip.model.SharedGossipDataMessage;
+import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.model.SharedDataMessage;
 
 /**
  * We wish to periodically sweep user data and remove entries past their timestamp. This
@@ -53,7 +53,7 @@ public class DataReaper {
   }
   
   void runSharedOnce(){
-    for (Entry<String, SharedGossipDataMessage> entry : gossipCore.getSharedData().entrySet()){
+    for (Entry<String, SharedDataMessage> entry : gossipCore.getSharedData().entrySet()){
       if (entry.getValue().getExpireAt() < clock.currentTimeMillis()){
         gossipCore.getSharedData().remove(entry.getKey(), entry.getValue());
       }
@@ -61,13 +61,13 @@ public class DataReaper {
   }
   
   void runPerNodeOnce(){
-    for (Entry<String, ConcurrentHashMap<String, GossipDataMessage>> node : gossipCore.getPerNodeData().entrySet()){
+    for (Entry<String, ConcurrentHashMap<String, PerNodeDataMessage>> node : gossipCore.getPerNodeData().entrySet()){
       reapData(node.getValue());
     }
   }
   
-  void reapData(ConcurrentHashMap<String, GossipDataMessage> concurrentHashMap){
-    for (Entry<String, GossipDataMessage> entry : concurrentHashMap.entrySet()){
+  void reapData(ConcurrentHashMap<String, PerNodeDataMessage> concurrentHashMap){
+    for (Entry<String, PerNodeDataMessage> entry : concurrentHashMap.entrySet()){
       if (entry.getValue().getExpireAt() < clock.currentTimeMillis()){
         concurrentHashMap.remove(entry.getKey(), entry.getValue());
       }

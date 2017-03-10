@@ -18,14 +18,13 @@
 package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
-import org.apache.gossip.GossipMember;
+import org.apache.gossip.Member;
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.LocalMember;
 import org.apache.gossip.manager.handlers.DefaultMessageInvoker;
 import org.apache.gossip.manager.handlers.MessageInvoker;
 import org.apache.gossip.manager.handlers.ResponseHandler;
 import org.apache.gossip.manager.handlers.SimpleMessageInvoker;
-import org.apache.gossip.manager.random.RandomGossipManager;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -43,47 +42,47 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.expectThrows;
 
 @RunWith(JUnitPlatform.class)
-public class RandomGossipManagerBuilderTest {
+public class GossipManagerBuilderTest {
 
   @Test
   public void idShouldNotBeNull() {
     expectThrows(IllegalArgumentException.class,() -> {
-        RandomGossipManager.newBuilder().cluster("aCluster").build();
+        GossipManagerBuilder.newBuilder().cluster("aCluster").build();
     });
   }
 
   @Test
   public void clusterShouldNotBeNull() {
       expectThrows(IllegalArgumentException.class,() -> {
-          RandomGossipManager.newBuilder().withId("id").build();
+          GossipManagerBuilder.newBuilder().id("id").build();
       });
   }
 
   @Test
   public void settingsShouldNotBeNull() {
       expectThrows(IllegalArgumentException.class,() -> {
-          RandomGossipManager.newBuilder().withId("id").cluster("aCluster").build();
+          GossipManagerBuilder.newBuilder().id("id").cluster("aCluster").build();
       });
   }
   
   @Test
   public void createMembersListIfNull() throws URISyntaxException {
-    RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
-        .withId("id")
+    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
+        .id("id")
         .cluster("aCluster")
         .uri(new URI("udp://localhost:2000"))
-        .settings(new GossipSettings())
+        .gossipSettings(new GossipSettings())
         .gossipMembers(null).registry(new MetricRegistry()).build();
     assertNotNull(gossipManager.getLiveMembers());
   }
 
   @Test
   public void createDefaultMessageInvokerIfNull() throws URISyntaxException {
-    RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
-        .withId("id")
+    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
+        .id("id")
         .cluster("aCluster")
         .uri(new URI("udp://localhost:2000"))
-        .settings(new GossipSettings())
+        .gossipSettings(new GossipSettings())
         .messageInvoker(null).registry(new MetricRegistry()).build();
     assertNotNull(gossipManager.getMessageInvoker());
     Assert.assertEquals(gossipManager.getMessageInvoker().getClass(), new DefaultMessageInvoker().getClass());
@@ -92,11 +91,11 @@ public class RandomGossipManagerBuilderTest {
   @Test
   public void testMessageInvokerKeeping() throws URISyntaxException {
     MessageInvoker mi = new SimpleMessageInvoker(Response.class, new ResponseHandler());
-    RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
-        .withId("id")
+    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
+        .id("id")
         .cluster("aCluster")
         .uri(new URI("udp://localhost:2000"))
-        .settings(new GossipSettings())
+        .gossipSettings(new GossipSettings())
         .messageInvoker(mi).registry(new MetricRegistry()).build();
     assertNotNull(gossipManager.getMessageInvoker());
     Assert.assertEquals(gossipManager.getMessageInvoker(), mi);
@@ -104,15 +103,15 @@ public class RandomGossipManagerBuilderTest {
 
   @Test
   public void useMemberListIfProvided() throws URISyntaxException {
-    LocalGossipMember member = new LocalGossipMember(
+    LocalMember member = new LocalMember(
             "aCluster", new URI("udp://localhost:2000"), "aGossipMember",
             System.nanoTime(), new HashMap<String, String>(), 1000, 1, "exponential");
-    List<GossipMember> memberList = new ArrayList<>();
+    List<Member> memberList = new ArrayList<>();
     memberList.add(member);
-    RandomGossipManager gossipManager = RandomGossipManager.newBuilder()
-        .withId("id")
+    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
+        .id("id")
         .cluster("aCluster")
-        .settings(new GossipSettings())
+        .gossipSettings(new GossipSettings())
         .uri(new URI("udp://localhost:8000"))
         .gossipMembers(memberList).registry(new MetricRegistry()).build();
     assertEquals(1, gossipManager.getDeadMembers().size());

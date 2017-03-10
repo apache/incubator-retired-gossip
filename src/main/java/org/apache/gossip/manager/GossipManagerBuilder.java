@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.manager.random;
+package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.gossip.GossipMember;
+import org.apache.gossip.Member;
 import org.apache.gossip.GossipSettings;
+import org.apache.gossip.StartupSettings;
 import org.apache.gossip.crdt.CrdtModule;
 import org.apache.gossip.event.GossipListener;
-import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.handlers.DefaultMessageInvoker;
 import org.apache.gossip.manager.handlers.MessageInvoker;
 
@@ -34,7 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RandomGossipManager extends GossipManager {
+public class GossipManagerBuilder {
 
   public static ManagerBuilder newBuilder() {
     return new ManagerBuilder();
@@ -45,7 +45,7 @@ public class RandomGossipManager extends GossipManager {
     private URI uri;
     private String id;
     private GossipSettings settings;
-    private List<GossipMember> gossipMembers;
+    private List<Member> gossipMembers;
     private GossipListener listener;
     private MetricRegistry registry;
     private Map<String,String> properties;
@@ -70,17 +70,26 @@ public class RandomGossipManager extends GossipManager {
       return this;
     }
 
-    public ManagerBuilder withId(String id) {
+    public ManagerBuilder id(String id) {
       this.id = id;
       return this;
     }
 
-    public ManagerBuilder settings(GossipSettings settings) {
+    public ManagerBuilder gossipSettings(GossipSettings settings) {
       this.settings = settings;
       return this;
     }
+    
+    public ManagerBuilder startupSettings(StartupSettings startupSettings) {
+      this.cluster = startupSettings.getCluster();
+      this.id = startupSettings.getId();
+      this.settings = startupSettings.getGossipSettings();
+      this.gossipMembers = startupSettings.getGossipMembers();
+      this.uri = startupSettings.getUri();
+      return this;
+    }
 
-    public ManagerBuilder gossipMembers(List<GossipMember> members) {
+    public ManagerBuilder gossipMembers(List<Member> members) {
       this.gossipMembers = members;
       return this;
     }
@@ -110,12 +119,14 @@ public class RandomGossipManager extends GossipManager {
       return this;
     }
 
-    public RandomGossipManager build() {
+    public GossipManager build() {
       checkArgument(id != null, "You must specify an id");
       checkArgument(cluster != null, "You must specify a cluster name");
       checkArgument(settings != null, "You must specify gossip settings");
       checkArgument(uri != null, "You must specify a uri");
-      checkArgument(registry != null, "You must specify a MetricRegistry");
+      if (registry == null){
+        registry = new MetricRegistry();
+      }
       if (properties == null){
         properties = new HashMap<String,String>();
       }
@@ -133,13 +144,9 @@ public class RandomGossipManager extends GossipManager {
       }
       if (messageInvoker == null) {
         messageInvoker = new DefaultMessageInvoker();
-      }
-      return new RandomGossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageInvoker);
+      } 
+      return new GossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageInvoker) {} ;
     }
   }
 
-  private RandomGossipManager(String cluster, URI uri, String id, Map<String,String> properties,  GossipSettings settings, 
-          List<GossipMember> gossipMembers, GossipListener listener, MetricRegistry registry, ObjectMapper objectMapper, MessageInvoker messageInvoker) {
-    super(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageInvoker);
-  }
 }

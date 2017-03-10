@@ -20,9 +20,9 @@ package org.apache.gossip.manager;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import org.apache.gossip.GossipMember;
-import org.apache.gossip.LocalGossipMember;
-import org.apache.gossip.RemoteGossipMember;
+import org.apache.gossip.Member;
+import org.apache.gossip.LocalMember;
+import org.apache.gossip.RemoteMember;
 import org.apache.gossip.crdt.Crdt;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.model.*;
@@ -49,8 +49,8 @@ public class GossipCore implements GossipCoreConstants {
   private final GossipManager gossipManager;
   private ConcurrentHashMap<String, Base> requests;
   private ThreadPoolExecutor service;
-  private final ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> perNodeData;
-  private final ConcurrentHashMap<String, SharedGossipDataMessage> sharedData;
+  private final ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> perNodeData;
+  private final ConcurrentHashMap<String, SharedDataMessage> sharedData;
   private final BlockingQueue<Runnable> workQueue;
   private final PKCS8EncodedKeySpec privKeySpec;
   private final PrivateKey privKey;
@@ -113,14 +113,14 @@ public class GossipCore implements GossipCoreConstants {
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
-  public void addSharedData(SharedGossipDataMessage message) {
+  public void addSharedData(SharedDataMessage message) {
     while (true){
-      SharedGossipDataMessage previous = sharedData.putIfAbsent(message.getKey(), message);
+      SharedDataMessage previous = sharedData.putIfAbsent(message.getKey(), message);
       if (previous == null){
         return;
       }
       if (message.getPayload() instanceof Crdt){
-        SharedGossipDataMessage merged = new SharedGossipDataMessage();
+        SharedDataMessage merged = new SharedDataMessage();
         merged.setExpireAt(message.getExpireAt());
         merged.setKey(message.getKey());
         merged.setNodeId(message.getNodeId());
@@ -144,12 +144,12 @@ public class GossipCore implements GossipCoreConstants {
     }
   }
   
-  public void addPerNodeData(GossipDataMessage message){
-    ConcurrentHashMap<String,GossipDataMessage> nodeMap = new ConcurrentHashMap<>();
+  public void addPerNodeData(PerNodeDataMessage message){
+    ConcurrentHashMap<String,PerNodeDataMessage> nodeMap = new ConcurrentHashMap<>();
     nodeMap.put(message.getKey(), message);
     nodeMap = perNodeData.putIfAbsent(message.getNodeId(), nodeMap);
     if (nodeMap != null){
-      GossipDataMessage current = nodeMap.get(message.getKey());
+      PerNodeDataMessage current = nodeMap.get(message.getKey());
       if (current == null){
         nodeMap.putIfAbsent(message.getKey(), message);
       } else {
@@ -160,11 +160,11 @@ public class GossipCore implements GossipCoreConstants {
     }
   }
 
-  public ConcurrentHashMap<String, ConcurrentHashMap<String, GossipDataMessage>> getPerNodeData(){
+  public ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> getPerNodeData(){
     return perNodeData;
   }
 
-  public ConcurrentHashMap<String, SharedGossipDataMessage> getSharedData() {
+  public ConcurrentHashMap<String, SharedDataMessage> getSharedData() {
     return sharedData;
   }
 
@@ -314,12 +314,12 @@ public class GossipCore implements GossipCoreConstants {
    * @param remoteList
    *
    */
-  public void mergeLists(GossipManager gossipManager, RemoteGossipMember senderMember,
-          List<GossipMember> remoteList) {
+  public void mergeLists(GossipManager gossipManager, RemoteMember senderMember,
+          List<Member> remoteList) {
     if (LOGGER.isDebugEnabled()){
       debugState(senderMember, remoteList);
     }
-    for (LocalGossipMember i : gossipManager.getDeadMembers()) {
+    for (LocalMember i : gossipManager.getDeadMembers()) {
       if (i.getId().equals(senderMember.getId())) {
         LOGGER.debug(gossipManager.getMyself() + " contacted by dead member " + senderMember.getUri());
         i.recordHeartbeat(senderMember.getHeartbeat());
@@ -327,11 +327,11 @@ public class GossipCore implements GossipCoreConstants {
         //TODO consider forcing an UP here
       }
     }
-    for (GossipMember remoteMember : remoteList) {
+    for (Member remoteMember : remoteList) {
       if (remoteMember.getId().equals(gossipManager.getMyself().getId())) {
         continue;
       }
-      LocalGossipMember aNewMember = new LocalGossipMember(remoteMember.getClusterName(),
+      LocalMember aNewMember = new LocalMember(remoteMember.getClusterName(),
       remoteMember.getUri(),
       remoteMember.getId(),
       remoteMember.getHeartbeat(),
@@ -342,7 +342,7 @@ public class GossipCore implements GossipCoreConstants {
       aNewMember.recordHeartbeat(remoteMember.getHeartbeat());
       Object result = gossipManager.getMembers().putIfAbsent(aNewMember, GossipState.UP);
       if (result != null){
-        for (Entry<LocalGossipMember, GossipState> localMember : gossipManager.getMembers().entrySet()){
+        for (Entry<LocalMember, GossipState> localMember : gossipManager.getMembers().entrySet()){
           if (localMember.getKey().getId().equals(remoteMember.getId())){
             localMember.getKey().recordHeartbeat(remoteMember.getHeartbeat());
             localMember.getKey().setHeartbeat(remoteMember.getHeartbeat());
@@ -356,8 +356,8 @@ public class GossipCore implements GossipCoreConstants {
     }
   }
 
-  private void debugState(RemoteGossipMember senderMember,
-          List<GossipMember> remoteList){
+  private void debugState(RemoteMember senderMember,
+          List<Member> remoteList){
     LOGGER.warn(
           "-----------------------\n" +
           "Me " + gossipManager.getMyself() + "\n" +
@@ -369,13 +369,13 @@ public class GossipCore implements GossipCoreConstants {
   }
 
   @SuppressWarnings("rawtypes")
-  public Crdt merge(SharedGossipDataMessage message) {
+  public Crdt merge(SharedDataMessage message) {
     for (;;){
-      SharedGossipDataMessage previous = sharedData.putIfAbsent(message.getKey(), message);
+      SharedDataMessage previous = sharedData.putIfAbsent(message.getKey(), message);
       if (previous == null){
         return (Crdt) message.getPayload();
       }
-      SharedGossipDataMessage copy = new SharedGossipDataMessage();
+      SharedDataMessage copy = new SharedDataMessage();
       copy.setExpireAt(message.getExpireAt());
       copy.setKey(message.getKey());
       copy.setNodeId(message.getNodeId());

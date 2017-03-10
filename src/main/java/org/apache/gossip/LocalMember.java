@@ -27,7 +27,7 @@ import org.apache.gossip.accrual.FailureDetector;
  * in the local list of gossip members.
  * 
  */
-public class LocalGossipMember extends GossipMember {
+public class LocalMember extends Member {
   /** The failure detector for this member */
   private transient FailureDetector detector;
 
@@ -40,13 +40,13 @@ public class LocalGossipMember extends GossipMember {
    * @param heartbeat
    *          The current heartbeat
    */
-  public LocalGossipMember(String clusterName, URI uri, String id,
+  public LocalMember(String clusterName, URI uri, String id,
           long heartbeat, Map<String,String> properties, int windowSize, int minSamples, String distribution) {
     super(clusterName, uri, id, heartbeat, properties );
     detector = new FailureDetector(this, minSamples, windowSize, distribution);
   }
 
-  protected LocalGossipMember(){
+  protected LocalMember(){
     
   }
   

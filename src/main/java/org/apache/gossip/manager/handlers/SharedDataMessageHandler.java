@@ -15,34 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.udp;
+package org.apache.gossip.manager.handlers;
 
-import org.apache.gossip.model.GossipDataMessage;
+import org.apache.gossip.manager.GossipCore;
+import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.model.Base;
+import org.apache.gossip.udp.UdpSharedDataMessage;
 
-public class UdpGossipDataMessage extends GossipDataMessage implements Trackable {
-
-  private String uriFrom;
-  private String uuid;
-  
-  public String getUriFrom() {
-    return uriFrom;
-  }
-  
-  public void setUriFrom(String uriFrom) {
-    this.uriFrom = uriFrom;
-  }
-  
-  public String getUuid() {
-    return uuid;
-  }
-  
-  public void setUuid(String uuid) {
-    this.uuid = uuid;
-  }
-
+public class SharedDataMessageHandler implements MessageHandler{
   @Override
-  public String toString() {
-    return "UdpGossipDataMessage [uriFrom=" + uriFrom + ", uuid=" + uuid + "]";
+  public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
+    UdpSharedDataMessage message = (UdpSharedDataMessage) base;
+    gossipCore.addSharedData(message);
   }
-
 }

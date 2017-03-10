@@ -25,7 +25,7 @@ import java.util.Map;
  * A abstract class representing a gossip member.
  * 
  */
-public abstract class GossipMember implements Comparable<GossipMember> {
+public abstract class Member implements Comparable<Member> {
 
   
   protected URI uri;
@@ -56,7 +56,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
    * @param id
    *          An id that may be replaced after contact
    */
-  public GossipMember(String clusterName, URI uri, String id, long heartbeat, Map<String,String> properties) {
+  public Member(String clusterName, URI uri, String id, long heartbeat, Map<String,String> properties) {
     this.clusterName = clusterName;
     this.id = id;
     this.heartbeat = heartbeat;
@@ -64,7 +64,7 @@ public abstract class GossipMember implements Comparable<GossipMember> {
     this.properties = properties;
   }
 
-  protected GossipMember(){}
+  protected Member(){}
   /**
    * Get the name of the cluster the member belongs to.
    * 
@@ -151,16 +151,16 @@ public abstract class GossipMember implements Comparable<GossipMember> {
       System.err.println("equals(): obj is null.");
       return false;
     }
-    if (!(obj instanceof GossipMember)) {
+    if (!(obj instanceof Member)) {
       System.err.println("equals(): obj is not of type GossipMember.");
       return false;
     }
     // The object is the same of they both have the same address (hostname and port).
-    return computeAddress().equals(((LocalGossipMember) obj).computeAddress())
-            && getClusterName().equals(((LocalGossipMember) obj).getClusterName());
+    return computeAddress().equals(((LocalMember) obj).computeAddress())
+            && getClusterName().equals(((LocalMember) obj).getClusterName());
   }
 
-  public int compareTo(GossipMember other) {
+  public int compareTo(Member other) {
     return this.computeAddress().compareTo(other.computeAddress());
   }
 }

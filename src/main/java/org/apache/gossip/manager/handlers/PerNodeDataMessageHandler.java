@@ -15,26 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.gossip.manager.handlers;
 
 import org.apache.gossip.manager.GossipCore;
 import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.model.*;
+import org.apache.gossip.model.Base;
+import org.apache.gossip.udp.UdpPerNodeDataMessage;
 
-public class DefaultMessageInvoker implements MessageInvoker {
-  private final MessageInvokerCombiner mic;
-
-  public DefaultMessageInvoker() {
-    mic = new MessageInvokerCombiner();
-    mic.add(new SimpleMessageInvoker(Response.class, new ResponseHandler()));
-    mic.add(new SimpleMessageInvoker(ShutdownMessage.class, new ShutdownMessageHandler()));
-    mic.add(new SimpleMessageInvoker(PerNodeDataMessage.class, new PerNodeDataMessageHandler()));
-    mic.add(new SimpleMessageInvoker(SharedDataMessage.class, new SharedDataMessageHandler()));
-    mic.add(new SimpleMessageInvoker(ActiveGossipMessage.class, new ActiveGossipMessageHandler()));
-  }
-
-  public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
-    return mic.invoke(gossipCore, gossipManager, base);
+public class PerNodeDataMessageHandler implements MessageHandler {
+  @Override
+  public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
+    UdpPerNodeDataMessage message = (UdpPerNodeDataMessage) base;
+    gossipCore.addPerNodeData(message);
   }
 }

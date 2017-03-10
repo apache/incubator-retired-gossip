@@ -25,7 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.LocalMember;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -88,12 +88,12 @@ public class SimpleActiveGossipper extends AbstractActiveGossiper {
   }
 
   protected void sendToALiveMember(){
-    LocalGossipMember member = selectPartner(gossipManager.getLiveMembers());
+    LocalMember member = selectPartner(gossipManager.getLiveMembers());
     sendMembershipList(gossipManager.getMyself(), member);
   }
   
   protected void sendToDeadMember(){
-    LocalGossipMember member = selectPartner(gossipManager.getDeadMembers());
+    LocalMember member = selectPartner(gossipManager.getDeadMembers());
     sendMembershipList(gossipManager.getMyself(), member);
   }
   
@@ -101,7 +101,7 @@ public class SimpleActiveGossipper extends AbstractActiveGossiper {
    * sends an optimistic shutdown message to several clusters nodes
    */
   protected void sendShutdownMessage(){
-    List<LocalGossipMember> l = gossipManager.getLiveMembers();
+    List<LocalMember> l = gossipManager.getLiveMembers();
     int sendTo = l.size() < 3 ? 1 : l.size() / 2;
     for (int i = 0; i < sendTo; i++) {
       threadService.execute(() -> sendShutdownMessage(gossipManager.getMyself(), selectPartner(l)));

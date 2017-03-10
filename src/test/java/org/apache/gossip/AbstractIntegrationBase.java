@@ -15,17 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.manager.handlers;
 
-import org.apache.gossip.manager.GossipCore;
+package org.apache.gossip;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.model.Base;
-import org.apache.gossip.udp.UdpGossipDataMessage;
+import org.junit.After;
+import org.junit.Before;
 
-public class GossipDataMessageHandler implements MessageHandler {
-  @Override
-  public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
-    UdpGossipDataMessage message = (UdpGossipDataMessage) base;
-    gossipCore.addPerNodeData(message);
+public abstract class AbstractIntegrationBase {
+
+  List <GossipManager> nodes = new ArrayList<GossipManager>();
+  
+  public void register(GossipManager manager){
+    nodes.add(manager);
   }
+    
+  @Before
+  public void before(){
+    nodes = new ArrayList<GossipManager>();
+  }
+  
+  @After
+  public void after(){
+    for (GossipManager node: nodes){
+      if (node !=null){
+        node.shutdown();
+      }
+    }
+  }
+  
 }

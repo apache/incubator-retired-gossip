@@ -17,7 +17,7 @@
  */
 package org.apache.gossip.model;
 
-public class SharedGossipDataMessage extends Base {
+public class PerNodeDataMessage extends Base {
 
   private String nodeId;
   private String key;
@@ -57,8 +57,10 @@ public class SharedGossipDataMessage extends Base {
   }
   @Override
   public String toString() {
-    return "SharedGossipDataMessage [nodeId=" + nodeId + ", key=" + key + ", payload=" + payload
+    return "GossipDataMessage [nodeId=" + nodeId + ", key=" + key + ", payload=" + payload
             + ", timestamp=" + timestamp + ", expireAt=" + expireAt + "]";
-  }  
-}
+  }
 
+  
+  
+}

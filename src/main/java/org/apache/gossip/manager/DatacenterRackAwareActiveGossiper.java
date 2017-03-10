@@ -27,7 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.gossip.LocalGossipMember;
+import org.apache.gossip.LocalMember;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -130,14 +130,14 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
     sendMembershipList(gossipManager.getMyself(), selectPartner(gossipManager.getDeadMembers()));
   }
   
-  private List<LocalGossipMember> differentDataCenter(){
+  private List<LocalMember> differentDataCenter(){
     String myDc = gossipManager.getMyself().getProperties().get(DATACENTER);
     String rack = gossipManager.getMyself().getProperties().get(RACK);
     if (myDc == null|| rack == null){
       return Collections.emptyList();
     }
-    List<LocalGossipMember> notMyDc = new ArrayList<LocalGossipMember>(10);
-    for (LocalGossipMember i : gossipManager.getLiveMembers()){
+    List<LocalMember> notMyDc = new ArrayList<LocalMember>(10);
+    for (LocalMember i : gossipManager.getLiveMembers()){
       if (!myDc.equals(i.getProperties().get(DATACENTER))){
         notMyDc.add(i);
       }
@@ -145,14 +145,14 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
     return notMyDc;
   }
   
-  private List<LocalGossipMember> sameDatacenterDifferentRack(){
+  private List<LocalMember> sameDatacenterDifferentRack(){
     String myDc = gossipManager.getMyself().getProperties().get(DATACENTER);
     String rack = gossipManager.getMyself().getProperties().get(RACK);
     if (myDc == null|| rack == null){
       return Collections.emptyList();
     }
-    List<LocalGossipMember> notMyDc = new ArrayList<LocalGossipMember>(10);
-    for (LocalGossipMember i : gossipManager.getLiveMembers()){
+    List<LocalMember> notMyDc = new ArrayList<LocalMember>(10);
+    for (LocalMember i : gossipManager.getLiveMembers()){
       if (myDc.equals(i.getProperties().get(DATACENTER)) && !rack.equals(i.getProperties().get(RACK))){
         notMyDc.add(i);
       }
@@ -160,14 +160,14 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
     return notMyDc;
   }
     
-  private List<LocalGossipMember> sameRackNodes(){
+  private List<LocalMember> sameRackNodes(){
     String myDc = gossipManager.getMyself().getProperties().get(DATACENTER);
     String rack = gossipManager.getMyself().getProperties().get(RACK);
     if (myDc == null|| rack == null){
       return Collections.emptyList();
     }
-    List<LocalGossipMember> sameDcAndRack = new ArrayList<LocalGossipMember>(10);
-    for (LocalGossipMember i : gossipManager.getLiveMembers()){
+    List<LocalMember> sameDcAndRack = new ArrayList<LocalMember>(10);
+    for (LocalMember i : gossipManager.getLiveMembers()){
       if (myDc.equals(i.getProperties().get(DATACENTER))
               && rack.equals(i.getProperties().get(RACK))){
         sameDcAndRack.add(i);
@@ -177,7 +177,7 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
   }
 
   private void sendToSameRackMember() {
-    LocalGossipMember i = selectPartner(sameRackNodes());
+    LocalMember i = selectPartner(sameRackNodes());
     sendMembershipList(gossipManager.getMyself(), i);
   }
   
@@ -235,7 +235,7 @@ public class DatacenterRackAwareActiveGossiper extends AbstractActiveGossiper {
    * sends an optimistic shutdown message to several clusters nodes
    */
   protected void sendShutdownMessage(){
-    List<LocalGossipMember> l = gossipManager.getLiveMembers();
+    List<LocalMember> l = gossipManager.getLiveMembers();
     int sendTo = l.size() < 3 ? 1 : l.size() / 3;
     for (int i = 0; i < sendTo; i++) {
       threadService.execute(() -> sendShutdownMessage(gossipManager.getMyself(), selectPartner(l)));
