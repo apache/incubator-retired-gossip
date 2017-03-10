@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.gossip.crdt.GrowOnlyCounter;
 import org.apache.gossip.crdt.GrowOnlySet;
 import org.apache.gossip.crdt.OrSet;
 import org.apache.gossip.manager.GossipManager;
@@ -39,6 +40,7 @@ import io.teknek.tunit.TUnit;
 public class DataTest extends AbstractIntegrationBase {
   
   private String orSetKey = "cror";
+  private String gCounterKey = "crdtgc";
   
   @Test
   public void dataTest() throws InterruptedException, UnknownHostException, URISyntaxException{
@@ -72,21 +74,22 @@ public class DataTest extends AbstractIntegrationBase {
     clients.get(0).gossipPerNodeData(msg());
     clients.get(0).gossipSharedData(sharedMsg());
 
-    TUnit.assertThat(()-> {      
+    TUnit.assertThat(()-> {
       PerNodeDataMessage x = clients.get(1).findPerNodeGossipData(1 + "", "a");
       if (x == null)
         return "";
       else
         return x.getPayload();
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("b");
-    
-    TUnit.assertThat(() ->  {    
+   
+    TUnit.assertThat(() ->  {
       SharedDataMessage x = clients.get(1).findSharedGossipData("a");
       if (x == null)
         return "";
       else
         return x.getPayload();
     }).afterWaitingAtMost(20, TimeUnit.SECONDS).isEqualTo("c");
+    
     
     givenDifferentDatumsInSet(clients);
     assertThatListIsMerged(clients);
@@ -95,8 +98,51 @@ public class DataTest extends AbstractIntegrationBase {
     assertThatOrSetIsMerged(clients);
     dropIt(clients);
     assertThatOrSetDelIsMerged(clients);
+
+    
+    // test g counter
+    givenDifferentIncrement(clients);
+    assertThatCountIsUpdated(clients, 3);
+    givenIncreaseOther(clients);
+    assertThatCountIsUpdated(clients, 7);
+
+    for (int i = 0; i < clusterMembers; ++i) {
+      clients.get(i).shutdown();
+    }
   }
   
+  private void givenDifferentIncrement(final List<GossipManager> clients) {
+    {
+      SharedDataMessage d = new SharedDataMessage();
+      d.setKey(gCounterKey);
+      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(0)).increment(1)));
+      d.setExpireAt(Long.MAX_VALUE);
+      d.setTimestamp(System.currentTimeMillis());
+      clients.get(0).merge(d);
+    }
+    {
+      SharedDataMessage d = new SharedDataMessage();
+      d.setKey(gCounterKey);
+      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(1)).increment(2)));
+      d.setExpireAt(Long.MAX_VALUE);
+      d.setTimestamp(System.currentTimeMillis());
+      clients.get(1).merge(d);
+    }
+  }
+
+  private void givenIncreaseOther(final List<GossipManager> clients) {
+    GrowOnlyCounter gc = (GrowOnlyCounter) clients.get(1).findCrdt(gCounterKey);
+    GrowOnlyCounter gc2 = new GrowOnlyCounter(gc,
+            new GrowOnlyCounter.Builder(clients.get(1)).increment(4));
+
+    SharedDataMessage d = new SharedDataMessage();
+    d.setKey(gCounterKey);
+    d.setPayload(gc2);
+    d.setExpireAt(Long.MAX_VALUE);
+    d.setTimestamp(System.currentTimeMillis());
+    clients.get(1).merge(d);
+  }
+
   private void givenOrs(List<GossipManager> clients) {
     {
       SharedDataMessage d = new SharedDataMessage();
@@ -148,6 +194,14 @@ public class DataTest extends AbstractIntegrationBase {
     clients.get(1).merge(CrdtMessage("2"));
   }
   
+
+  private void assertThatCountIsUpdated(final List<GossipManager> clients, int finalCount) {
+    TUnit.assertThat(() -> {
+      return clients.get(0).findCrdt(gCounterKey);
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new GrowOnlyCounter(
+            new GrowOnlyCounter.Builder(clients.get(0)).increment(finalCount)));
+  }
+
   private void assertThatListIsMerged(final List<GossipManager> clients){
     TUnit.assertThat(() ->  {
       return clients.get(0).findCrdt("cr");
@@ -160,7 +214,7 @@ public class DataTest extends AbstractIntegrationBase {
     d.setPayload(new GrowOnlySet<String>( Arrays.asList(item)));
     d.setExpireAt(Long.MAX_VALUE);
     d.setTimestamp(System.currentTimeMillis());
-    return d;  
+    return d;
   }
   
   private PerNodeDataMessage msg(){
