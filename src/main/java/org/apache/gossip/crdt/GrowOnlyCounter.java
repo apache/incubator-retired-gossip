@@ -111,7 +111,7 @@ public class GrowOnlyCounter implements CrdtCounter<Long, GrowOnlyCounter> {
       counter = 0L;
     }
     
-    public GrowOnlyCounter.Builder increment(Integer count) {
+    public GrowOnlyCounter.Builder increment(Long count) {
       counter += count;
       return this;
     }

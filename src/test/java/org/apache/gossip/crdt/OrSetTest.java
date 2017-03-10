@@ -37,7 +37,7 @@ public class OrSetTest {
     OrSet<Integer> i = new OrSet<>(new OrSet.Builder<Integer>().add(4).add(5).add(6).remove(5));
     Assert.assertArrayEquals(Arrays.asList(4, 6).toArray(), i.value().toArray());
   }
-  
+    
   @Test
   public void mergeTest(){
     OrSet<Integer> i = new OrSet<>(new OrSet.Builder<Integer>().add(4).add(5).add(6).remove(5));

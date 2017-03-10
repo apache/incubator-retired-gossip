@@ -115,7 +115,7 @@ public class DataTest extends AbstractIntegrationBase {
     {
       SharedDataMessage d = new SharedDataMessage();
       d.setKey(gCounterKey);
-      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(0)).increment(1)));
+      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(0)).increment(1L)));
       d.setExpireAt(Long.MAX_VALUE);
       d.setTimestamp(System.currentTimeMillis());
       clients.get(0).merge(d);
@@ -123,7 +123,7 @@ public class DataTest extends AbstractIntegrationBase {
     {
       SharedDataMessage d = new SharedDataMessage();
       d.setKey(gCounterKey);
-      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(1)).increment(2)));
+      d.setPayload(new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(1)).increment(2L)));
       d.setExpireAt(Long.MAX_VALUE);
       d.setTimestamp(System.currentTimeMillis());
       clients.get(1).merge(d);
@@ -133,7 +133,7 @@ public class DataTest extends AbstractIntegrationBase {
   private void givenIncreaseOther(final List<GossipManager> clients) {
     GrowOnlyCounter gc = (GrowOnlyCounter) clients.get(1).findCrdt(gCounterKey);
     GrowOnlyCounter gc2 = new GrowOnlyCounter(gc,
-            new GrowOnlyCounter.Builder(clients.get(1)).increment(4));
+            new GrowOnlyCounter.Builder(clients.get(1)).increment(4L));
 
     SharedDataMessage d = new SharedDataMessage();
     d.setKey(gCounterKey);
@@ -195,7 +195,7 @@ public class DataTest extends AbstractIntegrationBase {
   }
   
 
-  private void assertThatCountIsUpdated(final List<GossipManager> clients, int finalCount) {
+  private void assertThatCountIsUpdated(final List<GossipManager> clients, long finalCount) {
     TUnit.assertThat(() -> {
       return clients.get(0).findCrdt(gCounterKey);
     }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(new GrowOnlyCounter(

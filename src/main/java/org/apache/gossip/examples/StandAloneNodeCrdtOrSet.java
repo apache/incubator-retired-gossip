@@ -24,6 +24,7 @@ import java.net.URI;
 import java.util.Arrays;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.RemoteMember;
+import org.apache.gossip.crdt.GrowOnlyCounter;
 import org.apache.gossip.crdt.OrSet;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
@@ -51,6 +52,9 @@ public class StandAloneNodeCrdtOrSet {
       System.out.println("---------- " + (gossipService.findCrdt("abc") == null ? "": 
           gossipService.findCrdt("abc").value()));
       System.out.println("********** " + gossipService.findCrdt("abc"));
+      System.out.println("^^^^^^^^^^ " + (gossipService.findCrdt("def") == null ? "": 
+        gossipService.findCrdt("def").value()));
+      System.out.println("$$$$$$$$$$ " + gossipService.findCrdt("def"));
       try {
         Thread.sleep(2000);
       } catch (Exception e) {}
@@ -65,11 +69,29 @@ public class StandAloneNodeCrdtOrSet {
         String val = line.substring(2);
         if (op == 'a'){
           addData(val, gossipService);
-        } else {
+        } else if (op == 'r') {
           removeData(val, gossipService);
+        } else if (op == 'g'){
+          gcount(val, gossipService);
         }
       }
     }
+  }
+  
+  private static void gcount(String val, GossipManager gossipManager){
+    GrowOnlyCounter c = (GrowOnlyCounter) gossipManager.findCrdt("def");
+    Long l = Long.valueOf(val);
+    if (c == null){
+      c = new GrowOnlyCounter(new GrowOnlyCounter.Builder(gossipManager).increment((l)));
+    } else {
+      c = new GrowOnlyCounter(c, new GrowOnlyCounter.Builder(gossipManager).increment((l)));
+    }
+    SharedDataMessage m = new SharedDataMessage();
+    m.setExpireAt(Long.MAX_VALUE);
+    m.setKey("def");
+    m.setPayload(c);
+    m.setTimestamp(System.currentTimeMillis());
+    gossipManager.merge(m);
   }
   
   private static void removeData(String val, GossipManager gossipService){
