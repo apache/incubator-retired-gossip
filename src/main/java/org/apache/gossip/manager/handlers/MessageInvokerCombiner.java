@@ -24,6 +24,7 @@ import org.apache.gossip.model.Base;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Predicate;
 
 public class MessageInvokerCombiner implements MessageInvoker {
   private final List<MessageInvoker> invokers = new CopyOnWriteArrayList<>();
@@ -32,14 +33,7 @@ public class MessageInvokerCombiner implements MessageInvoker {
   }
 
   public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
-    if (invokers == null) {
-      return false;
-    }
-    boolean result = false;
-    for (MessageInvoker mi : invokers) {
-      result = mi.invoke(gossipCore, gossipManager, base) || result;
-    }
-    return result;
+    return invokers.stream().filter((mi) -> mi.invoke(gossipCore, gossipManager, base)).count() > 0;
   }
 
   public void clear() {

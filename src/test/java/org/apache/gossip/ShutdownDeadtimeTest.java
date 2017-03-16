@@ -81,6 +81,7 @@ public class ShutdownDeadtimeTest {
         return total;
       }
     }).afterWaitingAtMost(40, TimeUnit.SECONDS).isEqualTo(20);
+
     // shutdown one client and verify that one client is lost.
     Random r = new Random();
     int randomClientId = r.nextInt(clusterMembers);

@@ -85,6 +85,7 @@ abstract public class PassiveGossipThread implements Runnable {
             gossipCore.receive(activeGossipMessage);
             unsigned.mark();
           }
+          gossipManager.getMemberStateRefresher().run();
         } catch (RuntimeException ex) {//TODO trap json exception
           LOGGER.error("Unable to process message", ex);
         }
