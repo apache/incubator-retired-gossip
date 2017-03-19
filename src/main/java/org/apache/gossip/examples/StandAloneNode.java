@@ -28,9 +28,8 @@ import org.apache.gossip.manager.GossipManagerBuilder;
 public class StandAloneNode {
   public static void main (String [] args) throws UnknownHostException, InterruptedException{
     GossipSettings s = new GossipSettings();
-    s.setWindowSize(10);
-    s.setConvictThreshold(1.0);
-    s.setGossipInterval(10);
+    s.setWindowSize(1000);
+    s.setGossipInterval(100);
     GossipManager gossipService = GossipManagerBuilder.newBuilder()
             .cluster("mycluster")
             .uri(URI.create(args[0]))

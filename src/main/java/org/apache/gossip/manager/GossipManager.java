@@ -51,7 +51,6 @@ public abstract class GossipManager {
   private final LocalMember me;
   private final GossipSettings settings;
   private final AtomicBoolean gossipServiceRunning;
-  private final GossipListener listener;
   private AbstractActiveGossiper activeGossipThread;
   private PassiveGossipThread passiveGossipThread;
   private ExecutorService gossipThreadExecutor;
@@ -92,7 +91,6 @@ public abstract class GossipManager {
     }
     gossipThreadExecutor = Executors.newCachedThreadPool();
     gossipServiceRunning = new AtomicBoolean(true);
-    this.listener = listener;
     this.scheduledServiced = Executors.newScheduledThreadPool(1);
     this.registry = registry;
     this.ringState = new RingStatePersister(this);

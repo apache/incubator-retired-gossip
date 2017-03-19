@@ -62,27 +62,21 @@ public class GossipMemberStateRefresher implements Runnable {
       boolean userDown = processOptimisticShutdown(entry);
       if (userDown)
         continue;
-      try {
-        Double phiMeasure = entry.getKey().detect(clock.nanoTime());
-        if (phiMeasure != null) {
-          GossipState requiredState = calcRequiredState(phiMeasure);
-          if (entry.getValue() != requiredState) {
-            members.put(entry.getKey(), requiredState);
-            listener.gossipEvent(entry.getKey(), requiredState);
-          }
-        }
-      } catch (IllegalArgumentException ex) {
-        //0.0 returns throws exception computing the mean.
 
-        long now = clock.nanoTime();
-        long nowInMillis = TimeUnit.MILLISECONDS.convert(now, TimeUnit.NANOSECONDS);
-        if (nowInMillis - settings.getCleanupInterval() > entry.getKey().getHeartbeat() && entry.getValue() == GossipState.UP) {
-          LOGGER.warn("Marking down");
-          members.put(entry.getKey(), GossipState.DOWN);
-          listener.gossipEvent(entry.getKey(), GossipState.DOWN);
-        }
-      } //end catch
-    } // end for
+      Double phiMeasure = entry.getKey().detect(clock.nanoTime());
+      GossipState requiredState;
+
+      if (phiMeasure != null) {
+        requiredState = calcRequiredState(phiMeasure);
+      } else {
+        requiredState = calcRequiredStateCleanupInterval(entry.getKey(), entry.getValue());
+      }
+
+      if (entry.getValue() != requiredState) {
+        members.put(entry.getKey(), requiredState);
+        listener.gossipEvent(entry.getKey(), requiredState);
+      }
+    }
   }
 
   public GossipState calcRequiredState(Double phiMeasure) {
@@ -90,6 +84,16 @@ public class GossipMemberStateRefresher implements Runnable {
       return GossipState.DOWN;
     else
       return GossipState.UP;
+  }
+
+  public GossipState calcRequiredStateCleanupInterval(LocalMember member, GossipState state) {
+    long now = clock.nanoTime();
+    long nowInMillis = TimeUnit.MILLISECONDS.convert(now, TimeUnit.NANOSECONDS);
+    if (nowInMillis - settings.getCleanupInterval() > member.getHeartbeat()) {
+      return GossipState.DOWN;
+    } else {
+      return state;
+    }
   }
 
   /**

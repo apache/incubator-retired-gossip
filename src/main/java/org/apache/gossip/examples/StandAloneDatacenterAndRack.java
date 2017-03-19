@@ -34,9 +34,8 @@ public class StandAloneDatacenterAndRack {
 
   public static void main (String [] args) throws UnknownHostException, InterruptedException {
     GossipSettings s = new GossipSettings();
-    s.setWindowSize(10);
-    s.setConvictThreshold(1.0);
-    s.setGossipInterval(1000);
+    s.setWindowSize(1000);
+    s.setGossipInterval(100);
     s.setActiveGossipClass(DatacenterRackAwareActiveGossiper.class.getName());
     Map<String, String> gossipProps = new HashMap<>();
     gossipProps.put("sameRackGossipIntervalMs", "2000");

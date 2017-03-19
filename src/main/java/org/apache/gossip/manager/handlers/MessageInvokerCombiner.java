@@ -24,7 +24,6 @@ import org.apache.gossip.model.Base;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Predicate;
 
 public class MessageInvokerCombiner implements MessageInvoker {
   private final List<MessageInvoker> invokers = new CopyOnWriteArrayList<>();
