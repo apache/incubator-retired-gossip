@@ -27,7 +27,7 @@ public class ResponseHandler implements MessageHandler {
   public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
     if (base instanceof Trackable) {
       Trackable t = (Trackable) base;
-      gossipCore.addRequest(t.getUuid() + "/" + t.getUriFrom(), (Base) t);
+      gossipCore.handleResponse(t.getUuid() + "/" + t.getUriFrom(), (Base) t);
     }
   }
 }
