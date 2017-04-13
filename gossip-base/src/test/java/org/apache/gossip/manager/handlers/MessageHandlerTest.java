@@ -25,7 +25,7 @@ import org.apache.gossip.udp.UdpSharedDataMessage;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class MessageInvokerTest {
+public class MessageHandlerTest {
   private class FakeMessage extends Base {
     public FakeMessage() {
     }
@@ -46,8 +46,9 @@ public class MessageInvokerTest {
       data = 0;
     }
 
-    public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
+    public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
       data = ((FakeMessageData) base).data;
+      return true;
     }
   }
 
@@ -58,32 +59,33 @@ public class MessageInvokerTest {
       counter = 0;
     }
 
-    public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
+    public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
       counter++;
+      return true;
     }
   }
 
   @Test
-  public void testSimpleInvoker() {
-    MessageInvoker mi = new SimpleMessageInvoker(FakeMessage.class, new FakeMessageHandler());
+  public void testSimpleHandler() {
+    MessageHandler mi = new TypedMessageHandler(FakeMessage.class, new FakeMessageHandler());
     Assert.assertTrue(mi.invoke(null, null, new FakeMessage()));
     Assert.assertFalse(mi.invoke(null, null, new ActiveGossipMessage()));
   }
 
   @Test(expected = NullPointerException.class)
-  public void testSimpleInvokerNullClassConstructor() {
-    new SimpleMessageInvoker(null, new FakeMessageHandler());
+  public void testSimpleHandlerNullClassConstructor() {
+    new TypedMessageHandler(null, new FakeMessageHandler());
   }
 
   @Test(expected = NullPointerException.class)
-  public void testSimpleInvokerNullHandlerConstructor() {
-    new SimpleMessageInvoker(FakeMessage.class, null);
+  public void testSimpleHandlerNullHandlerConstructor() {
+    new TypedMessageHandler(FakeMessage.class, null);
   }
 
   @Test
-  public void testCallCountSimpleInvoker() {
+  public void testCallCountSimpleHandler() {
     FakeMessageHandler h = new FakeMessageHandler();
-    MessageInvoker mi = new SimpleMessageInvoker(FakeMessage.class, h);
+    MessageHandler mi = new TypedMessageHandler(FakeMessage.class, h);
     mi.invoke(null, null, new FakeMessage());
     Assert.assertEquals(1, h.counter);
     mi.invoke(null, null, new ActiveGossipMessage());
@@ -93,76 +95,78 @@ public class MessageInvokerTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void cantAddNullInvoker() {
-    MessageInvokerCombiner mi = new MessageInvokerCombiner();
-    mi.add(null);
+  @SuppressWarnings("all")
+  public void cantAddNullHandler() {
+    MessageHandler handler = MessageHandlerFactory.concurrentHandler(null);
+  }
+  
+  @Test(expected = NullPointerException.class)
+  public void cantAddNullHandler2() {
+    MessageHandler handler = MessageHandlerFactory.concurrentHandler(
+        new TypedMessageHandler(FakeMessage.class, new FakeMessageHandler()),
+        null,
+        new TypedMessageHandler(FakeMessage.class, new FakeMessageHandler())
+    );
   }
 
   @Test
-  public void testCombinerClear() {
-    MessageInvokerCombiner mi = new MessageInvokerCombiner();
-    mi.add(new SimpleMessageInvoker(FakeMessage.class, new FakeMessageHandler()));
-    Assert.assertTrue(mi.invoke(null, null, new FakeMessage()));
-
-    mi.clear();
-    Assert.assertFalse(mi.invoke(null, null, new FakeMessage()));
-  }
-
-  @Test
-  public void testMessageInvokerCombiner() {
+  public void testMessageHandlerCombiner() {
     //Empty combiner - false result
-    MessageInvokerCombiner mi = new MessageInvokerCombiner();
+    MessageHandler mi = MessageHandlerFactory.concurrentHandler();
     Assert.assertFalse(mi.invoke(null, null, new Base()));
 
     FakeMessageHandler h = new FakeMessageHandler();
-    mi.add(new SimpleMessageInvoker(FakeMessage.class, h));
-    mi.add(new SimpleMessageInvoker(FakeMessage.class, h));
+    mi = MessageHandlerFactory.concurrentHandler(
+      new TypedMessageHandler(FakeMessage.class, h),
+      new TypedMessageHandler(FakeMessage.class, h)
+    );
 
     Assert.assertTrue(mi.invoke(null, null, new FakeMessage()));
     Assert.assertFalse(mi.invoke(null, null, new ActiveGossipMessage()));
     Assert.assertEquals(2, h.counter);
-
+    
     //Increase size in runtime. Should be 3 calls: 2+3 = 5
-    mi.add(new SimpleMessageInvoker(FakeMessage.class, h));
+    mi = MessageHandlerFactory.concurrentHandler(mi, new TypedMessageHandler(FakeMessage.class, h));
     Assert.assertTrue(mi.invoke(null, null, new FakeMessage()));
     Assert.assertEquals(5, h.counter);
   }
 
   @Test
-  public void testMessageInvokerCombiner2levels() {
-    MessageInvokerCombiner mi = new MessageInvokerCombiner();
+  public void testMessageHandlerCombiner2levels() {
     FakeMessageHandler h = new FakeMessageHandler();
 
-    MessageInvokerCombiner mi1 = new MessageInvokerCombiner();
-    mi1.add(new SimpleMessageInvoker(FakeMessage.class, h));
-    mi1.add(new SimpleMessageInvoker(FakeMessage.class, h));
+    MessageHandler mi1 = MessageHandlerFactory.concurrentHandler(
+      new TypedMessageHandler(FakeMessage.class, h),
+      new TypedMessageHandler(FakeMessage.class, h)
+    );
 
-    MessageInvokerCombiner mi2 = new MessageInvokerCombiner();
-    mi2.add(new SimpleMessageInvoker(FakeMessage.class, h));
-    mi2.add(new SimpleMessageInvoker(FakeMessage.class, h));
+    MessageHandler mi2 = MessageHandlerFactory.concurrentHandler(
+      new TypedMessageHandler(FakeMessage.class, h),
+      new TypedMessageHandler(FakeMessage.class, h)
+    );
 
-    mi.add(mi1);
-    mi.add(mi2);
-
+    MessageHandler mi = MessageHandlerFactory.concurrentHandler(mi1, mi2);
+    
     Assert.assertTrue(mi.invoke(null, null, new FakeMessage()));
     Assert.assertEquals(4, h.counter);
   }
 
   @Test
-  public void testMessageInvokerCombinerDataShipping() {
-    MessageInvokerCombiner mi = new MessageInvokerCombiner();
+  public void testMessageHandlerCombinerDataShipping() {
+    MessageHandler mi = MessageHandlerFactory.concurrentHandler();
     FakeMessageDataHandler h = new FakeMessageDataHandler();
-    mi.add(new SimpleMessageInvoker(FakeMessageData.class, h));
+    mi = MessageHandlerFactory.concurrentHandler(mi, new TypedMessageHandler(FakeMessageData.class, h));
 
     Assert.assertTrue(mi.invoke(null, null, new FakeMessageData(101)));
     Assert.assertEquals(101, h.data);
   }
 
   @Test
-  public void testCombiningDefaultInvoker() {
-    MessageInvokerCombiner mi = new MessageInvokerCombiner();
-    mi.add(new DefaultMessageInvoker());
-    mi.add(new SimpleMessageInvoker(FakeMessage.class, new FakeMessageHandler()));
+  public void testCombiningDefaultHandler() {
+    MessageHandler mi = MessageHandlerFactory.concurrentHandler(
+      MessageHandlerFactory.defaultHandler(),
+      new TypedMessageHandler(FakeMessage.class, new FakeMessageHandler())
+    );
     //UdpSharedGossipDataMessage with null gossipCore -> exception
     boolean thrown = false;
     try {
@@ -171,7 +175,7 @@ public class MessageInvokerTest {
       thrown = true;
     }
     Assert.assertTrue(thrown);
-    //DefaultInvoker skips FakeMessage and FakeHandler works ok
+    //skips FakeMessage and FakeHandler works ok
     Assert.assertTrue(mi.invoke(null, null, new FakeMessage()));
   }
 

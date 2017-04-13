@@ -57,7 +57,6 @@ public class GossipCore implements GossipCoreConstants {
   public static final Logger LOGGER = Logger.getLogger(GossipCore.class);
   private final GossipManager gossipManager;
   private ConcurrentHashMap<String, LatchAndBase> requests;
-  private ThreadPoolExecutor service;
   private final ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> perNodeData;
   private final ConcurrentHashMap<String, SharedDataMessage> sharedData;
   private final BlockingQueue<Runnable> workQueue;
@@ -71,15 +70,12 @@ public class GossipCore implements GossipCoreConstants {
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
     workQueue = new ArrayBlockingQueue<>(1024);
-    service = new ThreadPoolExecutor(1, 5, 1, TimeUnit.SECONDS, workQueue, new ThreadPoolExecutor.DiscardOldestPolicy());
     perNodeData = new ConcurrentHashMap<>();
     sharedData = new ConcurrentHashMap<>();
     metrics.register(WORKQUEUE_SIZE, (Gauge<Integer>)() -> workQueue.size());
     metrics.register(PER_NODE_DATA_SIZE, (Gauge<Integer>)() -> perNodeData.size());
     metrics.register(SHARED_DATA_SIZE, (Gauge<Integer>)() ->  sharedData.size());
     metrics.register(REQUEST_SIZE, (Gauge<Integer>)() ->  requests.size());
-    metrics.register(THREADPOOL_ACTIVE, (Gauge<Integer>)() ->  service.getActiveCount());
-    metrics.register(THREADPOOL_SIZE, (Gauge<Integer>)() ->  service.getPoolSize());
     messageSerdeException = metrics.meter(MESSAGE_SERDE_EXCEPTION);
     tranmissionException = metrics.meter(MESSAGE_TRANSMISSION_EXCEPTION);
     tranmissionSuccess = metrics.meter(MESSAGE_TRANSMISSION_SUCCESS);
@@ -178,17 +174,10 @@ public class GossipCore implements GossipCoreConstants {
   }
 
   public void shutdown(){
-    service.shutdown();
-    try {
-      service.awaitTermination(1, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      LOGGER.warn(e);
-    }
-    service.shutdownNow();
   }
 
   public void receive(Base base) {
-    if (!gossipManager.getMessageInvoker().invoke(this, gossipManager, base)) {
+    if (!gossipManager.getMessageHandler().invoke(this, gossipManager, base)) {
       LOGGER.warn("received message can not be handled");
     }
   }
@@ -268,29 +257,10 @@ public class GossipCore implements GossipCoreConstants {
    * @param message the message to send
    * @param u the uri to send it to
    */
-  public void sendOneWay(Base message, URI u){
-    byte[] json_bytes;
+  public void sendOneWay(Base message, URI u) {
     try {
-      if (privKey == null){
-        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(message);
-      } else {
-        SignedPayload p = new SignedPayload();
-        p.setData(gossipManager.getObjectMapper().writeValueAsString(message).getBytes());
-        p.setSignature(sign(p.getData()));
-        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(p);
-      }
-    } catch (IOException e) {
-      messageSerdeException.mark();
-      throw new RuntimeException(e);
-    }
-    try (DatagramSocket socket = new DatagramSocket()) {
-      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval() * 2);
-      InetAddress dest = InetAddress.getByName(u.getHost());
-      DatagramPacket datagramPacket = new DatagramPacket(json_bytes, json_bytes.length, dest, u.getPort());
-      socket.send(datagramPacket);
-      tranmissionSuccess.mark();
-    } catch (IOException ex) {
-      tranmissionException.mark();
+      sendInternal(message, u);
+    } catch (RuntimeException ex) {
       LOGGER.debug("Send one way failed", ex);
     }
   }
@@ -304,13 +274,11 @@ public class GossipCore implements GossipCoreConstants {
   /**
    * Merge lists from remote members and update heartbeats
    *
-   * @param gossipManager
    * @param senderMember
    * @param remoteList
    *
    */
-  public void mergeLists(GossipManager gossipManager, RemoteMember senderMember,
-          List<Member> remoteList) {
+  public void mergeLists(RemoteMember senderMember, List<Member> remoteList) {
     if (LOGGER.isDebugEnabled()){
       debugState(senderMember, remoteList);
     }

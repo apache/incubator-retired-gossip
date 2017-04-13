@@ -21,10 +21,9 @@ import com.codahale.metrics.MetricRegistry;
 import org.apache.gossip.Member;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;
-import org.apache.gossip.manager.handlers.DefaultMessageInvoker;
-import org.apache.gossip.manager.handlers.MessageInvoker;
+import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.manager.handlers.ResponseHandler;
-import org.apache.gossip.manager.handlers.SimpleMessageInvoker;
+import org.apache.gossip.manager.handlers.TypedMessageHandler;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
@@ -77,28 +76,27 @@ public class GossipManagerBuilderTest {
   }
 
   @Test
-  public void createDefaultMessageInvokerIfNull() throws URISyntaxException {
+  public void createDefaultMessageHandlerIfNull() throws URISyntaxException {
     GossipManager gossipManager = GossipManagerBuilder.newBuilder()
         .id("id")
         .cluster("aCluster")
         .uri(new URI("udp://localhost:2000"))
         .gossipSettings(new GossipSettings())
-        .messageInvoker(null).registry(new MetricRegistry()).build();
-    assertNotNull(gossipManager.getMessageInvoker());
-    Assert.assertEquals(gossipManager.getMessageInvoker().getClass(), new DefaultMessageInvoker().getClass());
+        .messageHandler(null).registry(new MetricRegistry()).build();
+    assertNotNull(gossipManager.getMessageHandler());
   }
 
   @Test
-  public void testMessageInvokerKeeping() throws URISyntaxException {
-    MessageInvoker mi = new SimpleMessageInvoker(Response.class, new ResponseHandler());
+  public void testMessageHandlerKeeping() throws URISyntaxException {
+    MessageHandler mi = new TypedMessageHandler(Response.class, new ResponseHandler());
     GossipManager gossipManager = GossipManagerBuilder.newBuilder()
         .id("id")
         .cluster("aCluster")
         .uri(new URI("udp://localhost:2000"))
         .gossipSettings(new GossipSettings())
-        .messageInvoker(mi).registry(new MetricRegistry()).build();
-    assertNotNull(gossipManager.getMessageInvoker());
-    Assert.assertEquals(gossipManager.getMessageInvoker(), mi);
+        .messageHandler(mi).registry(new MetricRegistry()).build();
+    assertNotNull(gossipManager.getMessageHandler());
+    Assert.assertEquals(gossipManager.getMessageHandler(), mi);
   }
 
   @Test

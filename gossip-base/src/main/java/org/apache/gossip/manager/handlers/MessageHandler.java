@@ -22,5 +22,11 @@ import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.model.Base;
 
 public interface MessageHandler {
-  void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base);
+  /**
+   * @param gossipCore context.
+   * @param gossipManager context.
+   * @param base message reference.
+   * @return boolean indicating success.
+   */
+  boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base);
 }

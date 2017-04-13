@@ -25,8 +25,8 @@ import org.apache.gossip.GossipSettings;
 import org.apache.gossip.StartupSettings;
 import org.apache.gossip.crdt.CrdtModule;
 import org.apache.gossip.event.GossipListener;
-import org.apache.gossip.manager.handlers.DefaultMessageInvoker;
-import org.apache.gossip.manager.handlers.MessageInvoker;
+import org.apache.gossip.manager.handlers.MessageHandler;
+import org.apache.gossip.manager.handlers.MessageHandlerFactory;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class GossipManagerBuilder {
     private MetricRegistry registry;
     private Map<String,String> properties;
     private ObjectMapper objectMapper;
-    private MessageInvoker messageInvoker;
+    private MessageHandler messageHandler;
 
     private ManagerBuilder() {}
 
@@ -114,8 +114,8 @@ public class GossipManagerBuilder {
       return this;
     }
 
-    public ManagerBuilder messageInvoker(MessageInvoker messageInvoker) {
-      this.messageInvoker = messageInvoker;
+    public ManagerBuilder messageHandler(MessageHandler messageHandler) {
+      this.messageHandler = messageHandler;
       return this;
     }
 
@@ -142,10 +142,10 @@ public class GossipManagerBuilder {
         objectMapper.registerModule(new CrdtModule());
         objectMapper.configure(Feature.WRITE_NUMBERS_AS_STRINGS, false);
       }
-      if (messageInvoker == null) {
-        messageInvoker = new DefaultMessageInvoker();
+      if (messageHandler == null) {
+        messageHandler = MessageHandlerFactory.defaultHandler();
       } 
-      return new GossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageInvoker) {} ;
+      return new GossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageHandler) {} ;
     }
   }
 

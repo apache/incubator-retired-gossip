@@ -32,8 +32,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ActiveGossipMessageHandler implements MessageHandler {
+  
+  /**
+   * @param gossipCore context.
+   * @param gossipManager context.
+   * @param base message reference.
+   * @return boolean indicating success.
+   */
   @Override
-  public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
+  public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
     List<Member> remoteGossipMembers = new ArrayList<>();
     RemoteMember senderMember = null;
     UdpActiveGossipMessage activeGossipMessage = (UdpActiveGossipMessage) base;
@@ -69,6 +76,7 @@ public class ActiveGossipMessageHandler implements MessageHandler {
     o.setUriFrom(activeGossipMessage.getUriFrom());
     o.setUuid(activeGossipMessage.getUuid());
     gossipCore.sendOneWay(o, senderMember.getUri());
-    gossipCore.mergeLists(gossipManager, senderMember, remoteGossipMembers);
+    gossipCore.mergeLists(senderMember, remoteGossipMembers);
+    return true;
   }
 }

@@ -23,11 +23,20 @@ import org.apache.gossip.model.Base;
 import org.apache.gossip.udp.Trackable;
 
 public class ResponseHandler implements MessageHandler {
+  
+  /**
+   * @param gossipCore context.
+   * @param gossipManager context.
+   * @param base message reference.
+   * @return boolean indicating success.
+   */
   @Override
-  public void invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
+  public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
     if (base instanceof Trackable) {
       Trackable t = (Trackable) base;
       gossipCore.handleResponse(t.getUuid() + "/" + t.getUriFrom(), (Base) t);
+      return true;
     }
+    return false;
   }
 }

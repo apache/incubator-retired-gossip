@@ -25,7 +25,7 @@ import org.apache.gossip.Member;
 import org.apache.gossip.crdt.Crdt;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
-import org.apache.gossip.manager.handlers.MessageInvoker;
+import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.SharedDataMessage;
@@ -64,14 +64,14 @@ public abstract class GossipManager {
   private final GossipMemberStateRefresher memberStateRefresher;
   private final ObjectMapper objectMapper;
 
-  private final MessageInvoker messageInvoker;
+  private final MessageHandler messageHandler;
 
   public GossipManager(String cluster,
                        URI uri, String id, Map<String, String> properties, GossipSettings settings,
                        List<Member> gossipMembers, GossipListener listener, MetricRegistry registry,
-                       ObjectMapper objectMapper, MessageInvoker messageInvoker) {
+                       ObjectMapper objectMapper, MessageHandler messageHandler) {
     this.settings = settings;
-    this.messageInvoker = messageInvoker;
+    this.messageHandler = messageHandler;
 
     clock = new SystemClock();
     me = new LocalMember(cluster, uri, id, clock.nanoTime(), properties,
@@ -101,8 +101,8 @@ public abstract class GossipManager {
     readSavedDataState();
   }
 
-  public MessageInvoker getMessageInvoker() {
-    return messageInvoker;
+  public MessageHandler getMessageHandler() {
+    return messageHandler;
   }
 
   public ConcurrentSkipListMap<LocalMember, GossipState> getMembers() {
