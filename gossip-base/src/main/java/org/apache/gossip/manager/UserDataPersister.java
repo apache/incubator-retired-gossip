@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.SharedDataMessage;
 import org.apache.log4j.Logger;
@@ -30,31 +31,26 @@ import org.apache.log4j.Logger;
 public class UserDataPersister implements Runnable {
   
   private static final Logger LOGGER = Logger.getLogger(UserDataPersister.class);
-  private final GossipManager parent;
   private final GossipCore gossipCore; 
   
-  UserDataPersister(GossipManager parent, GossipCore gossipCore){
-    this.parent = parent;
+  private final File perNodePath;
+  private final File sharedPath;
+  private final ObjectMapper objectMapper;
+  
+  UserDataPersister(GossipCore gossipCore, File perNodePath, File sharedPath) {
     this.gossipCore = gossipCore;
-  }
-  
-  File computeSharedTarget(){
-    return new File(parent.getSettings().getPathToDataState(), "shareddata."
-            + parent.getMyself().getClusterName() + "." + parent.getMyself().getId() + ".json");
-  }
-  
-  File computePerNodeTarget() {
-    return new File(parent.getSettings().getPathToDataState(), "pernodedata."
-            + parent.getMyself().getClusterName() + "." + parent.getMyself().getId() + ".json");
+    this.objectMapper = GossipManager.metdataObjectMapper;
+    this.perNodePath = perNodePath;
+    this.sharedPath = sharedPath;
   }
   
   @SuppressWarnings("unchecked")
   ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> readPerNodeFromDisk(){
-    if (!parent.getSettings().isPersistDataState()){
+    if (!perNodePath.exists()) {
       return new ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>>();
     }
-    try (FileInputStream fos = new FileInputStream(computePerNodeTarget())){
-      return parent.getObjectMapper().readValue(fos, ConcurrentHashMap.class);
+    try (FileInputStream fos = new FileInputStream(perNodePath)){
+      return objectMapper.readValue(fos, ConcurrentHashMap.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }
@@ -62,22 +58,16 @@ public class UserDataPersister implements Runnable {
   }
   
   void writePerNodeToDisk(){
-    if (!parent.getSettings().isPersistDataState()){
-      return;
-    }
-    try (FileOutputStream fos = new FileOutputStream(computePerNodeTarget())){
-      parent.getObjectMapper().writeValue(fos, gossipCore.getPerNodeData());
+    try (FileOutputStream fos = new FileOutputStream(perNodePath)){
+      objectMapper.writeValue(fos, gossipCore.getPerNodeData());
     } catch (IOException e) {
       LOGGER.warn(e);
     }
   }
   
   void writeSharedToDisk(){
-    if (!parent.getSettings().isPersistDataState()){
-      return;
-    }
-    try (FileOutputStream fos = new FileOutputStream(computeSharedTarget())){
-      parent.getObjectMapper().writeValue(fos, gossipCore.getSharedData());
+    try (FileOutputStream fos = new FileOutputStream(sharedPath)){
+      objectMapper.writeValue(fos, gossipCore.getSharedData());
     } catch (IOException e) {
       LOGGER.warn(e);
     }
@@ -85,11 +75,11 @@ public class UserDataPersister implements Runnable {
 
   @SuppressWarnings("unchecked")
   ConcurrentHashMap<String, SharedDataMessage> readSharedDataFromDisk(){
-    if (!parent.getSettings().isPersistRingState()){
-      return new ConcurrentHashMap<String, SharedDataMessage>();
+    if (!sharedPath.exists()) {
+      return new ConcurrentHashMap<>();
     }
-    try (FileInputStream fos = new FileInputStream(computeSharedTarget())){
-      return parent.getObjectMapper().readValue(fos, ConcurrentHashMap.class);
+    try (FileInputStream fos = new FileInputStream(sharedPath)){
+      return objectMapper.readValue(fos, ConcurrentHashMap.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }

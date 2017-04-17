@@ -64,7 +64,7 @@ public class MessageHandlerTest {
       return true;
     }
   }
-
+      
   @Test
   public void testSimpleHandler() {
     MessageHandler mi = new TypedMessageHandler(FakeMessage.class, new FakeMessageHandler());

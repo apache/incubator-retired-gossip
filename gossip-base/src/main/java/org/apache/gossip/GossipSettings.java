@@ -45,6 +45,9 @@ public class GossipSettings {
   
   private String activeGossipClass = "org.apache.gossip.manager.SimpleActiveGossipper";
   
+  private String transportManagerClass = "org.apache.gossip.transport.UdpTransportManager";
+  private String protocolManagerClass = "org.apache.gossip.protocol.JacksonProtocolManager";
+  
   private Map<String,String> activeGossipProperties = new HashMap<>();
   
   private String pathToRingState = "./";
@@ -222,5 +225,12 @@ public class GossipSettings {
   public void setSignMessages(boolean signMessages) {
     this.signMessages = signMessages;
   }
-  
+
+  public String getTransportManagerClass() {
+    return transportManagerClass;
+  }
+
+  public String getProtocolManagerClass() {
+    return protocolManagerClass;
+  }
 }

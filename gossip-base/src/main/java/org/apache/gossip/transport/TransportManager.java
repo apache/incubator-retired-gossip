@@ -15,19 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.manager.impl;
+package org.apache.gossip.transport;
 
-import org.apache.gossip.manager.GossipCore;
-import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.manager.PassiveGossipThread;
-import org.apache.log4j.Logger;
+import java.io.IOException;
+import java.net.URI;
 
-public class OnlyProcessReceivedPassiveGossipThread extends PassiveGossipThread {
+/** interface for manage that sends and receives messages that have already been serialized. */
+public interface TransportManager {
   
-  public static final Logger LOGGER = Logger.getLogger(OnlyProcessReceivedPassiveGossipThread.class);
-
-  public OnlyProcessReceivedPassiveGossipThread(GossipManager gossipManager, GossipCore gossipCore) {
-    super(gossipManager, gossipCore);
-  }
-
+  /** starts the active gossip thread responsible for reaching out to remote nodes. Not related to `startEndpoint()` */
+  void startActiveGossiper();
+  
+  /** starts the passive gossip thread that receives messages from remote nodes. Not related to `startActiveGossiper()` */
+  void startEndpoint();
+  
+  /** attempts to shutdown all threads. */
+  void shutdown();
+  
+  /** sends a payload to an endpoint. */
+  void send(URI endpoint, byte[] buf) throws IOException;
+  
+  /** gets the next payload being sent to this node */
+  byte[] read() throws IOException;
 }

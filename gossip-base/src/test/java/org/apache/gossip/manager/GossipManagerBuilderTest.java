@@ -25,6 +25,7 @@ import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.manager.handlers.ResponseHandler;
 import org.apache.gossip.manager.handlers.TypedMessageHandler;
 import org.junit.Assert;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
@@ -43,6 +44,17 @@ import static org.junit.jupiter.api.Assertions.expectThrows;
 @RunWith(JUnitPlatform.class)
 public class GossipManagerBuilderTest {
 
+  private GossipManagerBuilder.ManagerBuilder builder;
+  
+  @BeforeEach
+  public void setup() throws Exception {
+    builder = GossipManagerBuilder.newBuilder()
+        .id("id")
+        .cluster("aCluster")
+        .uri(new URI("udp://localhost:2000"))
+        .gossipSettings(new GossipSettings());
+  }
+  
   @Test
   public void idShouldNotBeNull() {
     expectThrows(IllegalArgumentException.class,() -> {
@@ -66,35 +78,20 @@ public class GossipManagerBuilderTest {
   
   @Test
   public void createMembersListIfNull() throws URISyntaxException {
-    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
-        .id("id")
-        .cluster("aCluster")
-        .uri(new URI("udp://localhost:2000"))
-        .gossipSettings(new GossipSettings())
-        .gossipMembers(null).registry(new MetricRegistry()).build();
+    GossipManager gossipManager = builder.gossipMembers(null).registry(new MetricRegistry()).build();
     assertNotNull(gossipManager.getLiveMembers());
   }
 
   @Test
   public void createDefaultMessageHandlerIfNull() throws URISyntaxException {
-    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
-        .id("id")
-        .cluster("aCluster")
-        .uri(new URI("udp://localhost:2000"))
-        .gossipSettings(new GossipSettings())
-        .messageHandler(null).registry(new MetricRegistry()).build();
+    GossipManager gossipManager = builder.messageHandler(null).registry(new MetricRegistry()).build();
     assertNotNull(gossipManager.getMessageHandler());
   }
 
   @Test
   public void testMessageHandlerKeeping() throws URISyntaxException {
     MessageHandler mi = new TypedMessageHandler(Response.class, new ResponseHandler());
-    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
-        .id("id")
-        .cluster("aCluster")
-        .uri(new URI("udp://localhost:2000"))
-        .gossipSettings(new GossipSettings())
-        .messageHandler(mi).registry(new MetricRegistry()).build();
+    GossipManager gossipManager = builder.messageHandler(mi).registry(new MetricRegistry()).build();
     assertNotNull(gossipManager.getMessageHandler());
     Assert.assertEquals(gossipManager.getMessageHandler(), mi);
   }
@@ -106,10 +103,7 @@ public class GossipManagerBuilderTest {
             System.nanoTime(), new HashMap<String, String>(), 1000, 1, "exponential");
     List<Member> memberList = new ArrayList<>();
     memberList.add(member);
-    GossipManager gossipManager = GossipManagerBuilder.newBuilder()
-        .id("id")
-        .cluster("aCluster")
-        .gossipSettings(new GossipSettings())
+    GossipManager gossipManager = builder
         .uri(new URI("udp://localhost:8000"))
         .gossipMembers(memberList).registry(new MetricRegistry()).build();
     assertEquals(1, gossipManager.getDeadMembers().size());

@@ -29,16 +29,8 @@ import org.apache.gossip.model.*;
 import org.apache.gossip.udp.Trackable;
 import org.apache.log4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.URI;
-import java.security.*;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
@@ -60,8 +52,6 @@ public class GossipCore implements GossipCoreConstants {
   private final ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> perNodeData;
   private final ConcurrentHashMap<String, SharedDataMessage> sharedData;
   private final BlockingQueue<Runnable> workQueue;
-  private final PKCS8EncodedKeySpec privKeySpec;
-  private final PrivateKey privKey;
   private final Meter messageSerdeException;
   private final Meter tranmissionException;
   private final Meter tranmissionSuccess;
@@ -79,42 +69,6 @@ public class GossipCore implements GossipCoreConstants {
     messageSerdeException = metrics.meter(MESSAGE_SERDE_EXCEPTION);
     tranmissionException = metrics.meter(MESSAGE_TRANSMISSION_EXCEPTION);
     tranmissionSuccess = metrics.meter(MESSAGE_TRANSMISSION_SUCCESS);
-
-    if (manager.getSettings().isSignMessages()){
-      File privateKey = new File(manager.getSettings().getPathToKeyStore(), manager.getMyself().getId());
-      File publicKey = new File(manager.getSettings().getPathToKeyStore(), manager.getMyself().getId() + ".pub");
-      if (!privateKey.exists()){
-        throw new IllegalArgumentException("private key not found " + privateKey);
-      }
-      if (!publicKey.exists()){
-        throw new IllegalArgumentException("public key not found " + publicKey);
-      }
-      try (FileInputStream keyfis = new FileInputStream(privateKey)) {
-        byte[] encKey = new byte[keyfis.available()];
-        keyfis.read(encKey);
-        keyfis.close();
-        privKeySpec = new PKCS8EncodedKeySpec(encKey);
-        KeyFactory keyFactory = KeyFactory.getInstance("DSA");
-        privKey = keyFactory.generatePrivate(privKeySpec);
-      } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
-        throw new RuntimeException("failed hard", e);
-      }
-    } else {
-      privKeySpec = null;
-      privKey = null;
-    }
-  }
-
-  private byte [] sign(byte [] bytes){
-    Signature dsa;
-    try {
-      dsa = Signature.getInstance("SHA1withDSA", "SUN");
-      dsa.initSign(privKey);
-      dsa.update(bytes);
-      return dsa.sign();
-    } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException | SignatureException e) {
-      throw new RuntimeException(e);
-    } 
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -184,30 +138,21 @@ public class GossipCore implements GossipCoreConstants {
 
   /**
    * Sends a blocking message.
+   * todo: move functionality to TransportManager layer.
    * @param message
    * @param uri
    * @throws RuntimeException if data can not be serialized or in transmission error
    */
-  private void sendInternal(Base message, URI uri){
+  private void sendInternal(Base message, URI uri) {
     byte[] json_bytes;
     try {
-      if (privKey == null){
-        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(message);
-      } else {
-        SignedPayload p = new SignedPayload();
-        p.setData(gossipManager.getObjectMapper().writeValueAsString(message).getBytes());
-        p.setSignature(sign(p.getData()));
-        json_bytes = gossipManager.getObjectMapper().writeValueAsBytes(p);
-      }
+      json_bytes = gossipManager.getProtocolManager().write(message);
     } catch (IOException e) {
       messageSerdeException.mark();
       throw new RuntimeException(e);
     }
-    try (DatagramSocket socket = new DatagramSocket()) {
-      socket.setSoTimeout(gossipManager.getSettings().getGossipInterval() * 2);
-      InetAddress dest = InetAddress.getByName(uri.getHost());
-      DatagramPacket datagramPacket = new DatagramPacket(json_bytes, json_bytes.length, dest, uri.getPort());
-      socket.send(datagramPacket);
+    try {
+      gossipManager.getTransportManager().send(uri, json_bytes);
       tranmissionSuccess.mark();
     } catch (IOException e) {
       tranmissionException.mark();

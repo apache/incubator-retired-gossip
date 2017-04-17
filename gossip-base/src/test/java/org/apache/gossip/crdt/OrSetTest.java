@@ -18,15 +18,14 @@
 package org.apache.gossip.crdt;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.GossipSettings;
-import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.manager.GossipManagerBuilder;
+import org.apache.gossip.protocol.JacksonProtocolManager;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -88,16 +87,11 @@ public class OrSetTest {
   
   @Test
   public void serialTest() throws InterruptedException, URISyntaxException, IOException {
-    GossipManager gossipService2 = GossipManagerBuilder.newBuilder()
-            .cluster("a")
-            .uri(new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)))
-            .id("1")
-            .gossipSettings(new GossipSettings())
-            .build();
+    ObjectMapper objectMapper = JacksonProtocolManager.buildObjectMapper(new GossipSettings());
     OrSet<Integer> i = new OrSet<Integer>(new OrSet.Builder<Integer>().add(1).remove(1));
-    String s = gossipService2.getObjectMapper().writeValueAsString(i);
+    String s = objectMapper.writeValueAsString(i);
     @SuppressWarnings("unchecked")
-    OrSet<Integer> back = gossipService2.getObjectMapper().readValue(s, OrSet.class);
+    OrSet<Integer> back = objectMapper.readValue(s, OrSet.class);
     Assert.assertEquals(back, i);
   }
   

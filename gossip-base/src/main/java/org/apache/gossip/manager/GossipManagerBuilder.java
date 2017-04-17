@@ -18,12 +18,9 @@
 package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.core.JsonGenerator.Feature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.Member;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.StartupSettings;
-import org.apache.gossip.crdt.CrdtModule;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.manager.handlers.MessageHandlerFactory;
@@ -49,7 +46,6 @@ public class GossipManagerBuilder {
     private GossipListener listener;
     private MetricRegistry registry;
     private Map<String,String> properties;
-    private ObjectMapper objectMapper;
     private MessageHandler messageHandler;
 
     private ManagerBuilder() {}
@@ -108,11 +104,6 @@ public class GossipManagerBuilder {
       this.uri = uri;
       return this;
     }
-    
-    public ManagerBuilder mapper(ObjectMapper objectMapper){
-      this.objectMapper = objectMapper;
-      return this;
-    }
 
     public ManagerBuilder messageHandler(MessageHandler messageHandler) {
       this.messageHandler = messageHandler;
@@ -136,16 +127,11 @@ public class GossipManagerBuilder {
       if (gossipMembers == null) {
         gossipMembers = new ArrayList<>();
       }
-      if (objectMapper == null) {
-        objectMapper = new ObjectMapper();
-        objectMapper.enableDefaultTyping();
-        objectMapper.registerModule(new CrdtModule());
-        objectMapper.configure(Feature.WRITE_NUMBERS_AS_STRINGS, false);
-      }
+      
       if (messageHandler == null) {
         messageHandler = MessageHandlerFactory.defaultHandler();
-      } 
-      return new GossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, objectMapper, messageHandler) {} ;
+      }
+      return new GossipManager(cluster, uri, id, properties, settings, gossipMembers, listener, registry, messageHandler) {} ;
     }
   }
 

@@ -18,6 +18,7 @@
 package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.LocalMember;
@@ -26,13 +27,14 @@ import org.apache.gossip.crdt.Crdt;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.handlers.MessageHandler;
-import org.apache.gossip.manager.impl.OnlyProcessReceivedPassiveGossipThread;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.SharedDataMessage;
+import org.apache.gossip.protocol.ProtocolManager;
+import org.apache.gossip.transport.TransportManager;
+import org.apache.gossip.utils.ReflectionUtils;
 import org.apache.log4j.Logger;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
+import java.io.File;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
@@ -46,14 +48,21 @@ import java.util.stream.Collectors;
 public abstract class GossipManager {
 
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
+  
+  // this mapper is used for ring and user-data persistence only. NOT messages.
+  public static final ObjectMapper metdataObjectMapper = new ObjectMapper() {{
+    enableDefaultTyping();
+    configure(JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS, false);
+  }};
 
   private final ConcurrentSkipListMap<LocalMember, GossipState> members;
   private final LocalMember me;
   private final GossipSettings settings;
   private final AtomicBoolean gossipServiceRunning;
-  private AbstractActiveGossiper activeGossipThread;
-  private PassiveGossipThread passiveGossipThread;
-  private ExecutorService gossipThreadExecutor;
+  
+  private TransportManager transportManager;
+  private ProtocolManager protocolManager;
+  
   private final GossipCore gossipCore;
   private final DataReaper dataReaper;
   private final Clock clock;
@@ -62,14 +71,13 @@ public abstract class GossipManager {
   private final RingStatePersister ringState;
   private final UserDataPersister userDataState;
   private final GossipMemberStateRefresher memberStateRefresher;
-  private final ObjectMapper objectMapper;
-
+  
   private final MessageHandler messageHandler;
-
+  
   public GossipManager(String cluster,
                        URI uri, String id, Map<String, String> properties, GossipSettings settings,
                        List<Member> gossipMembers, GossipListener listener, MetricRegistry registry,
-                       ObjectMapper objectMapper, MessageHandler messageHandler) {
+                       MessageHandler messageHandler) {
     this.settings = settings;
     this.messageHandler = messageHandler;
 
@@ -89,14 +97,15 @@ public abstract class GossipManager {
         members.put(member, GossipState.DOWN);
       }
     }
-    gossipThreadExecutor = Executors.newCachedThreadPool();
     gossipServiceRunning = new AtomicBoolean(true);
     this.scheduledServiced = Executors.newScheduledThreadPool(1);
     this.registry = registry;
-    this.ringState = new RingStatePersister(this);
-    this.userDataState = new UserDataPersister(this, this.gossipCore);
+    this.ringState = new RingStatePersister(GossipManager.buildRingStatePath(this), this);
+    this.userDataState = new UserDataPersister(
+        gossipCore,
+        GossipManager.buildPerNodeDataPath(this),
+        GossipManager.buildSharedDataPath(this));
     this.memberStateRefresher = new GossipMemberStateRefresher(members, settings, listener, this::findPerNodeGossipData);
-    this.objectMapper = objectMapper;
     readSavedRingState();
     readSavedDataState();
   }
@@ -140,49 +149,66 @@ public abstract class GossipManager {
     return me;
   }
 
-  private AbstractActiveGossiper constructActiveGossiper(){
-    try {
-      Constructor<?> c = Class.forName(settings.getActiveGossipClass()).getConstructor(GossipManager.class, GossipCore.class, MetricRegistry.class);
-      return (AbstractActiveGossiper) c.newInstance(this, gossipCore, registry);
-    } catch (NoSuchMethodException | SecurityException | ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   /**
    * Starts the client. Specifically, start the various cycles for this protocol. Start the gossip
    * thread and start the receiver thread.
    */
   public void init() {
-    passiveGossipThread = new OnlyProcessReceivedPassiveGossipThread(this, gossipCore);
-    gossipThreadExecutor.execute(passiveGossipThread);
-    activeGossipThread = constructActiveGossiper();
-    activeGossipThread.init();
+    
+    // protocol manager and transport managers are specified in settings.
+    // construct them here via reflection.
+    
+    protocolManager = ReflectionUtils.constructWithReflection(
+        settings.getProtocolManagerClass(),
+        new Class<?>[] { GossipSettings.class, String.class, MetricRegistry.class },
+        new Object[] { settings, me.getId(), this.getRegistry() }
+    );
+    
+    transportManager = ReflectionUtils.constructWithReflection(
+        settings.getTransportManagerClass(),
+        new Class<?>[] { GossipManager.class, GossipCore.class},
+        new Object[] { this, gossipCore }
+    );
+    
+    // start processing gossip messages.
+    transportManager.startEndpoint();
+    transportManager.startActiveGossiper();
+    
     dataReaper.init();
-    scheduledServiced.scheduleAtFixedRate(ringState, 60, 60, TimeUnit.SECONDS);
-    scheduledServiced.scheduleAtFixedRate(userDataState, 60, 60, TimeUnit.SECONDS);
+    if (settings.isPersistRingState()) {
+      scheduledServiced.scheduleAtFixedRate(ringState, 60, 60, TimeUnit.SECONDS);
+    }
+    if (settings.isPersistDataState()) {
+      scheduledServiced.scheduleAtFixedRate(userDataState, 60, 60, TimeUnit.SECONDS);
+    }
     scheduledServiced.scheduleAtFixedRate(memberStateRefresher, 0, 100, TimeUnit.MILLISECONDS);
     LOGGER.debug("The GossipManager is started.");
   }
-
+  
   private void readSavedRingState() {
-    for (LocalMember l : ringState.readFromDisk()){
-      LocalMember member = new LocalMember(l.getClusterName(),
-              l.getUri(), l.getId(),
-              clock.nanoTime(), l.getProperties(), settings.getWindowSize(),
-              settings.getMinimumSamples(), settings.getDistribution());
-      members.putIfAbsent(member, GossipState.DOWN);
+    if (settings.isPersistRingState()) {
+      for (LocalMember l : ringState.readFromDisk()) {
+        LocalMember member = new LocalMember(l.getClusterName(),
+            l.getUri(), l.getId(),
+            clock.nanoTime(), l.getProperties(), settings.getWindowSize(),
+            settings.getMinimumSamples(), settings.getDistribution());
+        members.putIfAbsent(member, GossipState.DOWN);
+      }
     }
   }
 
   private void readSavedDataState() {
-    for (Entry<String, ConcurrentHashMap<String, PerNodeDataMessage>> l : userDataState.readPerNodeFromDisk().entrySet()){
-      for (Entry<String, PerNodeDataMessage> j : l.getValue().entrySet()){
-        gossipCore.addPerNodeData(j.getValue());
+    if (settings.isPersistDataState()) {
+      for (Entry<String, ConcurrentHashMap<String, PerNodeDataMessage>> l : userDataState.readPerNodeFromDisk().entrySet()) {
+        for (Entry<String, PerNodeDataMessage> j : l.getValue().entrySet()) {
+          gossipCore.addPerNodeData(j.getValue());
+        }
       }
     }
-    for (Entry<String, SharedDataMessage> l: userDataState.readSharedDataFromDisk().entrySet()){
-      gossipCore.addSharedData(l.getValue());
+    if (settings.isPersistRingState()) {
+      for (Entry<String, SharedDataMessage> l : userDataState.readSharedDataFromDisk().entrySet()) {
+        gossipCore.addSharedData(l.getValue());
+      }
     }
   }
 
@@ -191,24 +217,9 @@ public abstract class GossipManager {
    */
   public void shutdown() {
     gossipServiceRunning.set(false);
-    gossipThreadExecutor.shutdown();
     gossipCore.shutdown();
+    transportManager.shutdown();
     dataReaper.close();
-    if (passiveGossipThread != null) {
-      passiveGossipThread.shutdown();
-    }
-    if (activeGossipThread != null) {
-      activeGossipThread.shutdown();
-    }
-    try {
-      boolean result = gossipThreadExecutor.awaitTermination(10, TimeUnit.MILLISECONDS);
-      if (!result) {
-        LOGGER.error("executor shutdown timed out");
-      }
-    } catch (InterruptedException e) {
-      LOGGER.error(e);
-    }
-    gossipThreadExecutor.shutdownNow();
     scheduledServiced.shutdown();
     try {
       scheduledServiced.awaitTermination(1, TimeUnit.SECONDS);
@@ -233,7 +244,6 @@ public abstract class GossipManager {
     message.setNodeId(me.getId());
     gossipCore.addSharedData(message);
   }
-
 
   @SuppressWarnings("rawtypes")
   public Crdt findCrdt(String key){
@@ -308,12 +318,32 @@ public abstract class GossipManager {
     return clock;
   }
 
-  public ObjectMapper getObjectMapper() {
-    return objectMapper;
-  }
-
   public MetricRegistry getRegistry() {
     return registry;
   }
 
+  public ProtocolManager getProtocolManager() {
+    return protocolManager;
+  }
+
+  public TransportManager getTransportManager() {
+    return transportManager;
+  }
+  
+  // todo: consider making these path methods part of GossipSettings
+  
+  public static File buildRingStatePath(GossipManager manager) {
+    return new File(manager.getSettings().getPathToRingState(), "ringstate." + manager.getMyself().getClusterName() + "."
+        + manager.getMyself().getId() + ".json");
+  }
+  
+  public static File buildSharedDataPath(GossipManager manager){
+    return new File(manager.getSettings().getPathToDataState(), "shareddata."
+            + manager.getMyself().getClusterName() + "." + manager.getMyself().getId() + ".json");
+  }
+  
+  public static File buildPerNodeDataPath(GossipManager manager) {
+    return new File(manager.getSettings().getPathToDataState(), "pernodedata."
+            + manager.getMyself().getClusterName() + "." + manager.getMyself().getId() + ".json");
+  }
 }

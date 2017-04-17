@@ -68,8 +68,8 @@ public class UserDataPersistenceTest {
       gossipService.init();
       Assert.assertEquals("red", ((AToothpick) gossipService.findPerNodeGossipData(nodeId, "a").getPayload()).getColor());
       Assert.assertEquals("blue", ((AToothpick) gossipService.findSharedGossipData("a").getPayload()).getColor());
-      File f = gossipService.getUserDataState().computeSharedTarget();
-      File g = gossipService.getUserDataState().computePerNodeTarget();
+      File f = GossipManager.buildSharedDataPath(gossipService);
+      File g = GossipManager.buildPerNodeDataPath(gossipService);
       gossipService.shutdown();
       f.delete();
       g.delete();

@@ -18,34 +18,25 @@
 package org.apache.gossip.manager;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.SocketException;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.gossip.model.Base;
-import org.apache.gossip.model.SignedPayload;
 import org.apache.log4j.Logger;
 
-import com.codahale.metrics.Meter;
 
 /**
  * This class handles the passive cycle,
  * where this client has received an incoming message. 
  */
-abstract public class PassiveGossipThread implements Runnable {
+public class PassiveGossipThread implements Runnable {
 
   public static final Logger LOGGER = Logger.getLogger(PassiveGossipThread.class);
 
-  /** The socket used for the passive thread of the gossip service. */
-  private final DatagramSocket server;
+  
   private final AtomicBoolean keepRunning;
   private final GossipCore gossipCore;
   private final GossipManager gossipManager;
-  private final Meter signed;
-  private final Meter unsigned;
 
   public PassiveGossipThread(GossipManager gossipManager, GossipCore gossipCore) {
     this.gossipManager = gossipManager;
@@ -53,38 +44,18 @@ abstract public class PassiveGossipThread implements Runnable {
     if (gossipManager.getMyself().getClusterName() == null){
       throw new IllegalArgumentException("Cluster was null");
     }
-    try {
-      SocketAddress socketAddress = new InetSocketAddress(gossipManager.getMyself().getUri().getHost(),
-              gossipManager.getMyself().getUri().getPort());
-      server = new DatagramSocket(socketAddress);
-    } catch (SocketException ex) {
-      LOGGER.warn(ex);
-      throw new RuntimeException(ex);
-    }
+    
     keepRunning = new AtomicBoolean(true);
-    signed = gossipManager.getRegistry().meter(PassiveGossipConstants.SIGNED_MESSAGE);
-    unsigned = gossipManager.getRegistry().meter(PassiveGossipConstants.UNSIGNED_MESSAGE);
   }
 
   @Override
   public void run() {
     while (keepRunning.get()) {
       try {
-        byte[] buf = new byte[server.getReceiveBufferSize()];
-        DatagramPacket p = new DatagramPacket(buf, buf.length);
-        server.receive(p);
-        debug(p.getData());
+        byte[] buf = gossipManager.getTransportManager().read();
         try {
-          Base activeGossipMessage = gossipManager.getObjectMapper().readValue(p.getData(), Base.class);
-          if (activeGossipMessage instanceof SignedPayload){
-            SignedPayload s = (SignedPayload) activeGossipMessage;
-            Base nested = gossipManager.getObjectMapper().readValue(s.getData(), Base.class);
-            gossipCore.receive(nested);
-            signed.mark();
-          } else {
-            gossipCore.receive(activeGossipMessage);
-            unsigned.mark();
-          }
+          Base message = gossipManager.getProtocolManager().read(buf);
+          gossipCore.receive(message);
           gossipManager.getMemberStateRefresher().run();
         } catch (RuntimeException ex) {//TODO trap json exception
           LOGGER.error("Unable to process message", ex);
@@ -94,21 +65,9 @@ abstract public class PassiveGossipThread implements Runnable {
         keepRunning.set(false);
       }
     }
-    shutdown();
   }
-
-  private void debug(byte[] jsonBytes) {
-    if (LOGGER.isDebugEnabled()){
-      String receivedMessage = new String(jsonBytes);
-      LOGGER.debug("Received message ( bytes): " + receivedMessage);
-    }
+  
+  public void requestStop() {
+    keepRunning.set(false);
   }
-
-  public void shutdown() {
-    try {
-      server.close();
-    } catch (RuntimeException ex) {
-    }
-  }
-
 }

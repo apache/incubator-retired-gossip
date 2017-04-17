@@ -49,7 +49,7 @@ public class RingPersistenceTest {
                             new RemoteMember("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 0)), "0"),
                             new RemoteMember("a", new URI("udp://" + "127.0.0.1" + ":" + (29000 + 2)), "2"))).build();
     gossipService.getRingState().writeToDisk();
-    return gossipService.getRingState().computeTarget();
+    return GossipManager.buildRingStatePath(gossipService);
   }
   
   private void aNewInstanceGetsRingInfo(GossipSettings settings) throws UnknownHostException, InterruptedException, URISyntaxException {

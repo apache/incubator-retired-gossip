@@ -26,16 +26,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.LocalMember;
+import org.apache.gossip.crdt.CrdtModule;
 import org.apache.log4j.Logger;
 
 public class RingStatePersister implements Runnable {
 
   private static final Logger LOGGER = Logger.getLogger(RingStatePersister.class);
-  private GossipManager parent;
+  private final File path;
+  // NOTE: this is a different instance than what gets used for message marshalling.
+  private final ObjectMapper objectMapper;
+  private final GossipManager manager;
   
-  public RingStatePersister(GossipManager parent){
-    this.parent = parent;
+  public RingStatePersister(File path, GossipManager manager){
+    this.path = path;
+    this.objectMapper = GossipManager.metdataObjectMapper;
+    this.manager = manager;
   }
   
   @Override
@@ -43,34 +51,25 @@ public class RingStatePersister implements Runnable {
     writeToDisk();
   }
   
-  File computeTarget(){
-    return new File(parent.getSettings().getPathToRingState(), "ringstate." + parent.getMyself().getClusterName() + "." 
-            + parent.getMyself().getId() + ".json");
-  }
-  
-  void writeToDisk(){
-    if (!parent.getSettings().isPersistRingState()){
-      return;
-    }
-    NavigableSet<LocalMember> i = parent.getMembers().keySet();
-    try (FileOutputStream fos = new FileOutputStream(computeTarget())){
-      parent.getObjectMapper().writeValue(fos, i);
+  void writeToDisk() {
+    NavigableSet<LocalMember> i = manager.getMembers().keySet();
+    try (FileOutputStream fos = new FileOutputStream(path)){
+      objectMapper.writeValue(fos, i);
     } catch (IOException e) {
       LOGGER.debug(e);
     }
   }
 
   @SuppressWarnings("unchecked")
-  List<LocalMember> readFromDisk(){
-    if (!parent.getSettings().isPersistRingState()){
-      return Collections.emptyList();
+  List<LocalMember> readFromDisk() {
+    if (!path.exists()) {
+      return new ArrayList<>();
     }
-    try (FileInputStream fos = new FileInputStream(computeTarget())){
-      return parent.getObjectMapper().readValue(fos, ArrayList.class);
+    try (FileInputStream fos = new FileInputStream(path)){
+      return objectMapper.readValue(fos, ArrayList.class);
     } catch (IOException e) {
       LOGGER.debug(e);
     }
-    return Collections.emptyList();
+    return new ArrayList<>();
   }
-  
 }
