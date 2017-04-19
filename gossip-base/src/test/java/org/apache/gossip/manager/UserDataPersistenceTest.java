@@ -35,6 +35,8 @@ public class UserDataPersistenceTest {
   
   private GossipManager sameService() throws URISyntaxException {  
     GossipSettings settings = new GossipSettings();
+    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
+    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     return GossipManagerBuilder.newBuilder()
             .cluster("a")
             .uri(new URI("udp://" + "127.0.0.1" + ":" + (29000 + 1)))

@@ -17,15 +17,10 @@
  */
 package org.apache.gossip.crdt;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.gossip.GossipSettings;
-import org.apache.gossip.protocol.JacksonProtocolManager;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -83,16 +78,6 @@ public class OrSetTest {
     OrSet<Integer> i = new OrSet<>(19);
     OrSet<Integer> j = i.merge(i);
     Assert.assertEquals(i.value(), j.value());
-  }
-  
-  @Test
-  public void serialTest() throws InterruptedException, URISyntaxException, IOException {
-    ObjectMapper objectMapper = JacksonProtocolManager.buildObjectMapper(new GossipSettings());
-    OrSet<Integer> i = new OrSet<Integer>(new OrSet.Builder<Integer>().add(1).remove(1));
-    String s = objectMapper.writeValueAsString(i);
-    @SuppressWarnings("unchecked")
-    OrSet<Integer> back = objectMapper.readValue(s, OrSet.class);
-    Assert.assertEquals(back, i);
   }
   
   @Test

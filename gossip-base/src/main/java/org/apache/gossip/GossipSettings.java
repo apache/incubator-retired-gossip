@@ -45,8 +45,8 @@ public class GossipSettings {
   
   private String activeGossipClass = "org.apache.gossip.manager.SimpleActiveGossipper";
   
-  private String transportManagerClass = "org.apache.gossip.transport.UdpTransportManager";
-  private String protocolManagerClass = "org.apache.gossip.protocol.JacksonProtocolManager";
+  private String transportManagerClass = "org.apache.gossip.transport.udp.UdpTransportManager";
+  private String protocolManagerClass = "org.apache.gossip.protocol.json.JacksonProtocolManager";
   
   private Map<String,String> activeGossipProperties = new HashMap<>();
   
@@ -230,7 +230,15 @@ public class GossipSettings {
     return transportManagerClass;
   }
 
+  public void setTransportManagerClass(String transportManagerClass) {
+    this.transportManagerClass = transportManagerClass;
+  }
+
   public String getProtocolManagerClass() {
     return protocolManagerClass;
+  }
+
+  public void setProtocolManagerClass(String protocolManagerClass) {
+    this.protocolManagerClass = protocolManagerClass;
   }
 }

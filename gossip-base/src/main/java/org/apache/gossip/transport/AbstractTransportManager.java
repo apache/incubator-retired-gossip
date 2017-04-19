@@ -66,7 +66,8 @@ public abstract class AbstractTransportManager implements TransportManager {
     try {
       boolean result = gossipThreadExecutor.awaitTermination(10, TimeUnit.MILLISECONDS);
       if (!result) {
-        LOGGER.error("executor shutdown timed out");
+        // common when blocking patterns are used to read data from a socket.
+        LOGGER.warn("executor shutdown timed out");
       }
     } catch (InterruptedException e) {
       LOGGER.error(e);

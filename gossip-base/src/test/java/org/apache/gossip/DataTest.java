@@ -47,6 +47,8 @@ public class DataTest extends AbstractIntegrationBase {
     GossipSettings settings = new GossipSettings();
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
+    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
+    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 1;
     List<Member> startupMembers = new ArrayList<>();

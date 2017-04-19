@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.ArrayList;
@@ -41,28 +40,13 @@ import io.teknek.tunit.TUnit;
 
 public class SignedMessageTest extends AbstractIntegrationBase {
 
-  @Test(expected = IllegalArgumentException.class)
-  public void ifSignMustHaveKeys()
-          throws URISyntaxException, UnknownHostException, InterruptedException {
-    String cluster = UUID.randomUUID().toString();
-    GossipSettings settings = gossiperThatSigns();
-    List<Member> startupMembers = new ArrayList<>();
-    URI uri = new URI("udp://" + "127.0.0.1" + ":" + (30000 + 1));
-    GossipManager gossipService = GossipManagerBuilder.newBuilder()
-            .cluster(cluster)
-            .uri(uri)
-            .id(1 + "")
-            .gossipMembers(startupMembers)
-            .gossipSettings(settings)
-            .build();
-    gossipService.init();
-  }
-
   private GossipSettings gossiperThatSigns(){
     GossipSettings settings = new GossipSettings();
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
     settings.setSignMessages(true);
+    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
+    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     return settings;
   }
   

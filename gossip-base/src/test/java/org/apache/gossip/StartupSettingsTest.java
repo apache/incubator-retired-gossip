@@ -47,11 +47,14 @@ public class StartupSettingsTest {
     settingsFile.deleteOnExit();
     writeSettingsFile(settingsFile);
     URI uri = new URI("udp://" + "127.0.0.1" + ":" + 50000);
+    GossipSettings firstGossipSettings = new GossipSettings();
+    firstGossipSettings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
+    firstGossipSettings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     GossipManager firstService = GossipManagerBuilder.newBuilder()
             .cluster(CLUSTER)
             .uri(uri)
             .id("1")
-            .gossipSettings(new GossipSettings()).build();
+            .gossipSettings(firstGossipSettings).build();
     firstService.init();
     GossipManager manager = GossipManagerBuilder.newBuilder()
             .startupSettings(StartupSettings.fromJSONFile(settingsFile)).build();
@@ -72,6 +75,8 @@ public class StartupSettingsTest {
             "  \"cleanup_interval\":10000,\n" +
             "  \"convict_threshold\":2.6,\n" +
             "  \"distribution\":\"exponential\",\n" +
+            "  \"transport_manager_class\":\"org.apache.gossip.transport.UnitTestTransportManager\",\n" +
+            "  \"protocol_manager_class\":\"org.apache.gossip.protocol.UnitTestProtocolManager\",\n" +
             "  \"properties\":{},\n" +
             "  \"members\":[\n" +
             "    {\"cluster\": \"" + CLUSTER + "\",\"uri\":\"udp://127.0.0.1:5000\"}\n" +

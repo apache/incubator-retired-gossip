@@ -44,10 +44,14 @@ public class ShutdownDeadtimeTest {
 
   private static final Logger log = Logger.getLogger(ShutdownDeadtimeTest.class);
   
+  // Note: this test is floppy depending on the values in GossipSettings (smaller values seem to do harm), and the
+  //       sleep that happens after startup.
   @Test
   public void DeadNodesDoNotComeAliveAgain()
           throws InterruptedException, UnknownHostException, URISyntaxException {
     GossipSettings settings = new GossipSettings(100, 10000, 1000, 1, 10.0, "normal");
+    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
+    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
     String cluster = UUID.randomUUID().toString();
@@ -70,7 +74,7 @@ public class ShutdownDeadtimeTest {
               .build();
       clients.add(gossipService);
       gossipService.init();
-      
+      Thread.sleep(1000); 
     }
     TUnit.assertThat(new Callable<Integer>() {
       public Integer call() throws Exception {

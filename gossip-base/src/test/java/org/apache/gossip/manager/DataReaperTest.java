@@ -40,6 +40,8 @@ public class DataReaperTest {
     GossipSettings settings = new GossipSettings();
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
+    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
+    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     GossipManager gm = GossipManagerBuilder.newBuilder().cluster("abc").gossipSettings(settings)
             .id(myId).uri(URI.create("udp://localhost:6000")).registry(registry).build();
     gm.init();
@@ -88,6 +90,8 @@ public class DataReaperTest {
     String key = "key";
     String value = "a";
     GossipSettings settings = new GossipSettings();
+    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
+    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     GossipManager gm = GossipManagerBuilder.newBuilder().cluster("abc").gossipSettings(settings)
             .id(myId).uri(URI.create("udp://localhost:7000")).registry(registry).build();
     gm.init();

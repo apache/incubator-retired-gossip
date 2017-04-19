@@ -185,10 +185,22 @@ public class StartupSettings {
     if (cluster == null){
       throw new IllegalArgumentException("cluster was null. It is required");
     }
+    String transportClass = jsonObject.has("transport_manager_class") ? 
+        jsonObject.get("transport_manager_class").textValue() : 
+        null;
+    String protocolClass = jsonObject.has("protocol_manager_class") ? 
+        jsonObject.get("protocol_manager_class").textValue() : 
+        null;
     URI uri2 = new URI(uri);
-    StartupSettings settings = new StartupSettings(id, uri2, 
-            new GossipSettings(gossipInterval, cleanupInterval, windowSize, 
-                    minSamples, convictThreshold, distribution), cluster);
+    GossipSettings gossipSettings = new GossipSettings(gossipInterval, cleanupInterval, windowSize, minSamples,
+        convictThreshold, distribution);
+    if (transportClass != null) {
+      gossipSettings.setTransportManagerClass(transportClass);
+    }
+    if (protocolClass != null) {
+      gossipSettings.setProtocolManagerClass(protocolClass);
+    }
+    StartupSettings settings = new StartupSettings(id, uri2, gossipSettings, cluster);
     String configMembersDetails = "Config-members [";
     JsonNode membersJSON = jsonObject.get("members");
     Iterator<JsonNode> it = membersJSON.iterator();

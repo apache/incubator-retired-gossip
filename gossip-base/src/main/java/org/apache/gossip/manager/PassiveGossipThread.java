@@ -61,7 +61,10 @@ public class PassiveGossipThread implements Runnable {
           LOGGER.error("Unable to process message", ex);
         }
       } catch (IOException e) {
-        LOGGER.error(e);
+        // InterruptedException are completely normal here because of the blocking lifecycle.
+        if (!(e.getCause() instanceof InterruptedException)) {
+          LOGGER.error(e);
+        }
         keepRunning.set(false);
       }
     }

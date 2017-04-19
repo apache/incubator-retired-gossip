@@ -15,10 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.transport;
+package org.apache.gossip.transport.udp;
 
 import org.apache.gossip.manager.GossipCore;
 import org.apache.gossip.manager.GossipManager;
+import org.apache.gossip.transport.AbstractTransportManager;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;

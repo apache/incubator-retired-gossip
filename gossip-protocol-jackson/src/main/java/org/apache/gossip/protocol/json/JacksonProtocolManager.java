@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.protocol;
+package org.apache.gossip.protocol.json;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -26,6 +26,7 @@ import org.apache.gossip.crdt.CrdtModule;
 import org.apache.gossip.manager.PassiveGossipConstants;
 import org.apache.gossip.model.Base;
 import org.apache.gossip.model.SignedPayload;
+import org.apache.gossip.protocol.ProtocolManager;
 
 import java.io.File;
 import java.io.FileInputStream;

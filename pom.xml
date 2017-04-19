@@ -56,6 +56,8 @@
 	
 	<modules>
 		<module>gossip-base</module>
+		<module>gossip-transport-udp</module>
+		<module>gossip-protocol-jackson</module>
 	</modules>
 	
 	<description>A peer to peer cluster discovery service</description>
@@ -80,6 +82,39 @@
 		<system>JIRA</system>
 		<url>https://issues.apache.org/jira/browse/GOSSIP</url>
 	</issueManagement>
+	
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.vintage</groupId>
+			<artifactId>junit-vintage-engine</artifactId>
+			<version>${junit.vintage.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.platform</groupId>
+			<artifactId>junit-platform-runner</artifactId>
+			<version>${junit.platform.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.teknek</groupId>
+			<artifactId>tunit</artifactId>
+			<version>${tunit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 	
 	<build>
 		<pluginManagement>
