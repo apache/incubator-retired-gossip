@@ -21,7 +21,6 @@ import com.codahale.metrics.MetricRegistry;
 import org.apache.gossip.manager.AbstractActiveGossiper;
 import org.apache.gossip.manager.GossipCore;
 import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.manager.PassiveGossipThread;
 import org.apache.gossip.utils.ReflectionUtils;
 import org.apache.log4j.Logger;
 
@@ -36,14 +35,14 @@ public abstract class AbstractTransportManager implements TransportManager {
   
   public static final Logger LOGGER = Logger.getLogger(AbstractTransportManager.class);
   
-  private final PassiveGossipThread passiveGossipThread;
   private final ExecutorService gossipThreadExecutor;
-  
   private final AbstractActiveGossiper activeGossipThread;
+  protected final GossipManager gossipManager;
+  protected final GossipCore gossipCore;
   
   public AbstractTransportManager(GossipManager gossipManager, GossipCore gossipCore) {
-    
-    passiveGossipThread = new PassiveGossipThread(gossipManager, gossipCore);
+    this.gossipManager = gossipManager;
+    this.gossipCore = gossipCore;
     gossipThreadExecutor = Executors.newCachedThreadPool();
     activeGossipThread = ReflectionUtils.constructWithReflection(
       gossipManager.getSettings().getActiveGossipClass(),
@@ -58,7 +57,6 @@ public abstract class AbstractTransportManager implements TransportManager {
   // shut down threads etc.
   @Override
   public void shutdown() {
-    passiveGossipThread.requestStop();
     gossipThreadExecutor.shutdown();
     if (activeGossipThread != null) {
       activeGossipThread.shutdown();
@@ -77,11 +75,9 @@ public abstract class AbstractTransportManager implements TransportManager {
 
   @Override
   public void startActiveGossiper() {
-    activeGossipThread.init(); 
+    activeGossipThread.init();
   }
 
   @Override
-  public void startEndpoint() {
-    gossipThreadExecutor.execute(passiveGossipThread);
-  }
+  public abstract void startEndpoint();
 }

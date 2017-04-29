@@ -41,6 +41,7 @@ class TestMessage extends Base implements Trackable {
   private Object[] arrayOfThings;
   private Map<String, String> mapOfThings = new HashMap<>();
 
+  @SuppressWarnings("unused")//Used by ObjectMapper
   private TestMessage() {
   }
 

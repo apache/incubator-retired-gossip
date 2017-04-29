@@ -29,7 +29,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Only use in unit tests! */
-public class UnitTestTransportManager extends AbstractTransportManager {
+public class UnitTestTransportManager extends AbstractTransportManager { 
   
   private static final Map<URI, UnitTestTransportManager> allManagers = new ConcurrentHashMap<>();
   
@@ -71,6 +71,5 @@ public class UnitTestTransportManager extends AbstractTransportManager {
   @Override
   public void startEndpoint() {
     allManagers.put(localEndpoint, this);
-    super.startEndpoint();
   }
 }

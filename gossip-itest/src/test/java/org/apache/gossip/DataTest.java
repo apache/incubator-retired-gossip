@@ -36,7 +36,7 @@ import org.apache.gossip.model.SharedDataMessage;
 import org.junit.Test;
 
 import io.teknek.tunit.TUnit;
-
+ 
 public class DataTest extends AbstractIntegrationBase {
   
   private String orSetKey = "cror";
@@ -45,10 +45,8 @@ public class DataTest extends AbstractIntegrationBase {
   @Test
   public void dataTest() throws InterruptedException, UnknownHostException, URISyntaxException{
     GossipSettings settings = new GossipSettings();
-    settings.setPersistRingState(false);
+    settings.setPersistRingState(false); 
     settings.setPersistDataState(false);
-    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
-    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 1;
     List<Member> startupMembers = new ArrayList<>();

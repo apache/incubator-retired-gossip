@@ -58,6 +58,7 @@
 		<module>gossip-base</module>
 		<module>gossip-transport-udp</module>
 		<module>gossip-protocol-jackson</module>
+		<module>gossip-itest</module>
 	</modules>
 	
 	<description>A peer to peer cluster discovery service</description>

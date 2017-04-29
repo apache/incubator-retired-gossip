@@ -17,13 +17,8 @@
  */
 package org.apache.gossip.transport.udp;
 
-import org.apache.gossip.GossipSettings;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 public class UdpTransportIntegrationTest {
   

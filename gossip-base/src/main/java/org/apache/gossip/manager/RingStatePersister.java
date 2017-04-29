@@ -22,14 +22,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
 
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.LocalMember;
-import org.apache.gossip.crdt.CrdtModule;
 import org.apache.log4j.Logger;
 
 public class RingStatePersister implements Runnable {

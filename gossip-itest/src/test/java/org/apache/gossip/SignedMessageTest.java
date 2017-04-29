@@ -45,8 +45,6 @@ public class SignedMessageTest extends AbstractIntegrationBase {
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
     settings.setSignMessages(true);
-    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
-    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     return settings;
   }
   

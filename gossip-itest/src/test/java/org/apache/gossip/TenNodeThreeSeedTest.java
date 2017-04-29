@@ -50,8 +50,6 @@ public class TenNodeThreeSeedTest {
     GossipSettings settings = new GossipSettings(1000, 10000, 1000, 1, 1.6, "exponential");
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
-    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
-    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 3;
     List<Member> startupMembers = new ArrayList<>();

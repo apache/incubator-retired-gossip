@@ -25,9 +25,7 @@ import org.apache.gossip.Member;
 import org.apache.gossip.crdt.OrSet;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
-import org.apache.gossip.model.Base;
 import org.apache.gossip.protocol.ProtocolManager;
-import org.apache.gossip.udp.Trackable;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,11 +34,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 public class JacksonTest {

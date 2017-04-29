@@ -102,7 +102,7 @@ public class MessageHandlerTest {
   
   @Test(expected = NullPointerException.class)
   public void cantAddNullHandler2() {
-    MessageHandler handler = MessageHandlerFactory.concurrentHandler(
+    MessageHandlerFactory.concurrentHandler(
         new TypedMessageHandler(FakeMessage.class, new FakeMessageHandler()),
         null,
         new TypedMessageHandler(FakeMessage.class, new FakeMessageHandler())

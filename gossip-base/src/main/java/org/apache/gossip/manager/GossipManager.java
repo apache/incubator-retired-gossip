@@ -50,7 +50,9 @@ public abstract class GossipManager {
   public static final Logger LOGGER = Logger.getLogger(GossipManager.class);
   
   // this mapper is used for ring and user-data persistence only. NOT messages.
-  public static final ObjectMapper metdataObjectMapper = new ObjectMapper() {{
+  public static final ObjectMapper metdataObjectMapper = new ObjectMapper() {
+    private static final long serialVersionUID = 1L;
+  {
     enableDefaultTyping();
     configure(JsonGenerator.Feature.WRITE_NUMBERS_AS_STRINGS, false);
   }};

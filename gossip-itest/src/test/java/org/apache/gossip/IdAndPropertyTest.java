@@ -43,8 +43,6 @@ public class IdAndPropertyTest extends AbstractIntegrationBase {
   public void testDatacenterRackGossiper() throws URISyntaxException, UnknownHostException, InterruptedException {
     GossipSettings settings = new GossipSettings();
     settings.setActiveGossipClass(DatacenterRackAwareActiveGossiper.class.getName());
-    settings.setTransportManagerClass("org.apache.gossip.transport.UnitTestTransportManager");
-    settings.setProtocolManagerClass("org.apache.gossip.protocol.UnitTestProtocolManager");
     List<Member> startupMembers = new ArrayList<>();
     Map<String, String> x = new HashMap<>();
     x.put("a", "b");
