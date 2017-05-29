@@ -31,56 +31,62 @@ import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.model.SharedDataMessage;
 
 public class StandAloneNodeCrdtOrSet {
-  public static void main (String [] args) throws InterruptedException, IOException{
+
+  private static ExampleCommon common = new ExampleCommon();
+
+  public static void main(String[] args) throws InterruptedException, IOException {
+    args = common.checkArgsForClearFlag(args);
     GossipSettings s = new GossipSettings();
     s.setWindowSize(1000);
     s.setGossipInterval(100);
-    GossipManager gossipService = GossipManagerBuilder.newBuilder()
-            .cluster("mycluster")
+    GossipManager gossipService = GossipManagerBuilder.newBuilder().cluster("mycluster")
             .uri(URI.create(args[0]))
             .id(args[1])
-            .gossipMembers(Arrays.asList( new RemoteMember("mycluster", URI.create(args[2]), args[3])))
+            .gossipMembers(
+                    Arrays.asList(new RemoteMember("mycluster", URI.create(args[2]), args[3])))
             .gossipSettings(s)
             .build();
     gossipService.init();
-    
+
     new Thread(() -> {
-      while (true){
-      System.out.println("Live: " + gossipService.getLiveMembers());
-      System.out.println("Dead: " + gossipService.getDeadMembers());
-      System.out.println("---------- " + (gossipService.findCrdt("abc") == null ? "": 
-          gossipService.findCrdt("abc").value()));
-      System.out.println("********** " + gossipService.findCrdt("abc"));
-      System.out.println("^^^^^^^^^^ " + (gossipService.findCrdt("def") == null ? "": 
-        gossipService.findCrdt("def").value()));
-      System.out.println("$$$$$$$$$$ " + gossipService.findCrdt("def"));
-      try {
-        Thread.sleep(2000);
-      } catch (Exception e) {}
+      while (true) {
+        common.optionallyClearTerminal();
+        System.out.println("Live: " + gossipService.getLiveMembers());
+        System.out.println("Dead: " + gossipService.getDeadMembers());
+        System.out.println("---------- " + (gossipService.findCrdt("abc") == null ? ""
+                : gossipService.findCrdt("abc").value()));
+        System.out.println("********** " + gossipService.findCrdt("abc"));
+        System.out.println("^^^^^^^^^^ " + (gossipService.findCrdt("def") == null ? ""
+                : gossipService.findCrdt("def").value()));
+        System.out.println("$$$$$$$$$$ " + gossipService.findCrdt("def"));
+        try {
+          Thread.sleep(2000);
+        } catch (Exception e) {
+        }
       }
     }).start();
-    
+
     String line = null;
-    try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))){
-      while ( (line = br.readLine()) != null){
+    try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+      while ((line = br.readLine()) != null) {
         System.out.println(line);
         char op = line.charAt(0);
         String val = line.substring(2);
-        if (op == 'a'){
+        if (op == 'a') {
           addData(val, gossipService);
         } else if (op == 'r') {
           removeData(val, gossipService);
-        } else if (op == 'g'){
+        } else if (op == 'g') {
           gcount(val, gossipService);
         }
       }
     }
   }
-  
-  private static void gcount(String val, GossipManager gossipManager){
+
+  private static void gcount(String val, GossipManager gossipManager) {
     GrowOnlyCounter c = (GrowOnlyCounter) gossipManager.findCrdt("def");
     Long l = Long.valueOf(val);
-    if (c == null){
+    if (c == null) {
       c = new GrowOnlyCounter(new GrowOnlyCounter.Builder(gossipManager).increment((l)));
     } else {
       c = new GrowOnlyCounter(c, new GrowOnlyCounter.Builder(gossipManager).increment((l)));
@@ -92,19 +98,19 @@ public class StandAloneNodeCrdtOrSet {
     m.setTimestamp(System.currentTimeMillis());
     gossipManager.merge(m);
   }
-  
-  private static void removeData(String val, GossipManager gossipService){
+
+  private static void removeData(String val, GossipManager gossipService) {
     @SuppressWarnings("unchecked")
     OrSet<String> s = (OrSet<String>) gossipService.findCrdt("abc");
     SharedDataMessage m = new SharedDataMessage();
     m.setExpireAt(Long.MAX_VALUE);
     m.setKey("abc");
-    m.setPayload(new OrSet<String>(s , new OrSet.Builder<String>().remove(val)));
+    m.setPayload(new OrSet<String>(s, new OrSet.Builder<String>().remove(val)));
     m.setTimestamp(System.currentTimeMillis());
     gossipService.merge(m);
   }
-  
-  private static void addData(String val, GossipManager gossipService){
+
+  private static void addData(String val, GossipManager gossipService) {
     SharedDataMessage m = new SharedDataMessage();
     m.setExpireAt(Long.MAX_VALUE);
     m.setKey("abc");
@@ -112,4 +118,5 @@ public class StandAloneNodeCrdtOrSet {
     m.setTimestamp(System.currentTimeMillis());
     gossipService.merge(m);
   }
+
 }

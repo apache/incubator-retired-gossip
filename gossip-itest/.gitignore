@@ -1,0 +1,5 @@
+# json files generated with running examples in this module
+pernodedata.*.*.json
+ringstate.*.*.json
+shareddata.*.*.json
+

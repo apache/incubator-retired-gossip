@@ -4,6 +4,10 @@ Gossip protocol is a method for a group of nodes to discover and check the livel
 
 The original implementation was forked from https://code.google.com/p/java-gossip/. Several bug fixes and changes have already been added.
 
+A set of easily-run examples, illustrating various features of Gossip, are available in the gossip-examples module. The README.md file, in that module described how to run those examples.
+
+Below, a list of code snippits which show how to incorproate Apache Gossip into your project.  
+
 Usage
 -----
 

@@ -26,22 +26,28 @@ import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
 
 public class StandAloneNode {
-  public static void main (String [] args) throws UnknownHostException, InterruptedException{
+
+  private static ExampleCommon common = new ExampleCommon();
+
+  public static void main(String[] args) throws UnknownHostException, InterruptedException {
+    args = common.checkArgsForClearFlag(args);
     GossipSettings s = new GossipSettings();
     s.setWindowSize(1000);
     s.setGossipInterval(100);
-    GossipManager gossipService = GossipManagerBuilder.newBuilder()
-            .cluster("mycluster")
+    GossipManager gossipService = GossipManagerBuilder.newBuilder().cluster("mycluster")
             .uri(URI.create(args[0]))
             .id(args[1])
-            .gossipMembers(Arrays.asList( new RemoteMember("mycluster", URI.create(args[2]), args[3])))
+            .gossipMembers(
+                    Arrays.asList(new RemoteMember("mycluster", URI.create(args[2]), args[3])))
             .gossipSettings(s)
             .build();
     gossipService.init();
-    while (true){
+    while (true) {
+      common.optionallyClearTerminal();
       System.out.println("Live: " + gossipService.getLiveMembers());
       System.out.println("Dead: " + gossipService.getDeadMembers());
       Thread.sleep(2000);
     }
   }
+
 }
