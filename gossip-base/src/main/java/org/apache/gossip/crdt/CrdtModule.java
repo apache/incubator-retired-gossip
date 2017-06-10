@@ -61,6 +61,13 @@ abstract class GrowOnlyCounterMixin {
   @JsonProperty("counters") abstract Map<String, Long> getCounters();
 }
 
+abstract class PNCounterMixin {
+  @JsonCreator
+  PNCounterMixin(@JsonProperty("p-counters") Map<String, Long> up, @JsonProperty("n-counters") Map<String,Long> down) { }
+  @JsonProperty("p-counters") abstract Map<String, Long> getPCounters();
+  @JsonProperty("n-counters") abstract Map<String, Long> getNCounters();
+}
+
 //If anyone wants to take a stab at this. please have at it
 //https://github.com/FasterXML/jackson-datatype-guava/blob/master/src/main/java/com/fasterxml/jackson/datatype/guava/ser/MultimapSerializer.java
 public class CrdtModule extends SimpleModule {
@@ -76,6 +83,7 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(OrSet.class, OrSetMixin.class);
     context.setMixInAnnotations(GrowOnlySet.class, GrowOnlySetMixin.class);
     context.setMixInAnnotations(GrowOnlyCounter.class, GrowOnlyCounterMixin.class);
+    context.setMixInAnnotations(PNCounter.class, PNCounterMixin.class);
     context.setMixInAnnotations(LWWSet.class, LWWSetMixin.class);
     context.setMixInAnnotations(LWWSet.Timestamps.class, LWWSetTimestampsMixin.class);
   }
