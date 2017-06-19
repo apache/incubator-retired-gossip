@@ -22,6 +22,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.gossip.GossipSettings;
 import org.apache.gossip.Member;
+import org.apache.gossip.crdt.LWWSet;
 import org.apache.gossip.crdt.OrSet;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
@@ -79,6 +80,22 @@ public class JacksonTest {
     @SuppressWarnings("unchecked")
     OrSet<Integer> back = objectMapper.readValue(s, OrSet.class);
     Assert.assertEquals(back, i);
+  }
+
+  @Test
+  public void jacksonCrdtLWWSetTest() {
+    ObjectMapper objectMapper = JacksonProtocolManager.buildObjectMapper(simpleSettings(new GossipSettings()));
+
+    LWWSet<String> lww = new LWWSet<>("a", "b", "c");
+
+    try {
+      String lwwS = objectMapper.writeValueAsString(lww);
+      @SuppressWarnings("unchecked")
+      LWWSet<String> parsedLww = objectMapper.readValue(lwwS, LWWSet.class);
+      Assert.assertEquals(lww, parsedLww);
+    } catch (Exception e) {
+      Assert.fail("LWWSet se/de error");
+    }
   }
   
   @Test

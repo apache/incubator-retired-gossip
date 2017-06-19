@@ -35,6 +35,19 @@ abstract class OrSetMixin<E> {
   @JsonIgnore abstract boolean isEmpty();
 }
 
+abstract class LWWSetMixin<ElementType> {
+  @JsonCreator
+  LWWSetMixin(@JsonProperty("data") Map<ElementType, LWWSet.Timestamps> struct) { }
+  @JsonProperty("data") abstract Map<ElementType, LWWSet.Timestamps> getStruct();
+}
+
+abstract class LWWSetTimestampsMixin {
+  @JsonCreator
+  LWWSetTimestampsMixin(@JsonProperty("add") long latestAdd, @JsonProperty("remove") long latestRemove) { }
+  @JsonProperty("add") abstract long getLatestAdd();
+  @JsonProperty("remove") abstract long getLatestRemove();
+}
+
 abstract class GrowOnlySetMixin<E>{
   @JsonCreator
   GrowOnlySetMixin(@JsonProperty("elements") Set<E> elements){ }
@@ -63,6 +76,8 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(OrSet.class, OrSetMixin.class);
     context.setMixInAnnotations(GrowOnlySet.class, GrowOnlySetMixin.class);
     context.setMixInAnnotations(GrowOnlyCounter.class, GrowOnlyCounterMixin.class);
+    context.setMixInAnnotations(LWWSet.class, LWWSetMixin.class);
+    context.setMixInAnnotations(LWWSet.Timestamps.class, LWWSetTimestampsMixin.class);
   }
 
 }
