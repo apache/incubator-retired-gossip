@@ -79,10 +79,21 @@ public class StandAloneNodeCrdtOrSet {
         } else if (op == 'g') {
           gcount(val, gossipService);
         }
+        if (op == 'l') {
+          listen(val, gossipService);
+        }
       }
     }
   }
-
+  
+  private static void listen(String val, GossipManager gossipManager) {
+    gossipManager.registerSharedDataSubscriber((key, oldValue, newValue) -> {
+      if (key.equals(val)) {
+        System.out.println("Event Handler fired! " + oldValue + " " + newValue);
+      }
+    });
+  }
+  
   private static void gcount(String val, GossipManager gossipManager) {
     GrowOnlyCounter c = (GrowOnlyCounter) gossipManager.findCrdt("def");
     Long l = Long.valueOf(val);

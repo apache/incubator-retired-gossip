@@ -26,6 +26,8 @@ import org.apache.gossip.Member;
 import org.apache.gossip.crdt.Crdt;
 import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
+import org.apache.gossip.event.data.UpdateNodeDataEventHandler;
+import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
 import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.SharedDataMessage;
@@ -347,5 +349,21 @@ public abstract class GossipManager {
   public static File buildPerNodeDataPath(GossipManager manager) {
     return new File(manager.getSettings().getPathToDataState(), "pernodedata."
             + manager.getMyself().getClusterName() + "." + manager.getMyself().getId() + ".json");
+  }
+  
+  public void registerPerNodeDataSubscriber(UpdateNodeDataEventHandler handler){
+    gossipCore.registerPerNodeDataSubscriber(handler);
+  }
+  
+  public void registerSharedDataSubscriber(UpdateSharedDataEventHandler handler){
+    gossipCore.registerSharedDataSubscriber(handler);
+  }
+  
+  public void unregisterPerNodeDataSubscriber(UpdateNodeDataEventHandler handler){
+    gossipCore.unregisterPerNodeDataSubscriber(handler);
+  }
+  
+  public void unregisterSharedDataSubscriber(UpdateSharedDataEventHandler handler){
+    gossipCore.unregisterSharedDataSubscriber(handler);
   }
 }

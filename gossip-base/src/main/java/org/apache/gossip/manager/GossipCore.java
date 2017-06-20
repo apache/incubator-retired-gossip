@@ -20,12 +20,18 @@ package org.apache.gossip.manager;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import org.apache.gossip.Member;
 import org.apache.gossip.LocalMember;
+import org.apache.gossip.Member;
 import org.apache.gossip.RemoteMember;
 import org.apache.gossip.crdt.Crdt;
 import org.apache.gossip.event.GossipState;
-import org.apache.gossip.model.*;
+import org.apache.gossip.event.data.DataEventManager;
+import org.apache.gossip.event.data.UpdateNodeDataEventHandler;
+import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
+import org.apache.gossip.model.Base;
+import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.model.Response;
+import org.apache.gossip.model.SharedDataMessage;
 import org.apache.gossip.udp.Trackable;
 import org.apache.log4j.Logger;
 
@@ -55,13 +61,15 @@ public class GossipCore implements GossipCoreConstants {
   private final Meter messageSerdeException;
   private final Meter tranmissionException;
   private final Meter tranmissionSuccess;
-
+  private final DataEventManager eventManager;
+  
   public GossipCore(GossipManager manager, MetricRegistry metrics){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
     workQueue = new ArrayBlockingQueue<>(1024);
     perNodeData = new ConcurrentHashMap<>();
     sharedData = new ConcurrentHashMap<>();
+    eventManager = new DataEventManager(metrics);
     metrics.register(WORKQUEUE_SIZE, (Gauge<Integer>)() -> workQueue.size());
     metrics.register(PER_NODE_DATA_SIZE, (Gauge<Integer>)() -> perNodeData.size());
     metrics.register(SHARED_DATA_SIZE, (Gauge<Integer>)() ->  sharedData.size());
@@ -76,6 +84,7 @@ public class GossipCore implements GossipCoreConstants {
     while (true){
       SharedDataMessage previous = sharedData.putIfAbsent(message.getKey(), message);
       if (previous == null){
+        eventManager.notifySharedData(message.getKey(), message.getPayload(), null);
         return;
       }
       if (message.getPayload() instanceof Crdt){
@@ -88,12 +97,17 @@ public class GossipCore implements GossipCoreConstants {
         merged.setPayload(mergedCrdt);
         boolean replaced = sharedData.replace(message.getKey(), previous, merged);
         if (replaced){
+          if(!merged.getPayload().equals(previous.getPayload())) {
+            eventManager
+                    .notifySharedData(message.getKey(), merged.getPayload(), previous.getPayload());
+          }
           return;
         }
       } else {
         if (previous.getTimestamp() < message.getTimestamp()){
           boolean result = sharedData.replace(message.getKey(), previous, message);
           if (result){
+            eventManager.notifySharedData(message.getKey(), message.getPayload(), previous.getPayload());
             return;
           }
         } else {
@@ -102,7 +116,7 @@ public class GossipCore implements GossipCoreConstants {
       }
     }
   }
-  
+
   public void addPerNodeData(PerNodeDataMessage message){
     ConcurrentHashMap<String,PerNodeDataMessage> nodeMap = new ConcurrentHashMap<>();
     nodeMap.put(message.getKey(), message);
@@ -111,11 +125,16 @@ public class GossipCore implements GossipCoreConstants {
       PerNodeDataMessage current = nodeMap.get(message.getKey());
       if (current == null){
         nodeMap.putIfAbsent(message.getKey(), message);
+        eventManager.notifyPerNodeData(message.getNodeId(), message.getKey(), message.getPayload(), null);
       } else {
         if (current.getTimestamp() < message.getTimestamp()){
           nodeMap.replace(message.getKey(), current, message);
+          eventManager.notifyPerNodeData(message.getNodeId(), message.getKey(), message.getPayload(),
+                  current.getPayload());
         }
       }
+    } else {
+      eventManager.notifyPerNodeData(message.getNodeId(), message.getKey(), message.getPayload(), null);
     }
   }
 
@@ -178,7 +197,7 @@ public class GossipCore implements GossipCoreConstants {
     sendInternal(message, uri);
     if (latchAndBase == null){
       return null;
-    } 
+    }
     
     try {
       boolean complete = latchAndBase.latch.await(1, TimeUnit.SECONDS);
@@ -296,5 +315,21 @@ public class GossipCore implements GossipCoreConstants {
         return merged;
       }
     }
+  }
+  
+  void registerPerNodeDataSubscriber(UpdateNodeDataEventHandler handler){
+    eventManager.registerPerNodeDataSubscriber(handler);
+  }
+  
+  void registerSharedDataSubscriber(UpdateSharedDataEventHandler handler){
+    eventManager.registerSharedDataSubscriber(handler);
+  }
+  
+  void unregisterPerNodeDataSubscriber(UpdateNodeDataEventHandler handler){
+    eventManager.unregisterPerNodeDataSubscriber(handler);
+  }
+  
+  void unregisterSharedDataSubscriber(UpdateSharedDataEventHandler handler){
+    eventManager.unregisterSharedDataSubscriber(handler);
   }
 }
