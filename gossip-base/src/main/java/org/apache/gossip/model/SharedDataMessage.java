@@ -17,6 +17,9 @@
  */
 package org.apache.gossip.model;
 
+import org.apache.gossip.replication.AllReplicable;
+import org.apache.gossip.replication.Replicable;
+
 public class SharedDataMessage extends Base {
 
   private String nodeId;
@@ -24,6 +27,7 @@ public class SharedDataMessage extends Base {
   private Object payload;
   private Long timestamp;
   private Long expireAt;
+  private Replicable<SharedDataMessage> replicable;
   
   public String getNodeId() {
     return nodeId;
@@ -55,10 +59,20 @@ public class SharedDataMessage extends Base {
   public void setExpireAt(Long expireAt) {
     this.expireAt = expireAt;
   }
+  
+  public Replicable<SharedDataMessage> getReplicable() {
+    return replicable;
+  }
+  
+  public void setReplicable(Replicable<SharedDataMessage> replicable) {
+    this.replicable = replicable;
+  }
+  
   @Override
   public String toString() {
     return "SharedGossipDataMessage [nodeId=" + nodeId + ", key=" + key + ", payload=" + payload
-            + ", timestamp=" + timestamp + ", expireAt=" + expireAt + "]";
-  }  
+            + ", timestamp=" + timestamp + ", expireAt=" + expireAt
+            + ", replicable=" + replicable + "]";
+  }
 }
 

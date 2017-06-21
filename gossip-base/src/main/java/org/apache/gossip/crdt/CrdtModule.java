@@ -20,9 +20,15 @@ package org.apache.gossip.crdt;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import org.apache.gossip.LocalMember;
+import org.apache.gossip.replication.BlackListReplicable;
+import org.apache.gossip.replication.Replicable;
+import org.apache.gossip.replication.WhiteListReplicable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -81,6 +87,26 @@ abstract class PNCounterMixin {
   @JsonProperty("n-counters") abstract Map<String, Long> getNCounters();
 }
 
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.CLASS,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+abstract class ReplicableMixin {
+
+}
+
+abstract class WhiteListReplicableMixin {
+  @JsonCreator
+  WhiteListReplicableMixin(@JsonProperty("whiteListMembers") List<LocalMember> whiteListMembers) { }
+  @JsonProperty("whiteListMembers") abstract List<LocalMember> getWhiteListMembers();
+}
+
+abstract class BlackListReplicableMixin {
+  @JsonCreator
+  BlackListReplicableMixin(@JsonProperty("blackListMembers") List<LocalMember> blackListMembers) { }
+  @JsonProperty("blackListMembers") abstract List<LocalMember> getBlackListMembers();
+}
+
 //If anyone wants to take a stab at this. please have at it
 //https://github.com/FasterXML/jackson-datatype-guava/blob/master/src/main/java/com/fasterxml/jackson/datatype/guava/ser/MultimapSerializer.java
 public class CrdtModule extends SimpleModule {
@@ -101,6 +127,9 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(LwwSet.Timestamps.class, LWWSetTimestampsMixin.class);
     context.setMixInAnnotations(MaxChangeSet.class, MaxChangeSetMixin.class);
     context.setMixInAnnotations(TwoPhaseSet.class, TwoPhaseSetMixin.class);
+    context.setMixInAnnotations(Replicable.class, ReplicableMixin.class);
+    context.setMixInAnnotations(WhiteListReplicable.class, WhiteListReplicableMixin.class);
+    context.setMixInAnnotations(BlackListReplicable.class, BlackListReplicableMixin.class);
   }
 
 }

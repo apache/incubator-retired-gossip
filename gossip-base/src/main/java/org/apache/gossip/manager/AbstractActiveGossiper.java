@@ -85,6 +85,10 @@ public abstract class AbstractActiveGossiper {
     }
     long startTime = System.currentTimeMillis();
     for (Entry<String, SharedDataMessage> innerEntry : gossipCore.getSharedData().entrySet()){
+      if (innerEntry.getValue().getReplicable() != null && !innerEntry.getValue().getReplicable()
+              .shouldReplicate(me, member, innerEntry.getValue())) {
+        continue;
+      }
       UdpSharedDataMessage message = new UdpSharedDataMessage();
       message.setUuid(UUID.randomUUID().toString());
       message.setUriFrom(me.getId());
@@ -93,6 +97,7 @@ public abstract class AbstractActiveGossiper {
       message.setNodeId(innerEntry.getValue().getNodeId());
       message.setTimestamp(innerEntry.getValue().getTimestamp());
       message.setPayload(innerEntry.getValue().getPayload());
+      message.setReplicable(innerEntry.getValue().getReplicable());
       gossipCore.sendOneWay(message, member.getUri());
     }
     sharedDataHistogram.update(System.currentTimeMillis() - startTime);
@@ -105,6 +110,10 @@ public abstract class AbstractActiveGossiper {
     long startTime = System.currentTimeMillis();
     for (Entry<String, ConcurrentHashMap<String, PerNodeDataMessage>> entry : gossipCore.getPerNodeData().entrySet()){
       for (Entry<String, PerNodeDataMessage> innerEntry : entry.getValue().entrySet()){
+        if (innerEntry.getValue().getReplicable() != null && !innerEntry.getValue().getReplicable()
+                .shouldReplicate(me, member, innerEntry.getValue())) {
+          continue;
+        }
         UdpPerNodeDataMessage message = new UdpPerNodeDataMessage();
         message.setUuid(UUID.randomUUID().toString());
         message.setUriFrom(me.getId());
@@ -113,6 +122,7 @@ public abstract class AbstractActiveGossiper {
         message.setNodeId(innerEntry.getValue().getNodeId());
         message.setTimestamp(innerEntry.getValue().getTimestamp());
         message.setPayload(innerEntry.getValue().getPayload());
+        message.setReplicable(innerEntry.getValue().getReplicable());
         gossipCore.sendOneWay(message, member.getUri());   
       }
     }

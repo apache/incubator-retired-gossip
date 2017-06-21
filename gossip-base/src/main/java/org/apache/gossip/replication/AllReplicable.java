@@ -15,35 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.udp;
+package org.apache.gossip.replication;
 
-import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.LocalMember;
+import org.apache.gossip.model.Base;
 
-public class UdpPerNodeDataMessage extends PerNodeDataMessage implements Trackable {
-
-  private String uriFrom;
-  private String uuid;
+/**
+ * Replicable implementation which replicates data to any node. This is the default replication
+ * strategy if a data item not specified its replication behaviour.
+ *
+ * @param <T> A subtype of the class {@link org.apache.gossip.model.Base} which uses this interface
+ * @see Replicable
+ */
+public class AllReplicable<T extends Base> implements Replicable<T> {
   
-  public String getUriFrom() {
-    return uriFrom;
-  }
-  
-  public void setUriFrom(String uriFrom) {
-    this.uriFrom = uriFrom;
-  }
-  
-  public String getUuid() {
-    return uuid;
-  }
-  
-  public void setUuid(String uuid) {
-    this.uuid = uuid;
-  }
-
   @Override
-  public String toString() {
-    return "UdpGossipDataMessage [uriFrom=" + uriFrom + ", uuid=" + uuid
-            + ", getReplicable()=" + getReplicable() + "]";
+  public boolean shouldReplicate(LocalMember me, LocalMember destination, T message) {
+    return true;
   }
-
 }

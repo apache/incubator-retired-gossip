@@ -44,7 +44,8 @@ public class UdpSharedDataMessage extends SharedDataMessage implements Trackable
   public String toString() {
     return "UdpSharedGossipDataMessage [uriFrom=" + uriFrom + ", uuid=" + uuid + ", getNodeId()="
             + getNodeId() + ", getKey()=" + getKey() + ", getPayload()=" + getPayload()
-            + ", getTimestamp()=" + getTimestamp() + ", getExpireAt()=" + getExpireAt() + "]";
+            + ", getTimestamp()=" + getTimestamp() + ", getExpireAt()=" + getExpireAt()
+            + ", getReplicable()=" + getReplicable() + "]";
   }
 
 }

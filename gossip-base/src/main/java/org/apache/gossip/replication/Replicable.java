@@ -15,35 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.udp;
+package org.apache.gossip.replication;
 
-import org.apache.gossip.model.PerNodeDataMessage;
+import org.apache.gossip.LocalMember;
+import org.apache.gossip.model.Base;
 
-public class UdpPerNodeDataMessage extends PerNodeDataMessage implements Trackable {
-
-  private String uriFrom;
-  private String uuid;
-  
-  public String getUriFrom() {
-    return uriFrom;
-  }
-  
-  public void setUriFrom(String uriFrom) {
-    this.uriFrom = uriFrom;
-  }
-  
-  public String getUuid() {
-    return uuid;
-  }
-  
-  public void setUuid(String uuid) {
-    this.uuid = uuid;
-  }
-
-  @Override
-  public String toString() {
-    return "UdpGossipDataMessage [uriFrom=" + uriFrom + ", uuid=" + uuid
-            + ", getReplicable()=" + getReplicable() + "]";
-  }
-
+/**
+ * This interface is used to determine whether a data item needs to be replicated to
+ * another gossip member.
+ *
+ * @param <T> A subtype of the class {@link org.apache.gossip.model.Base} which uses this interface
+ */
+public interface Replicable<T extends Base> {
+  /**
+   * Test for a given data item needs to be replicated.
+   * @param me node that the data item is going to transmit from.
+   * @param destination target node to replicate.
+   * @param message this parameter is currently ignored
+   * @return true if the data item needs to be replicated to the destination. Otherwise false.
+   */
+  boolean shouldReplicate(LocalMember me, LocalMember destination, T message);
 }
