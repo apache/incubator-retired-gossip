@@ -17,15 +17,15 @@
  */
 package org.apache.gossip.crdt;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 abstract class OrSetMixin<E> {
   @JsonCreator
@@ -37,8 +37,8 @@ abstract class OrSetMixin<E> {
 
 abstract class LWWSetMixin<ElementType> {
   @JsonCreator
-  LWWSetMixin(@JsonProperty("data") Map<ElementType, LWWSet.Timestamps> struct) { }
-  @JsonProperty("data") abstract Map<ElementType, LWWSet.Timestamps> getStruct();
+  LWWSetMixin(@JsonProperty("data") Map<ElementType, LwwSet.Timestamps> struct) { }
+  @JsonProperty("data") abstract Map<ElementType, LwwSet.Timestamps> getStruct();
 }
 
 abstract class LWWSetTimestampsMixin {
@@ -46,6 +46,12 @@ abstract class LWWSetTimestampsMixin {
   LWWSetTimestampsMixin(@JsonProperty("add") long latestAdd, @JsonProperty("remove") long latestRemove) { }
   @JsonProperty("add") abstract long getLatestAdd();
   @JsonProperty("remove") abstract long getLatestRemove();
+}
+
+abstract class MaxChangeSetMixin<E> {
+  @JsonCreator
+  MaxChangeSetMixin(@JsonProperty("data") Map<E, Integer> struct) { }
+  @JsonProperty("data") abstract Map<E, Integer> getStruct();
 }
 
 abstract class GrowOnlySetMixin<E>{
@@ -84,8 +90,9 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(GrowOnlySet.class, GrowOnlySetMixin.class);
     context.setMixInAnnotations(GrowOnlyCounter.class, GrowOnlyCounterMixin.class);
     context.setMixInAnnotations(PNCounter.class, PNCounterMixin.class);
-    context.setMixInAnnotations(LWWSet.class, LWWSetMixin.class);
-    context.setMixInAnnotations(LWWSet.Timestamps.class, LWWSetTimestampsMixin.class);
+    context.setMixInAnnotations(LwwSet.class, LWWSetMixin.class);
+    context.setMixInAnnotations(LwwSet.Timestamps.class, LWWSetTimestampsMixin.class);
+    context.setMixInAnnotations(MaxChangeSet.class, MaxChangeSetMixin.class);
   }
 
 }

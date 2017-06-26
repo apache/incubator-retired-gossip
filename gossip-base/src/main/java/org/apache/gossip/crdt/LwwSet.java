@@ -20,12 +20,31 @@ package org.apache.gossip.crdt;
 import org.apache.gossip.manager.Clock;
 import org.apache.gossip.manager.SystemClock;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class LWWSet<ElementType> implements CrdtSet<ElementType, Set<ElementType>, LWWSet<ElementType>> {
+/*
+  Last write wins CrdtSet
+  Each operation has timestamp: when you add or remove SystemClock is used to get current time in nanoseconds.
+  When all add/remove operations are within the only node LWWSet is guaranteed to work like a Set.
+  If you have multiple nodes with ideally synchronized clocks:
+    You will observe operations on all machines later than on the initiator, but the last operations on cluster will win.
+  If you have some significant clock drift you will suffer from data loss.
+
+  Read more: https://github.com/aphyr/meangirls#lww-element-set
+
+  You can view examples of usage in tests:
+  LwwSetTest - unit tests
+  DataTest - integration test with 2 nodes, LWWSet was serialized/deserialized, sent between nodes, merged
+*/
+
+public class LwwSet<ElementType> implements CrdtAddRemoveSet<ElementType, Set<ElementType>, LwwSet<ElementType>> {
   static private Clock clock = new SystemClock();
 
   private final Map<ElementType, Timestamps> struct;
@@ -44,11 +63,11 @@ public class LWWSet<ElementType> implements CrdtSet<ElementType, Set<ElementType
       latestRemove = remove;
     }
 
-    long getLatestAdd() {
+    long getLatestAdd(){
       return latestAdd;
     }
 
-    long getLatestRemove() {
+    long getLatestRemove(){
       return latestRemove;
     }
 
@@ -74,23 +93,23 @@ public class LWWSet<ElementType> implements CrdtSet<ElementType, Set<ElementType
   }
 
 
-  public LWWSet(){
+  public LwwSet(){
     struct = new HashMap<>();
   }
 
   @SafeVarargs
-  public LWWSet(ElementType... elements){
+  public LwwSet(ElementType... elements){
     this(new HashSet<>(Arrays.asList(elements)));
   }
 
-  public LWWSet(Set<ElementType> set){
+  public LwwSet(Set<ElementType> set){
     struct = new HashMap<>();
     for (ElementType e : set){
       struct.put(e, new Timestamps().updateAdd());
     }
   }
 
-  public LWWSet(LWWSet<ElementType> first, LWWSet<ElementType> second){
+  public LwwSet(LwwSet<ElementType> first, LwwSet<ElementType> second){
     Function<ElementType, Timestamps> timestampsFor = p -> {
       Timestamps firstTs = first.struct.get(p);
       Timestamps secondTs = second.struct.get(p);
@@ -103,33 +122,33 @@ public class LWWSet<ElementType> implements CrdtSet<ElementType, Set<ElementType
         .distinct().collect(Collectors.toMap(p -> p, timestampsFor));
   }
 
-  public LWWSet<ElementType> add(ElementType e){
-    return this.merge(new LWWSet<>(e));
+  public LwwSet<ElementType> add(ElementType e){
+    return this.merge(new LwwSet<>(e));
   }
 
   // for serialization
-  LWWSet(Map<ElementType, Timestamps> struct){
+  LwwSet(Map<ElementType, Timestamps> struct){
     this.struct = struct;
   }
 
-  Map<ElementType, Timestamps> getStruct() {
+  Map<ElementType, Timestamps> getStruct(){
     return struct;
   }
 
 
-  public LWWSet<ElementType> remove(ElementType e){
+  public LwwSet<ElementType> remove(ElementType e){
     Timestamps eTimestamps = struct.get(e);
     if (eTimestamps == null || !eTimestamps.isPresent()){
       return this;
     }
     Map<ElementType, Timestamps> changeMap = new HashMap<>();
     changeMap.put(e, eTimestamps.updateRemove());
-    return this.merge(new LWWSet<>(changeMap));
+    return this.merge(new LwwSet<>(changeMap));
   }
 
   @Override
-  public LWWSet<ElementType> merge(LWWSet<ElementType> other){
-    return new LWWSet<>(this, other);
+  public LwwSet<ElementType> merge(LwwSet<ElementType> other){
+    return new LwwSet<>(this, other);
   }
 
   @Override
@@ -141,12 +160,12 @@ public class LWWSet<ElementType> implements CrdtSet<ElementType, Set<ElementType
   }
 
   @Override
-  public LWWSet<ElementType> optimize(){
+  public LwwSet<ElementType> optimize(){
     return this;
   }
 
   @Override
   public boolean equals(Object obj){
-    return this == obj || (obj != null && getClass() == obj.getClass() && value().equals(((LWWSet) obj).value()));
+    return this == obj || (obj != null && getClass() == obj.getClass() && value().equals(((LwwSet) obj).value()));
   }
 }
