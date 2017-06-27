@@ -171,6 +171,17 @@ public class SharedDataEventTest extends AbstractIntegrationBase {
     Assert.assertTrue(receivingNodeDataNewValue instanceof GrowOnlyCounter);
     Assert.assertEquals(1, ((GrowOnlyCounter) receivingNodeDataNewValue).value().longValue());
   
+    // check whether Node 3 received the gCounter
+    TUnit.assertThat(() -> {
+      GrowOnlyCounter gc = (GrowOnlyCounter) clients.get(2).findCrdt(gCounterKey);
+      if (gc == null) {
+        return "";
+      } else {
+        return gc;
+      }
+    }).afterWaitingAtMost(10, TimeUnit.SECONDS).isEqualTo(
+            new GrowOnlyCounter(new GrowOnlyCounter.Builder(clients.get(0)).increment(1L)));
+    
     // Node 3 Updates the gCounter by 4
     GrowOnlyCounter gc = (GrowOnlyCounter) clients.get(2).findCrdt(gCounterKey);
     GrowOnlyCounter gcNew = new GrowOnlyCounter(gc,
