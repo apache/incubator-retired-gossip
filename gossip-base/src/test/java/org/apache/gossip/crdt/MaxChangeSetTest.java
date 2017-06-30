@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class MaxChangeSetTest extends AbstractCRDTStringSetTest<MaxChangeSet<String>> {
+public class MaxChangeSetTest extends AddRemoveStringSetTest<MaxChangeSet<String>> {
   MaxChangeSet<String> construct(Set<String> set){
     return new MaxChangeSet<>(set);
   }

@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class LwwSetTest extends AbstractCRDTStringSetTest<LwwSet<String>> {
+public class LwwSetTest extends AddRemoveStringSetTest<LwwSet<String>> {
   static private Clock clock = new SystemClock();
 
   LwwSet<String> construct(Set<String> set){

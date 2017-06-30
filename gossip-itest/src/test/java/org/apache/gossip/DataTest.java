@@ -25,6 +25,7 @@ import org.apache.gossip.crdt.LwwSet;
 import org.apache.gossip.crdt.MaxChangeSet;
 import org.apache.gossip.crdt.OrSet;
 import org.apache.gossip.crdt.PNCounter;
+import org.apache.gossip.crdt.TwoPhaseSet;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.model.PerNodeDataMessage;
@@ -145,6 +146,11 @@ public class DataTest {
   @Test
   public void MaxChangeSetTest(){
     crdtSetTest("crmcs", MaxChangeSet::new);
+  }
+
+  @Test
+  public void TwoPhaseSetTest(){
+    crdtSetTest("crtps", TwoPhaseSet::new);
   }
 
   @Test

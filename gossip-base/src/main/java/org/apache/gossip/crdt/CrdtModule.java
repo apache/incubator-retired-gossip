@@ -54,6 +54,13 @@ abstract class MaxChangeSetMixin<E> {
   @JsonProperty("data") abstract Map<E, Integer> getStruct();
 }
 
+abstract class TwoPhaseSetMixin<E> {
+  @JsonCreator
+  TwoPhaseSetMixin(@JsonProperty("added") Set<E> added, @JsonProperty("removed") Set<E> removed) { }
+  @JsonProperty("added") abstract Set<E> getAdded();
+  @JsonProperty("removed") abstract Set<E> getRemoved();
+}
+
 abstract class GrowOnlySetMixin<E>{
   @JsonCreator
   GrowOnlySetMixin(@JsonProperty("elements") Set<E> elements){ }
@@ -93,6 +100,7 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(LwwSet.class, LWWSetMixin.class);
     context.setMixInAnnotations(LwwSet.Timestamps.class, LWWSetTimestampsMixin.class);
     context.setMixInAnnotations(MaxChangeSet.class, MaxChangeSetMixin.class);
+    context.setMixInAnnotations(TwoPhaseSet.class, TwoPhaseSetMixin.class);
   }
 
 }
