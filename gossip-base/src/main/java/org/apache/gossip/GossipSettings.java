@@ -17,6 +17,8 @@
  */
 package org.apache.gossip;
 
+import org.apache.gossip.lock.LockManagerSettings;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,7 +63,10 @@ public class GossipSettings {
   private String pathToKeyStore = "./keys";
   
   private boolean signMessages = false;
-  
+
+  // Settings related to lock manager
+  private LockManagerSettings lockManagerSettings = LockManagerSettings
+          .getLockManagerDefaultSettings();
   
   /**
    * Construct GossipSettings with default settings.
@@ -242,4 +247,15 @@ public class GossipSettings {
     this.protocolManagerClass = protocolManagerClass;
   }
 
+  public LockManagerSettings getLockManagerSettings() {
+    return lockManagerSettings;
+  }
+
+  /**
+   * Set the lock settings use by the lock manager
+   * @param lockManagerSettings lock settings. This object cannot be null.
+   */
+  public void setLockManagerSettings(LockManagerSettings lockManagerSettings) {
+    this.lockManagerSettings = lockManagerSettings;
+  }
 }

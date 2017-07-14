@@ -28,6 +28,8 @@ import org.apache.gossip.event.GossipListener;
 import org.apache.gossip.event.GossipState;
 import org.apache.gossip.event.data.UpdateNodeDataEventHandler;
 import org.apache.gossip.event.data.UpdateSharedDataEventHandler;
+import org.apache.gossip.lock.LockManager;
+import org.apache.gossip.lock.exceptions.VoteFailedException;
 import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.apache.gossip.model.SharedDataMessage;
@@ -43,7 +45,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -77,7 +83,8 @@ public abstract class GossipManager {
   private final GossipMemberStateRefresher memberStateRefresher;
   
   private final MessageHandler messageHandler;
-  
+  private final LockManager lockManager;
+
   public GossipManager(String cluster,
                        URI uri, String id, Map<String, String> properties, GossipSettings settings,
                        List<Member> gossipMembers, GossipListener listener, MetricRegistry registry,
@@ -89,6 +96,7 @@ public abstract class GossipManager {
     me = new LocalMember(cluster, uri, id, clock.nanoTime(), properties,
             settings.getWindowSize(), settings.getMinimumSamples(), settings.getDistribution());
     gossipCore = new GossipCore(this, registry);
+    this.lockManager = new LockManager(this, settings.getLockManagerSettings(), registry);
     dataReaper = new DataReaper(gossipCore, clock);
     members = new ConcurrentSkipListMap<>();
     for (Member startupMember : gossipMembers) {
@@ -221,6 +229,7 @@ public abstract class GossipManager {
    */
   public void shutdown() {
     gossipServiceRunning.set(false);
+    lockManager.shutdown();
     gossipCore.shutdown();
     transportManager.shutdown();
     dataReaper.close();
@@ -370,5 +379,22 @@ public abstract class GossipManager {
 
   public void registerGossipListener(GossipListener listener) {
     memberStateRefresher.register(listener);
+  }
+
+  /**
+   * Get the lock manager specified with this GossipManager.
+   * @return lock manager object.
+   */
+  public LockManager getLockManager() {
+    return lockManager;
+  }
+
+  /**
+   * Try to acquire a lock on given shared data key.
+   * @param key key of tha share data object.
+   * @throws VoteFailedException if the locking is failed.
+   */
+  public void acquireSharedDataLock(String key) throws VoteFailedException{
+    lockManager.acquireSharedDataLock(key);
   }
 }

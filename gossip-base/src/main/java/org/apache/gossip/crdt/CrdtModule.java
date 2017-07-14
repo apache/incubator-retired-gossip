@@ -24,6 +24,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.gossip.LocalMember;
+import org.apache.gossip.lock.vote.MajorityVote;
+import org.apache.gossip.lock.vote.Vote;
+import org.apache.gossip.lock.vote.VoteCandidate;
 import org.apache.gossip.replication.BlackListReplicable;
 import org.apache.gossip.replication.Replicable;
 import org.apache.gossip.replication.WhiteListReplicable;
@@ -107,6 +110,31 @@ abstract class BlackListReplicableMixin {
   @JsonProperty("blackListMembers") abstract List<LocalMember> getBlackListMembers();
 }
 
+abstract class VoteCandidateMixin {
+  @JsonCreator
+  VoteCandidateMixin(
+          @JsonProperty("candidateNodeId") String candidateNodeId,
+          @JsonProperty("votingKey") String votingKey,
+          @JsonProperty("votes") Map<String, Vote> votes
+  ) { }
+}
+
+abstract class VoteMixin {
+  @JsonCreator
+  VoteMixin(
+          @JsonProperty("votingNode") String votingNode,
+          @JsonProperty("voteValue") Boolean voteValue,
+          @JsonProperty("voteExchange") Boolean voteExchange,
+          @JsonProperty("liveMembers") List<String> liveMembers,
+          @JsonProperty("deadMembers") List<String> deadMembers
+  ) { }
+}
+
+abstract class MajorityVoteMixin<E>{
+  @JsonCreator
+  MajorityVoteMixin(@JsonProperty("voteCandidates") Map<String, VoteCandidate> voteCandidateMap){ }
+}
+
 //If anyone wants to take a stab at this. please have at it
 //https://github.com/FasterXML/jackson-datatype-guava/blob/master/src/main/java/com/fasterxml/jackson/datatype/guava/ser/MultimapSerializer.java
 public class CrdtModule extends SimpleModule {
@@ -130,6 +158,9 @@ public class CrdtModule extends SimpleModule {
     context.setMixInAnnotations(Replicable.class, ReplicableMixin.class);
     context.setMixInAnnotations(WhiteListReplicable.class, WhiteListReplicableMixin.class);
     context.setMixInAnnotations(BlackListReplicable.class, BlackListReplicableMixin.class);
+    context.setMixInAnnotations(MajorityVote.class, MajorityVoteMixin.class);
+    context.setMixInAnnotations(VoteCandidate.class, VoteCandidateMixin.class);
+    context.setMixInAnnotations(Vote.class, VoteMixin.class);
   }
 
 }
