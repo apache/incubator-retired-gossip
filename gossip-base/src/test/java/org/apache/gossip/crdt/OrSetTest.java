@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public class OrSetTest extends AbstractCRDTStringSetTest<OrSet<String>> {
+public class OrSetTest extends AddRemoveStringSetTest<OrSet<String>> {
   OrSet<String> construct(){
     return new OrSet<>();
   }

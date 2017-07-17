@@ -25,6 +25,7 @@ import org.apache.gossip.Member;
 import org.apache.gossip.crdt.LwwSet;
 import org.apache.gossip.crdt.MaxChangeSet;
 import org.apache.gossip.crdt.OrSet;
+import org.apache.gossip.crdt.TwoPhaseSet;
 import org.apache.gossip.manager.GossipManager;
 import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.protocol.ProtocolManager;
@@ -98,17 +99,22 @@ public class JacksonTest {
 
   @Test
   public void jacksonOrSetTest(){
-    jacksonCrdtSeDeTest(new OrSet<>("1", "2", "3"), OrSet.class);
+    jacksonCrdtSeDeTest(new OrSet<>("1", "2", "3").remove("2"), OrSet.class);
   }
 
   @Test
   public void jacksonLWWSetTest(){
-    jacksonCrdtSeDeTest(new LwwSet<>("1", "2", "3"), LwwSet.class);
+    jacksonCrdtSeDeTest(new LwwSet<>("1", "2", "3").remove("2"), LwwSet.class);
   }
 
   @Test
   public void jacksonMaxChangeSetTest(){
-    jacksonCrdtSeDeTest(new MaxChangeSet<>("1", "2", "3"), MaxChangeSet.class);
+    jacksonCrdtSeDeTest(new MaxChangeSet<>("1", "2", "3").remove("2"), MaxChangeSet.class);
+  }
+
+  @Test
+  public void jacksonTwoPhaseSetTest(){
+    jacksonCrdtSeDeTest(new TwoPhaseSet<>("1", "2", "3").remove("2"), TwoPhaseSet.class);
   }
 
   @Test

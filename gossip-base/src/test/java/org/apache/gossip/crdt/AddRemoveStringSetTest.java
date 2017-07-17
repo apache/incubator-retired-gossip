@@ -19,8 +19,9 @@ package org.apache.gossip.crdt;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,6 +29,8 @@ import java.util.stream.Stream;
 
 /*
   Abstract test suit to test CrdtSets with Add and Remove operations.
+  You can use this suite only if your set supports multiple additions/deletions
+    and has behavior similar to Set in single-threaded environment.
   It compares them with simple sets, validates add, remove, equals, value, etc. operations
   To use it you should:
   1. subclass this and implement constructors
@@ -36,7 +39,8 @@ import java.util.stream.Stream;
 */
 
 @Ignore
-public abstract class AbstractCRDTStringSetTest<SetType extends CrdtAddRemoveSet<String, Set<String>, SetType>> {
+public abstract class AddRemoveStringSetTest<SetType extends CrdtAddRemoveSet<String, Set<String>, SetType>> {
+
   abstract SetType construct(Set<String> set);
 
   abstract SetType construct();
