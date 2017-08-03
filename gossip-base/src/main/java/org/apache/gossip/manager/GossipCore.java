@@ -57,26 +57,24 @@ public class GossipCore implements GossipCoreConstants {
   private ConcurrentHashMap<String, LatchAndBase> requests;
   private final ConcurrentHashMap<String, ConcurrentHashMap<String, PerNodeDataMessage>> perNodeData;
   private final ConcurrentHashMap<String, SharedDataMessage> sharedData;
-  private final BlockingQueue<Runnable> workQueue;
   private final Meter messageSerdeException;
-  private final Meter tranmissionException;
-  private final Meter tranmissionSuccess;
+  private final Meter transmissionException;
+  private final Meter transmissionSuccess;
   private final DataEventManager eventManager;
   
   public GossipCore(GossipManager manager, MetricRegistry metrics){
     this.gossipManager = manager;
     requests = new ConcurrentHashMap<>();
-    workQueue = new ArrayBlockingQueue<>(1024);
     perNodeData = new ConcurrentHashMap<>();
     sharedData = new ConcurrentHashMap<>();
     eventManager = new DataEventManager(metrics);
-    metrics.register(WORKQUEUE_SIZE, (Gauge<Integer>)() -> workQueue.size());
+    metrics.register(WORKQUEUE_SIZE, (Gauge<Integer>)() -> 0);
     metrics.register(PER_NODE_DATA_SIZE, (Gauge<Integer>)() -> perNodeData.size());
     metrics.register(SHARED_DATA_SIZE, (Gauge<Integer>)() ->  sharedData.size());
     metrics.register(REQUEST_SIZE, (Gauge<Integer>)() ->  requests.size());
     messageSerdeException = metrics.meter(MESSAGE_SERDE_EXCEPTION);
-    tranmissionException = metrics.meter(MESSAGE_TRANSMISSION_EXCEPTION);
-    tranmissionSuccess = metrics.meter(MESSAGE_TRANSMISSION_SUCCESS);
+    transmissionException = metrics.meter(MESSAGE_TRANSMISSION_EXCEPTION);
+    transmissionSuccess = metrics.meter(MESSAGE_TRANSMISSION_SUCCESS);
   }
 
   @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -172,9 +170,9 @@ public class GossipCore implements GossipCoreConstants {
     }
     try {
       gossipManager.getTransportManager().send(uri, json_bytes);
-      tranmissionSuccess.mark();
+      transmissionSuccess.mark();
     } catch (IOException e) {
-      tranmissionException.mark();
+      transmissionException.mark();
       throw new RuntimeException(e);
     }
   }
