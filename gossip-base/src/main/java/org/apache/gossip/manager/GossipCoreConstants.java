@@ -18,7 +18,6 @@
 package org.apache.gossip.manager;
 
 public interface GossipCoreConstants {
-  String WORKQUEUE_SIZE = "gossip.core.workqueue.size";
   String PER_NODE_DATA_SIZE = "gossip.core.pernodedata.size"; 
   String SHARED_DATA_SIZE = "gossip.core.shareddata.size";
   String REQUEST_SIZE = "gossip.core.requests.size";

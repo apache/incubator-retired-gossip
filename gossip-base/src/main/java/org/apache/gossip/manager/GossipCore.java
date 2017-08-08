@@ -68,7 +68,6 @@ public class GossipCore implements GossipCoreConstants {
     perNodeData = new ConcurrentHashMap<>();
     sharedData = new ConcurrentHashMap<>();
     eventManager = new DataEventManager(metrics);
-    metrics.register(WORKQUEUE_SIZE, (Gauge<Integer>)() -> 0);
     metrics.register(PER_NODE_DATA_SIZE, (Gauge<Integer>)() -> perNodeData.size());
     metrics.register(SHARED_DATA_SIZE, (Gauge<Integer>)() ->  sharedData.size());
     metrics.register(REQUEST_SIZE, (Gauge<Integer>)() ->  requests.size());
