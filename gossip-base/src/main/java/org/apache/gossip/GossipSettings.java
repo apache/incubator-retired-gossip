@@ -43,7 +43,7 @@ public class GossipSettings {
   
   private String distribution = "normal";
   
-  private String activeGossipClass = "org.apache.gossip.manager.SimpleActiveGossipper";
+  private String activeGossipClass = "org.apache.gossip.manager.SimpleActiveGossiper";
 
   private String transportManagerClass = "org.apache.gossip.transport.udp.UdpTransportManager";
   private String protocolManagerClass = "org.apache.gossip.protocol.json.JacksonProtocolManager";

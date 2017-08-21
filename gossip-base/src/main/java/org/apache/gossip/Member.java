@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.Map;
 
 /**
- * A abstract class representing a gossip member.
+ * An abstract class representing a gossip member.
  * 
  */
 public abstract class Member implements Comparable<Member> {

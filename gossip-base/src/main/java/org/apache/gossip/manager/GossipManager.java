@@ -185,7 +185,7 @@ public abstract class GossipManager {
     if (settings.isPersistDataState()) {
       scheduledServiced.scheduleAtFixedRate(userDataState, 60, 60, TimeUnit.SECONDS);
     }
-    scheduledServiced.scheduleAtFixedRate(memberStateRefresher, 0, 100, TimeUnit.MILLISECONDS);
+    memberStateRefresher.init();
     LOGGER.debug("The GossipManager is started.");
   }
   
@@ -224,6 +224,7 @@ public abstract class GossipManager {
     gossipCore.shutdown();
     transportManager.shutdown();
     dataReaper.close();
+    memberStateRefresher.shutdown();
     scheduledServiced.shutdown();
     try {
       scheduledServiced.awaitTermination(1, TimeUnit.SECONDS);
@@ -365,5 +366,9 @@ public abstract class GossipManager {
   
   public void unregisterSharedDataSubscriber(UpdateSharedDataEventHandler handler){
     gossipCore.unregisterSharedDataSubscriber(handler);
+  }
+
+  public void registerGossipListener(GossipListener listener) {
+    memberStateRefresher.register(listener);
   }
 }

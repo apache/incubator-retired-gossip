@@ -33,14 +33,14 @@ import com.codahale.metrics.MetricRegistry;
  * Base implementation gossips randomly to live nodes periodically gossips to dead ones
  *
  */
-public class SimpleActiveGossipper extends AbstractActiveGossiper {
+public class SimpleActiveGossiper extends AbstractActiveGossiper {
 
   private ScheduledExecutorService scheduledExecutorService;
   private final BlockingQueue<Runnable> workQueue;
   private ThreadPoolExecutor threadService;
   
-  public SimpleActiveGossipper(GossipManager gossipManager, GossipCore gossipCore,
-          MetricRegistry registry) {
+  public SimpleActiveGossiper(GossipManager gossipManager, GossipCore gossipCore,
+                              MetricRegistry registry) {
     super(gossipManager, gossipCore, registry);
     scheduledExecutorService = Executors.newScheduledThreadPool(2);
     workQueue = new ArrayBlockingQueue<Runnable>(1024);

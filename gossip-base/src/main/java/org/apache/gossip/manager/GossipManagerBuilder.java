@@ -18,10 +18,11 @@
 package org.apache.gossip.manager;
 
 import com.codahale.metrics.MetricRegistry;
-import org.apache.gossip.Member;
 import org.apache.gossip.GossipSettings;
+import org.apache.gossip.Member;
 import org.apache.gossip.StartupSettings;
 import org.apache.gossip.event.GossipListener;
+import org.apache.gossip.event.GossipState;
 import org.apache.gossip.manager.handlers.MessageHandler;
 import org.apache.gossip.manager.handlers.MessageHandlerFactory;
 

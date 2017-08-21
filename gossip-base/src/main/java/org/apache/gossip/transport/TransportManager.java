@@ -20,7 +20,7 @@ package org.apache.gossip.transport;
 import java.io.IOException;
 import java.net.URI;
 
-/** interface for manage that sends and receives messages that have already been serialized. */
+/** interface for manager that sends and receives messages that have already been serialized. */
 public interface TransportManager {
   
   /** starts the active gossip thread responsible for reaching out to remote nodes. Not related to `startEndpoint()` */
