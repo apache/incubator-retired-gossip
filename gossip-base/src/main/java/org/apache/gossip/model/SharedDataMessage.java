@@ -28,7 +28,7 @@ public class SharedDataMessage extends Base {
   private Long timestamp;
   private Long expireAt;
   private Replicable<SharedDataMessage> replicable;
-  
+
   public String getNodeId() {
     return nodeId;
   }

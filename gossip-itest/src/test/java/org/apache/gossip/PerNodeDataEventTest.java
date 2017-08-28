@@ -23,19 +23,17 @@ import org.apache.gossip.manager.GossipManagerBuilder;
 import org.apache.gossip.model.PerNodeDataMessage;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.platform.runner.JUnitPlatform;
 import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-@RunWith(JUnitPlatform.class)
+@RunWith(Parameterized.class)
 public class PerNodeDataEventTest extends AbstractIntegrationBase {
   
   private String receivedKey = "";
@@ -43,25 +41,39 @@ public class PerNodeDataEventTest extends AbstractIntegrationBase {
   private Object receivingNodeDataNewValue = "";
   private Object receivingNodeDataOldValue = "";
   private Semaphore lock = new Semaphore(0);
-  
-  
+  private int base;
+  private boolean bulkTransfer;
+
+  public PerNodeDataEventTest(int base, boolean bulkTransfer) {
+    this.base = base;
+    this.bulkTransfer = bulkTransfer;
+  }
+
+  @Parameterized.Parameters(name = "{index} bulkTransfer={1}")
+  public static Collection<Object[]> data() {
+    return Arrays.asList(new Object[][]{
+            {50000, false}, {55000, true}
+    });
+  }
+
   @Test
   public void perNodeDataEventTest()
           throws InterruptedException, UnknownHostException, URISyntaxException {
     GossipSettings settings = new GossipSettings();
     settings.setPersistRingState(false);
     settings.setPersistDataState(false);
+    settings.setBulkTransfer(bulkTransfer);
     String cluster = UUID.randomUUID().toString();
     int seedNodes = 1;
     List<Member> startupMembers = new ArrayList<>();
     for (int i = 1; i < seedNodes + 1; ++i) {
-      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (base + i));
       startupMembers.add(new RemoteMember(cluster, uri, i + ""));
     }
     final List<GossipManager> clients = new ArrayList<>();
     final int clusterMembers = 2;
     for (int i = 1; i < clusterMembers + 1; ++i) {
-      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (50000 + i));
+      URI uri = new URI("udp://" + "127.0.0.1" + ":" + (base + i));
       GossipManager gossipService = GossipManagerBuilder.newBuilder().cluster(cluster).uri(uri)
               .id(i + "").gossipMembers(startupMembers).gossipSettings(settings).build();
       clients.add(gossipService);
