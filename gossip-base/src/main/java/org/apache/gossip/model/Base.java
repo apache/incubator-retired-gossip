@@ -19,9 +19,9 @@ package org.apache.gossip.model;
 
 import org.apache.gossip.udp.UdpActiveGossipMessage;
 import org.apache.gossip.udp.UdpActiveGossipOk;
-import org.apache.gossip.udp.UdpPerNodeDataMessage;
+import org.apache.gossip.udp.UdpPerNodeDataBulkMessage;
 import org.apache.gossip.udp.UdpNotAMemberFault;
-import org.apache.gossip.udp.UdpSharedDataMessage;
+import org.apache.gossip.udp.UdpSharedDataBulkMessage;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -40,9 +40,9 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
         @Type(value = UdpActiveGossipMessage.class, name = "UdpActiveGossipMessage"),
         @Type(value = UdpNotAMemberFault.class, name = "UdpNotAMemberFault"),
         @Type(value = PerNodeDataMessage.class, name = "PerNodeDataMessage"),
-        @Type(value = UdpPerNodeDataMessage.class, name = "UdpPerNodeDataMessage"),
+        @Type(value = UdpPerNodeDataBulkMessage.class, name = "UdpPerNodeDataMessage"),
         @Type(value = SharedDataMessage.class, name = "SharedDataMessage"),
-        @Type(value = UdpSharedDataMessage.class, name = "UdpSharedDataMessage")
+        @Type(value = UdpSharedDataBulkMessage.class, name = "UdpSharedDataMessage")
         })
 public class Base {
 

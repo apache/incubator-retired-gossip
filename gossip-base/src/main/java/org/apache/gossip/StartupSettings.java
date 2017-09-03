@@ -55,6 +55,10 @@ public class StartupSettings {
   /** The list with gossip members to start with. */
   private final List<Member> gossipMembers;
 
+  /** Default setting values */
+  private static final boolean DEFAULT_BULK_TRANSFER = false;
+  public static final int DEFAULT_BULK_TRANSFER_SIZE = 100;
+
   /**
    * Constructor.
    * 
@@ -175,6 +179,7 @@ public class StartupSettings {
       properties.put(i.getKey(), i.getValue().asText());
     }
     //TODO constants as defaults?
+    // TODO setting keys as constants?
     int gossipInterval = jsonObject.get("gossip_interval").intValue();
     int cleanupInterval = jsonObject.get("cleanup_interval").intValue();
     int windowSize = jsonObject.get("window_size").intValue();
@@ -182,6 +187,12 @@ public class StartupSettings {
     double convictThreshold = jsonObject.get("convict_threshold").asDouble();
     String cluster = jsonObject.get("cluster").textValue();
     String distribution = jsonObject.get("distribution").textValue();
+    boolean bulkTransfer = jsonObject.has("bulk_transfer") ?
+            jsonObject.get("bulk_transfer").booleanValue() :
+            DEFAULT_BULK_TRANSFER;
+    int bulkTransferSize = jsonObject.has("bulk_transfer_size") ?
+            jsonObject.get("bulk_transfer_size").intValue() :
+            DEFAULT_BULK_TRANSFER_SIZE;
     if (cluster == null){
       throw new IllegalArgumentException("cluster was null. It is required");
     }
@@ -192,8 +203,9 @@ public class StartupSettings {
         jsonObject.get("protocol_manager_class").textValue() : 
         null;
     URI uri2 = new URI(uri);
-    GossipSettings gossipSettings = new GossipSettings(gossipInterval, cleanupInterval, windowSize, minSamples,
-        convictThreshold, distribution);
+    GossipSettings gossipSettings = new GossipSettings(gossipInterval, cleanupInterval, windowSize,
+            minSamples, convictThreshold, distribution, bulkTransfer);
+    gossipSettings.setBulkTransferSize(bulkTransferSize);
     if (transportClass != null) {
       gossipSettings.setTransportManagerClass(transportClass);
     }

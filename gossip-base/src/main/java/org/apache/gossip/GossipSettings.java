@@ -68,6 +68,10 @@ public class GossipSettings {
   private LockManagerSettings lockManagerSettings = LockManagerSettings
           .getLockManagerDefaultSettings();
   
+  private boolean bulkTransfer = false;
+
+  private int bulkTransferSize = StartupSettings.DEFAULT_BULK_TRANSFER_SIZE;
+  
   /**
    * Construct GossipSettings with default settings.
    */
@@ -82,14 +86,15 @@ public class GossipSettings {
    * @param cleanupInterval
    *          The cleanup interval in ms.
    */
-  public GossipSettings(int gossipInterval, int cleanupInterval, int windowSize, 
-          int minimumSamples, double convictThreshold, String distribution) {
+  public GossipSettings(int gossipInterval, int cleanupInterval, int windowSize, int minimumSamples,
+          double convictThreshold, String distribution, boolean bulkTransfer) {
     this.gossipInterval = gossipInterval;
     this.cleanupInterval = cleanupInterval;
     this.windowSize = windowSize;
     this.minimumSamples = minimumSamples;
     this.convictThreshold = convictThreshold;
     this.distribution = distribution;
+    this.bulkTransfer = bulkTransfer;
   }
 
   /**
@@ -257,5 +262,21 @@ public class GossipSettings {
    */
   public void setLockManagerSettings(LockManagerSettings lockManagerSettings) {
     this.lockManagerSettings = lockManagerSettings;
+  }
+
+  public boolean isBulkTransfer() {
+    return bulkTransfer;
+  }
+
+  public void setBulkTransfer(boolean bulkTransfer) {
+    this.bulkTransfer = bulkTransfer;
+  }
+
+  public int getBulkTransferSize() {
+    return bulkTransferSize;
+  }
+
+  public void setBulkTransferSize(int bulkTransferSize) {
+    this.bulkTransferSize = bulkTransferSize;
   }
 }

@@ -15,25 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.manager.handlers;
+package org.apache.gossip.model;
 
-import org.apache.gossip.manager.GossipCore;
-import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.model.Base;
-import org.apache.gossip.udp.UdpPerNodeDataMessage;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class PerNodeDataMessageHandler implements MessageHandler {
+public class SharedDataBulkMessage extends Base {
+  private List<SharedDataMessage> messages = new ArrayList<>();
 
-  /**
-   * @param gossipCore context.
-   * @param gossipManager context.
-   * @param base message reference.
-   * @return boolean indicating success.
-   */
-  @Override
-  public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
-    UdpPerNodeDataMessage message = (UdpPerNodeDataMessage) base;
-    gossipCore.addPerNodeData(message);
-    return true;
+  public void addMessage(SharedDataMessage msg) {
+    messages.add(msg);
+  }
+
+  public List<SharedDataMessage> getMessages() {
+    return messages;
+  }
+
+  @Override public String toString() {
+    return "SharedGossipDataBulkMessage[" + messages.stream().map(Object::toString)
+            .collect(Collectors.joining(",")) + "]";
   }
 }

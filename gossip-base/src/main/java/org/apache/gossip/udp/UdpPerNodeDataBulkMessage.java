@@ -15,25 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.gossip.manager.handlers;
+package org.apache.gossip.udp;
 
-import org.apache.gossip.manager.GossipCore;
-import org.apache.gossip.manager.GossipManager;
-import org.apache.gossip.model.Base;
-import org.apache.gossip.udp.UdpPerNodeDataMessage;
+import org.apache.gossip.model.PerNodeDataBulkMessage;
 
-public class PerNodeDataMessageHandler implements MessageHandler {
+public class UdpPerNodeDataBulkMessage extends PerNodeDataBulkMessage implements Trackable {
 
-  /**
-   * @param gossipCore context.
-   * @param gossipManager context.
-   * @param base message reference.
-   * @return boolean indicating success.
-   */
-  @Override
-  public boolean invoke(GossipCore gossipCore, GossipManager gossipManager, Base base) {
-    UdpPerNodeDataMessage message = (UdpPerNodeDataMessage) base;
-    gossipCore.addPerNodeData(message);
-    return true;
+  private String uriFrom;
+  private String uuid;
+  
+  public String getUriFrom() {
+    return uriFrom;
   }
+  
+  public void setUriFrom(String uriFrom) {
+    this.uriFrom = uriFrom;
+  }
+  
+  public String getUuid() {
+    return uuid;
+  }
+  
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
+  @Override
+  public String toString() {
+    return "UdpGossipDataMessage [uriFrom=" + uriFrom + ", uuid=" + uuid
+            + ", messages=[" + super.toString() + "] ]";
+  }
+
 }
