@@ -1,0 +1,1 @@
+RedirectMatch Permanent ^(/.*)?$ http://incubator.apache.org/projects/gossip.html
